@@ -612,6 +612,50 @@
   background:#f3f4f6;
 }
 </style>
+
+<style>
+.vehicle-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.vehicle-actions button{
+  min-height:38px;
+  padding:8px 12px;
+}
+.flow-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100001;
+  padding:16px;
+}
+.flow-modal.show{display:flex;}
+.flow-modal-card{
+  width:min(760px,100%);
+  max-height:88vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.flow-modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+.flow-modal-close{
+  background:#eef2f7;
+  color:#314055;
+}
+</style>
 </head>
 <body>
   <div class="app">
@@ -891,7 +935,7 @@
         </div>
       </div>
 
-      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
+      <div class="actions">
         <button class="primary" type="button" id="saveVehicleBtn">儲存入庫</button>
         <button class="secondary" type="button" id="resetVehicleBtn">清空表單</button>
       </div>
@@ -974,7 +1018,7 @@
               <div class="full"><label>公告標題 *</label><input id="announcementTitle" placeholder="例如：本週貸款案件資料補齊規範"></div>
               <div class="full"><label>公告內容 *</label><textarea id="announcementContent" placeholder="輸入公告內容..."></textarea></div>
             </div>
-            <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
+            <div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
           </div>
           <div class="card">
             <h3>公告列表</h3>
@@ -1036,7 +1080,7 @@
               </div>
               <div class="full"><label>備註</label><input id="employeeNote" placeholder="例如 負責貸款案件 / 等待 LINE 綁定"></div>
             </div>
-            <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
+            <div class="actions">
               <button class="primary" onclick="saveEmployee()">儲存員工</button>
               <button class="secondary" onclick="resetEmployeeForm()">清空</button>
             </div>
@@ -1061,7 +1105,7 @@
         <div><label>售出金額 *</label><input id="saleSellAmount" type="number" placeholder="例如 280000"></div>
         <div><label>售出日期 *</label><input id="saleDate" type="date"></div>
       </div>
-      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
+      <div class="actions">
         <button class="success" onclick="saveSaleInfo()">儲存售出資料</button>
         <button class="secondary" onclick="closeSaleModal()">取消</button>
       </div>
@@ -1072,7 +1116,7 @@
     <div class="modal-content">
       <h3>照片查看</h3>
       <div class="photo-grid" id="photosModalGrid"></div>
-      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
+      <div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
     </div>
   </div>
 
@@ -1082,7 +1126,7 @@
       <div class="image-preview-wrap">
         <img id="imagePreviewTarget" src="" alt="放大照片" onclick="closeImagePreview()">
       </div>
-      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
+      <div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
     </div>
   </div>
 
@@ -1485,7 +1529,7 @@
               <div class="car-line">買入金額：${fmtNum(x.buyAmount)} ｜ 整備總額：${fmtNum(x.repairTotal)}</div>
               <div class="car-line">調作金額：${fmtNum(x.companyAdjust)} ｜ 預估利潤：<span class="${x.profit >= 0 ? "good":"bad"}">${fmtNum(x.profit)}</span></div>
               <div class="car-line">整備項目：${repairText || "—"}</div>
-              <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
+              <div class="actions">
                 <button class="mini-btn secondary" onclick="showPhotos('${x.id}')">照片</button>
                 <button class="mini-btn secondary" onclick="editVehicle('${x.id}')">編輯入庫</button>
                 <button class="mini-btn success" onclick="openSaleModal('${x.id}')">後續售出</button>
@@ -1626,7 +1670,7 @@
           </div>
           <div style="margin-top:10px;line-height:1.9;font-size:16px">${a.content}</div>
           <div class="small-note" style="margin-top:10px">已讀人數：${(a.readBy || []).length}</div>
-          <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">${readButtons || '<span class="small-note">請先建立員工資料後再標記已讀</span>'}</div>
+          <div class="actions">${readButtons || '<span class="small-note">請先建立員工資料後再標記已讀</span>'}</div>
         </div>`;
       });
     }
@@ -2045,14 +2089,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
 
-  function setWorkflowVisible(visible){
-    ['depositSection','paymentSection','soldSection'].forEach(function(id){
-      var el = $(id);
-      if(el) el.classList.toggle('hidden-field', !visible);
-    });
-    var hint = $('afterCreateHint');
-    if(hint) hint.style.display = visible ? 'none' : 'block';
-  }
+  function setWorkflowVisible(visible){ return; }
 
   function updateLoanOther(){
     $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
@@ -2096,14 +2133,21 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  function renderInventory(){
+  
+function renderInventory(){
     const rows = getJSON(INVENTORY_KEY);
     const listBox = $('savedVehicleListView') || $('savedVehicleInner');
     const cardBox = $('savedVehicleCardView');
     if(listBox){
       listBox.innerHTML = rows.length ? rows.map(r=>`
         <div class="record-row">
-          <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+          <div>
+            <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+            <div class="vehicle-actions">
+              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
+              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
+            </div>
+          </div>
         </div>
       `).join('') : '<div class="small-note">目前還沒有資料</div>';
     }
@@ -2119,10 +2163,15 @@ document.addEventListener("DOMContentLoaded", function(){
             <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
             <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
             <div class="car-line">狀態：${r.status}</div>
+            <div class="vehicle-actions">
+              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
+              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
+            </div>
           </div>
         </div>
       `).join('') : '<div class="small-note">目前還沒有資料</div>';
     }
+    bindInventoryActionButtons();
   }
 
   function renderSoldHistory(){
@@ -2149,6 +2198,199 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+
+
+  function findInventoryById(id){
+    return getJSON(INVENTORY_KEY).find(r => String(r.id) === String(id));
+  }
+
+  function updateInventoryRecord(updated){
+    const rows = getJSON(INVENTORY_KEY).map(r => String(r.id) === String(updated.id) ? updated : r);
+    setJSON(INVENTORY_KEY, rows);
+  }
+
+  function upsertSaleRecord(record){
+    let rows = getJSON(SALES_KEY);
+    const idx = rows.findIndex(r => String(r.id) === String(record.id));
+    if(idx >= 0) rows[idx] = record;
+    else rows.unshift(record);
+    setJSON(SALES_KEY, rows);
+  }
+
+  function openFlowModal(title, bodyHtml){
+    $('flowModalTitle').textContent = title;
+    $('flowModalBody').innerHTML = bodyHtml;
+    $('flowModal').classList.add('show');
+  }
+
+  function closeFlowModal(){
+    $('flowModal').classList.remove('show');
+    $('flowModalBody').innerHTML = '';
+  }
+
+  function bindInventoryActionButtons(){
+    qa('[data-action="deposit"]').forEach(btn=>{
+      btn.onclick = function(){
+        const id = btn.getAttribute('data-id');
+        const row = findInventoryById(id);
+        if(!row) return;
+        openFlowModal('收訂作業 - ' + row.brand + ' ' + row.model, `
+          <div class="form-grid">
+            <div>
+              <label>是否收訂</label>
+              <select id="modalHasDeposit">
+                <option value="已收訂">已收訂</option>
+              </select>
+            </div>
+            <div>
+              <label>收訂金額</label>
+              <input id="modalDepositAmount" type="number" value="${row.depositAmount || ''}" placeholder="例如 30000">
+            </div>
+            <div>
+              <label>收訂照片</label>
+              <input id="modalDepositPhoto" type="file" accept="image/*">
+            </div>
+            <div>
+              <label>款項位置</label>
+              <select id="modalDepositAccount">
+                <option value="">請選擇</option>
+                <option value="公司帳戶" ${row.depositAccount==='公司帳戶'?'selected':''}>公司帳戶</option>
+                <option value="個人帳戶" ${row.depositAccount==='個人帳戶'?'selected':''}>個人帳戶</option>
+              </select>
+            </div>
+            <div>
+              <label>付款方式</label>
+              <select id="modalPaymentType">
+                <option value="">請選擇</option>
+                <option value="現金" ${row.paymentType==='現金'?'selected':''}>現金</option>
+                <option value="貸款" ${row.paymentType==='貸款'?'selected':''}>貸款</option>
+              </select>
+            </div>
+            <div>
+              <label>貸款公司</label>
+              <input id="modalLoanCompany" value="${row.loanCompany || ''}" placeholder="如現金可留空">
+            </div>
+            <div>
+              <label>貸款業務</label>
+              <select id="modalLoanAgent">
+                <option value="">請選擇</option>
+                <option value="中租怡婷" ${row.loanAgent==='中租怡婷'?'selected':''}>中租怡婷</option>
+                <option value="裕融若榛" ${row.loanAgent==='裕融若榛'?'selected':''}>裕融若榛</option>
+                <option value="和潤子豪" ${row.loanAgent==='和潤子豪'?'selected':''}>和潤子豪</option>
+                <option value="和潤萱宇" ${row.loanAgent==='和潤萱宇'?'selected':''}>和潤萱宇</option>
+                <option value="匯豐仕謙" ${row.loanAgent==='匯豐仕謙'?'selected':''}>匯豐仕謙</option>
+                <option value="其他" ${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?'selected':''}>其他</option>
+              </select>
+            </div>
+            <div id="modalLoanOtherWrap" class="${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?'':'hidden-field'}">
+              <label>其他貸款業務</label>
+              <input id="modalLoanAgentOther" value="${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?row.loanAgent:''}" placeholder="手動填寫">
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="primary" id="saveDepositFlowBtn">儲存收訂</button>
+          </div>
+        `);
+
+        $('modalLoanAgent').onchange = function(){
+          $('modalLoanOtherWrap').classList.toggle('hidden-field', $('modalLoanAgent').value !== '其他');
+        };
+
+        $('saveDepositFlowBtn').onclick = async function(){
+          if(!$('modalDepositAmount').value.trim()) return toast('請填收訂金額');
+          if(!$('modalDepositAccount').value.trim()) return toast('請選款項位置');
+          if(!$('modalPaymentType').value.trim()) return toast('請選付款方式（現金或貸款）');
+          if($('modalPaymentType').value === '貸款'){
+            if(!$('modalLoanCompany').value.trim()) return toast('貸款請填貸款公司');
+            if(!$('modalLoanAgent').value.trim()) return toast('貸款請選貸款業務');
+            if($('modalLoanAgent').value === '其他' && !$('modalLoanAgentOther').value.trim()) return toast('請填其他貸款業務');
+          }
+          row.hasDeposit = '已收訂';
+          row.depositAmount = Number($('modalDepositAmount').value) || 0;
+          row.depositAccount = $('modalDepositAccount').value;
+          row.paymentType = $('modalPaymentType').value;
+          row.loanCompany = $('modalLoanCompany').value.trim();
+          row.loanAgent = $('modalLoanAgent').value === '其他' ? $('modalLoanAgentOther').value.trim() : $('modalLoanAgent').value;
+          if($('modalDepositPhoto').files[0]) row.depositPhoto = await readFile($('modalDepositPhoto').files[0]);
+          updateInventoryRecord(row);
+          const money = getJSON(MONEY_KEY);
+          money.unshift({time:new Date().toISOString(), type:row.depositAccount, amount:row.depositAmount, plate:row.plate});
+          setJSON(MONEY_KEY, money);
+          renderInventory();
+          closeFlowModal();
+          toast('收訂資料已儲存');
+        };
+      };
+    });
+
+    qa('[data-action="sell"]').forEach(btn=>{
+      btn.onclick = function(){
+        const id = btn.getAttribute('data-id');
+        const row = findInventoryById(id);
+        if(!row) return;
+        openFlowModal('售出作業 - ' + row.brand + ' ' + row.model, `
+          <div class="form-grid">
+            <div>
+              <label>售出業務</label>
+              <select id="modalSellerPerson">
+                <option value="">請選擇</option>
+                ${['葉咨廷','陳柏誠','許晟豪','吳俊廷','劉家瑋','林家旻','吳宥勳','吳七一','林宥甫','劉穎','蔡冠宇','鄭宜隆','蕭宇廷'].map(n=>`<option value="${n}" ${row.sellerPerson===n?'selected':''}>${n}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>新車主</label>
+              <input id="modalNewOwner" value="${row.newOwner || ''}" placeholder="例如 王小明">
+            </div>
+            <div>
+              <label>新車主行照</label>
+              <input id="modalNewOwnerLicense" type="file" accept="image/*">
+            </div>
+            <div>
+              <label>公司底價</label>
+              <input id="modalCompanyFloorPrice" type="number" value="${row.companyFloorPrice || ''}" placeholder="例如 300000">
+            </div>
+            <div>
+              <label>售出金額</label>
+              <input id="modalSellAmount" type="number" value="${row.sellAmount || ''}" placeholder="例如 350000">
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="primary" id="saveSellFlowBtn">儲存售出</button>
+          </div>
+        `);
+
+        $('saveSellFlowBtn').onclick = async function(){
+          if(!row.hasDeposit || row.hasDeposit !== '已收訂') return toast('請先完成收訂');
+          if(!row.paymentType) return toast('請先在收訂作業中選擇付款方式');
+          if(!$('modalSellerPerson').value.trim()) return toast('請選售出業務');
+          if(!$('modalSellAmount').value.trim()) return toast('請填售出金額');
+
+          row.sellerPerson = $('modalSellerPerson').value;
+          row.newOwner = $('modalNewOwner').value.trim();
+          row.companyFloorPrice = Number($('modalCompanyFloorPrice').value) || 0;
+          row.sellAmount = Number($('modalSellAmount').value) || 0;
+          if($('modalNewOwnerLicense').files[0]) row.newOwnerLicensePhoto = await readFile($('modalNewOwnerLicense').files[0]);
+          row.soldStatus = '已售出';
+          row.status = '已售';
+
+          const taxable = row.entryType === '屏東鴻翊汽車' || row.entryType === '鴻豪汽車商行';
+          const repairTotal = Number(row.repairTotal || 0);
+          const buy = Number(row.buyAmount || 0);
+          row.invoiceTax = taxable ? Math.max(row.sellAmount - (buy + repairTotal), 0) * 0.05 : 0;
+          row.businessTax = taxable ? row.sellAmount * 0.012 : 0;
+          row.profit = row.sellAmount - buy - repairTotal - row.invoiceTax - row.businessTax + Number(row.companyAdjust || 0);
+
+          updateInventoryRecord(row);
+          upsertSaleRecord(row);
+          renderInventory();
+          renderSoldHistory();
+          renderPerformance();
+          closeFlowModal();
+          toast('售出資料已儲存');
+        };
+      };
+    });
+  }
 
   function setSavedView(mode){
     const listBox = $('savedVehicleListView');
@@ -2389,14 +2631,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
-  function setWorkflowVisible(visible){
-    ['depositSection','paymentSection','soldSection'].forEach(id=>{
-      const el = $(id);
-      if(el) el.classList.toggle('hidden-field', !visible);
-    });
-    const hint = $('afterCreateHint');
-    if(hint) hint.style.display = visible ? 'none' : 'block';
-  }
+  function setWorkflowVisible(visible){ return; }
 
   function updateTransferField(){
     const entry = $('entryType') ? $('entryType').value : '屏東鴻翊汽車';
@@ -2506,14 +2741,21 @@ document.addEventListener("DOMContentLoaded", function(){
     return {buy, adjust, sell, repairTotal, taxable, invoiceTax, businessTax, profit};
   }
 
-  function renderInventory(){
+  
+function renderInventory(){
     const rows = getJSON(INVENTORY_KEY);
     const listBox = $('savedVehicleListView') || $('savedVehicleInner');
     const cardBox = $('savedVehicleCardView');
     if(listBox){
       listBox.innerHTML = rows.length ? rows.map(r=>`
         <div class="record-row">
-          <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+          <div>
+            <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+            <div class="vehicle-actions">
+              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
+              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
+            </div>
+          </div>
         </div>
       `).join('') : '<div class="small-note">目前還沒有資料</div>';
     }
@@ -2529,10 +2771,15 @@ document.addEventListener("DOMContentLoaded", function(){
             <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
             <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
             <div class="car-line">狀態：${r.status}</div>
+            <div class="vehicle-actions">
+              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
+              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
+            </div>
           </div>
         </div>
       `).join('') : '<div class="small-note">目前還沒有資料</div>';
     }
+    bindInventoryActionButtons();
   }
 
   function renderPerformance(){
@@ -2583,25 +2830,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if((entryType === '寄賣' || entryType === '調做') && (!$('transferName') || !$('transferName').value.trim())) return toast('請填寫對應人頭資料');
     if(!$('buyerPerson') || !$('buyerPerson').value.trim()) return toast('請選買入人');
     if(!$('buyAmount') || !$('buyAmount').value.trim()) return toast('請填買入金額');
-    if(!$('carPhotoInput') || !$('carPhotoInput').files[0]) return toast('請上傳車輛照片');
-    if(!$('licensePhotoInput') || !$('licensePhotoInput').files[0]) return toast('請上傳行照照片');
-
-    if($('hasDeposit') && $('hasDeposit').value === '已收訂'){
-      if(!$('depositAmount').value.trim()) return toast('已收訂時請填收訂金額');
-      if(!$('depositAccount').value.trim()) return toast('已收訂時請選款項位置');
-      if(!$('depositPhoto').files[0]) return toast('已收訂時請上傳收訂照片');
-    }
-
-    if($('soldStatus') && $('soldStatus').value === '已售出'){
-      if(!$('paymentType').value) return toast('售出前請選付款方式');
-      if($('paymentType').value === '貸款'){
-        if(!$('loanCompany').value.trim()) return toast('貸款件請填貸款公司');
-        if(!$('loanAgent').value.trim()) return toast('貸款件請選貸款業務');
-        if($('loanAgent').value === '其他' && !$('loanAgentOther').value.trim()) return toast('請填寫其他貸款業務');
-      }
-      if(!$('sellerPerson').value.trim()) return toast('已售出請選售出業務');
-      if(!$('sellAmount').value.trim()) return toast('已售出請填售出金額');
-    }
+    if(!$('carPhotoInput') || !$('carPhotoInput').files || !$('carPhotoInput').files[0]) return toast('請上傳車輛照片');
+    if(!$('licensePhotoInput') || !$('licensePhotoInput').files || !$('licensePhotoInput').files[0]) return toast('請上傳行照照片');
 
     const calc = calcTaxesAndProfit();
     const record = {
@@ -2623,53 +2853,31 @@ document.addEventListener("DOMContentLoaded", function(){
       note: $('note').value.trim(),
       carPhoto: await readFile($('carPhotoInput').files[0]),
       licensePhoto: await readFile($('licensePhotoInput').files[0]),
-      hasDeposit: $('hasDeposit') ? $('hasDeposit').value : '未收訂',
-      depositAmount: $('depositAmount') ? Number($('depositAmount').value) || 0 : 0,
-      depositPhoto: $('depositPhoto') ? await readFile($('depositPhoto').files[0]) : '',
-      depositAccount: $('depositAccount') ? $('depositAccount').value : '',
-      paymentType: $('paymentType') ? $('paymentType').value : '',
-      loanCompany: $('loanCompany') ? $('loanCompany').value.trim() : '',
-      loanAgent: $('loanAgent') ? ($('loanAgent').value === '其他' ? $('loanAgentOther').value.trim() : $('loanAgent').value) : '',
-      soldStatus: $('soldStatus') ? $('soldStatus').value : '未售出',
-      sellerPerson: $('sellerPerson') ? $('sellerPerson').value : '',
-      newOwner: $('newOwner') ? $('newOwner').value.trim() : '',
-      newOwnerLicensePhoto: $('newOwnerLicensePhoto') ? await readFile($('newOwnerLicensePhoto').files[0]) : '',
-      companyFloorPrice: $('companyFloorPrice') ? Number($('companyFloorPrice').value) || 0 : 0,
-      sellAmount: $('sellAmount') ? Number($('sellAmount').value) || 0 : 0,
-      invoiceTax: calc.invoiceTax,
-      businessTax: calc.businessTax,
-      profit: calc.profit,
-      status: ($('soldStatus') && $('soldStatus').value === '已售出') ? '已售' : '在庫'
+      hasDeposit: '未收訂',
+      depositAmount: 0,
+      depositPhoto: '',
+      depositAccount: '',
+      paymentType: '',
+      loanCompany: '',
+      loanAgent: '',
+      soldStatus: '未售出',
+      sellerPerson: '',
+      newOwner: '',
+      newOwnerLicensePhoto: '',
+      companyFloorPrice: 0,
+      sellAmount: 0,
+      invoiceTax: 0,
+      businessTax: 0,
+      profit: 0,
+      status: '在庫'
     };
 
     const inventory = getJSON(INVENTORY_KEY);
     inventory.unshift(record);
     setJSON(INVENTORY_KEY, inventory);
-
-    if(record.soldStatus === '已售出'){
-      const sales = getJSON(SALES_KEY);
-      sales.unshift(record);
-      setJSON(SALES_KEY, sales);
-    }
-
-    if(record.depositAmount > 0){
-      const money = getJSON(MONEY_KEY);
-      money.unshift({
-        time: record.createdAt,
-        type: record.depositAccount || '未指定',
-        amount: record.depositAmount,
-        plate: record.plate
-      });
-      setJSON(MONEY_KEY, money);
-    }
-
     localStorage.setItem(CREATED_FLAG_KEY, '1');
-    setWorkflowVisible(true);
     renderInventory();
-    renderSoldHistory();
-    renderPerformance();
-    setSavedView(localStorage.getItem('hongyi_saved_view_mode') || 'list');
-    toast('車輛已儲存');
+    toast('車輛已建立，後續請到已儲存車輛點選收訂或售出');
   }
 
   document.addEventListener('DOMContentLoaded', function(){
@@ -2701,6 +2909,8 @@ document.addEventListener("DOMContentLoaded", function(){
       $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
     });
 
+    if($('flowModalClose')) $('flowModalClose').onclick = closeFlowModal;
+    if($('flowModal')) $('flowModal').onclick = function(e){ if(e.target === $('flowModal')) closeFlowModal(); };
     setEntryType($('entryType') ? $('entryType').value : '屏東鴻翊汽車');
     setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
     renderRepairList();
@@ -2714,6 +2924,17 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 })();
 </script>
+
+
+<div class="flow-modal" id="flowModal">
+  <div class="flow-modal-card">
+    <div class="flow-modal-head">
+      <h3 id="flowModalTitle">流程作業</h3>
+      <button type="button" class="flow-modal-close secondary" id="flowModalClose">關閉</button>
+    </div>
+    <div id="flowModalBody"></div>
+  </div>
+</div>
 
 </body>
 </html>
