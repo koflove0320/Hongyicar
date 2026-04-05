@@ -656,6 +656,21 @@
   color:#314055;
 }
 </style>
+
+<style>
+.flow-modal,
+.flow-modal *{
+  pointer-events:auto;
+}
+.flow-modal-card .actions{
+  position:relative;
+  z-index:100002;
+}
+.flow-modal-card button{
+  position:relative;
+  z-index:100003;
+}
+</style>
 </head>
 <body>
   <div class="app">
@@ -2228,6 +2243,101 @@ function renderInventory(){
     $('flowModalBody').innerHTML = '';
   }
 
+
+  function bindModalGlobalEvents(){
+    if($('flowModalClose')){
+      $('flowModalClose').onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        closeFlowModal();
+      };
+    }
+    if($('flowModal')){
+      $('flowModal').onclick = function(e){
+        if(e.target === $('flowModal')){
+          closeFlowModal();
+        }
+      };
+    }
+
+    document.addEventListener('click', async function(e){
+      const target = e.target.closest('button');
+      if(!target) return;
+
+      if(target.id === 'saveDepositFlowBtn'){
+        e.preventDefault();
+        const id = target.getAttribute('data-id');
+        const row = findInventoryById(id);
+        if(!row) return toast('找不到車輛資料');
+        if(!$('modalDepositAmount').value.trim()) return toast('請填收訂金額');
+        if(!$('modalDepositAccount').value.trim()) return toast('請選款項位置');
+        if(!$('modalPaymentType').value.trim()) return toast('請選付款方式（現金或貸款）');
+        if($('modalPaymentType').value === '貸款'){
+          if(!$('modalLoanCompany').value.trim()) return toast('貸款請填貸款公司');
+          if(!$('modalLoanAgent').value.trim()) return toast('貸款請選貸款業務');
+          if($('modalLoanAgent').value === '其他' && !$('modalLoanAgentOther').value.trim()) return toast('請填其他貸款業務');
+        }
+
+        row.hasDeposit = '已收訂';
+        row.depositAmount = Number($('modalDepositAmount').value) || 0;
+        row.depositAccount = $('modalDepositAccount').value;
+        row.paymentType = $('modalPaymentType').value;
+        row.loanCompany = $('modalLoanCompany').value.trim();
+        row.loanAgent = $('modalLoanAgent').value === '其他' ? $('modalLoanAgentOther').value.trim() : $('modalLoanAgent').value;
+        if($('modalDepositPhoto').files[0]) row.depositPhoto = await readFile($('modalDepositPhoto').files[0]);
+
+        updateInventoryRecord(row);
+        const money = getJSON(MONEY_KEY);
+        money.unshift({time:new Date().toISOString(), type:row.depositAccount, amount:row.depositAmount, plate:row.plate});
+        setJSON(MONEY_KEY, money);
+        renderInventory();
+        closeFlowModal();
+        toast('收訂資料已儲存');
+      }
+
+      if(target.id === 'saveSellFlowBtn'){
+        e.preventDefault();
+        const id = target.getAttribute('data-id');
+        const row = findInventoryById(id);
+        if(!row) return toast('找不到車輛資料');
+        if(!row.hasDeposit || row.hasDeposit !== '已收訂') return toast('請先完成收訂');
+        if(!row.paymentType) return toast('請先在收訂作業中選擇付款方式');
+        if(!$('modalSellerPerson').value.trim()) return toast('請選售出業務');
+        if(!$('modalSellAmount').value.trim()) return toast('請填售出金額');
+
+        row.sellerPerson = $('modalSellerPerson').value;
+        row.newOwner = $('modalNewOwner').value.trim();
+        row.companyFloorPrice = Number($('modalCompanyFloorPrice').value) || 0;
+        row.sellAmount = Number($('modalSellAmount').value) || 0;
+        if($('modalNewOwnerLicense').files[0]) row.newOwnerLicensePhoto = await readFile($('modalNewOwnerLicense').files[0]);
+        row.soldStatus = '已售出';
+        row.status = '已售';
+
+        const taxable = row.entryType === '屏東鴻翊汽車' || row.entryType === '鴻豪汽車商行';
+        const repairTotal = Number(row.repairTotal || 0);
+        const buy = Number(row.buyAmount || 0);
+        row.invoiceTax = taxable ? Math.max(row.sellAmount - (buy + repairTotal), 0) * 0.05 : 0;
+        row.businessTax = taxable ? row.sellAmount * 0.012 : 0;
+        row.profit = row.sellAmount - buy - repairTotal - row.invoiceTax - row.businessTax + Number(row.companyAdjust || 0);
+
+        updateInventoryRecord(row);
+        upsertSaleRecord(row);
+        renderInventory();
+        renderSoldHistory();
+        renderPerformance();
+        closeFlowModal();
+        toast('售出資料已儲存');
+      }
+    }, true);
+
+    document.addEventListener('change', function(e){
+      const target = e.target;
+      if(target && target.id === 'modalLoanAgent'){
+        $('modalLoanOtherWrap').classList.toggle('hidden-field', $('modalLoanAgent').value !== '其他');
+      }
+    }, true);
+  }
+
   function bindInventoryActionButtons(){
     qa('[data-action="deposit"]').forEach(btn=>{
       btn.onclick = function(){
@@ -2296,7 +2406,7 @@ function renderInventory(){
           $('modalLoanOtherWrap').classList.toggle('hidden-field', $('modalLoanAgent').value !== '其他');
         };
 
-        $('saveDepositFlowBtn').onclick = async function(){
+        document.getElementById('saveDepositFlowBtn').setAttribute('data-id', id); $('saveDepositFlowBtn').onclick = null; /* delegated */ if(false){
           if(!$('modalDepositAmount').value.trim()) return toast('請填收訂金額');
           if(!$('modalDepositAccount').value.trim()) return toast('請選款項位置');
           if(!$('modalPaymentType').value.trim()) return toast('請選付款方式（現金或貸款）');
@@ -2319,7 +2429,7 @@ function renderInventory(){
           renderInventory();
           closeFlowModal();
           toast('收訂資料已儲存');
-        };
+        }
       };
     });
 
@@ -2359,7 +2469,7 @@ function renderInventory(){
           </div>
         `);
 
-        $('saveSellFlowBtn').onclick = async function(){
+        document.getElementById('saveSellFlowBtn').setAttribute('data-id', id); $('saveSellFlowBtn').onclick = null; /* delegated */ if(false){
           if(!row.hasDeposit || row.hasDeposit !== '已收訂') return toast('請先完成收訂');
           if(!row.paymentType) return toast('請先在收訂作業中選擇付款方式');
           if(!$('modalSellerPerson').value.trim()) return toast('請選售出業務');
@@ -2387,7 +2497,7 @@ function renderInventory(){
           renderPerformance();
           closeFlowModal();
           toast('售出資料已儲存');
-        };
+        }
       };
     });
   }
@@ -2909,8 +3019,7 @@ function renderInventory(){
       $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
     });
 
-    if($('flowModalClose')) $('flowModalClose').onclick = closeFlowModal;
-    if($('flowModal')) $('flowModal').onclick = function(e){ if(e.target === $('flowModal')) closeFlowModal(); };
+    bindModalGlobalEvents();
     setEntryType($('entryType') ? $('entryType').value : '屏東鴻翊汽車');
     setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
     renderRepairList();
