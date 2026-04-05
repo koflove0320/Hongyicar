@@ -554,25 +554,26 @@
               建立入庫時，不必先填售出資訊。<br>
               上架車輛至少要有 2 張照片：車輛照片 + 行照照片。<br>
               整備項目格式請使用「名稱:金額」，一行一筆，例如：烤漆:3000。<br>
-              入庫類型若為「寄賣 / 調作」則不計稅。
-            </div>
-            <input type="hidden" id="editId">
-            <div class="form-grid">
-              <div>
-                <label>入庫類型 *（公司/寄賣/調做）</label>
-                <select id="entryType">
-                  <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
-                  <option value="鴻豪汽車商行">鴻豪汽車商行</option>
-                  <option value="寄賣">寄賣</option>
-                  <option value="調作">調作</option>
-                </select>
+              
+入庫類型 *
+<select id="stockType">
+<option value="company">公司車</option>
+<option value="consign">寄賣</option>
+<option value="dealer">調做</option>
+</select>
+
+<div style="margin-top:10px">
+<button onclick="selectCompany('屏東鴻翊汽車')">屏東鴻翊汽車</button>
+<button onclick="selectCompany('鴻豪汽車商行')">鴻豪汽車商行</button>
+</div>
+
               </div>
               <div><label>品牌 *</label><input id="brand" placeholder="例如 BMW"></div>
               <div><label>車輛型號 *</label><input id="model" placeholder="例如 318TIA"></div>
 
               <div><label>車牌號碼 *</label><input id="plate" placeholder="例如 YM-1025"></div>
               <div><label>車年份 *</label><input id="year" type="number" placeholder="例如 1995"></div>
-              <div><label>過戶人頭 *</label><input id="transferName" placeholder="例如 鴻翊汽車"></div>
+              <div><label>過戶人頭 * <input id="transferInput" id="transferName" placeholder="例如 鴻翊汽車"></div>
 
               <div><label>買入人 *
 <select>
@@ -594,8 +595,8 @@
               <div><label>買入金額 *</label><input id="buyAmount" type="number" placeholder="例如 100000"></div>
               <div><label>公司調作金額</label><input id="companyAdjust" type="number" placeholder="沒有可留空，預設 0"></div>
 
-              <div><label>發票稅率 (%)（固定）</label><input id="invoiceTaxRate" type="number" step="0.001" value="0.05" readonly></div>
-              <div><label>營業稅率 (%)（固定）</label><input id="businessTaxRate" type="number" step="0.001" value="0.012" readonly></div>
+              <div><label>發票稅率 (%)（固定）</label><input id="invoiceTaxRate" type="number" step="0.001" value="5" readonly></div>
+              <div><label>營業稅率 (%)（固定）</label><input id="businessTaxRate" type="number" step="0.001" value="1.2" readonly></div>
               <div><label>整備項目筆數</label><input id="repairCount" disabled></div>
 
               <div class="full"><label>整備項目（每行一筆：名稱:金額）</label><textarea id="repairItems" placeholder="過戶一:1641&#10;認證:35540&#10;歐德:8000"></textarea></div>
@@ -614,14 +615,7 @@
           </div>
 
           <div class="card">
-            <h3>計算預覽</h3>
-            <div class="list-box" id="formulaPreviewBox"></div>
-            <div class="small-note">
-              標準利潤公式：車輛售價 - (車子成本 + 整備總額) - 發票稅(利潤的 0.05%) - 營業稅(總售出金額的 0.012%)<br>
-              調作利潤公式：調作金額 - 買入成本 - 整備總額 - 發票稅(利潤的 0.05%) - 營業稅(總售出金額的 0.012%)<br>
-              寄賣 / 調作：不計稅
-            </div>
-          </div>
+            <h3>
         </div>
 
         <div class="card" style="margin-top:16px">
@@ -642,58 +636,19 @@
               <thead>
                 <tr>
                   <th>台數</th>
-                  <th>入庫類型</th>
-                  <th>品牌</th>
-                  <th>型號</th>
-                  <th>車牌</th>
-                  <th>買入金額</th>
-                  <th>整備總額</th>
-                  <th>售出金額</th>
-                  <th>調作金額</th>
-                  <th>發票稅</th>
-                  <th>營業稅</th>
-                  <th>利潤</th>
-                  <th>KPI利潤</th>
-                  <th>照片</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="vehicleTableBody"></tbody>
-            </table>
-          </div>
-          <div id="cardView" class="cards-wrap" style="display:none"></div>
-        </div>
-      </section>
+                  <th>
+入庫類型 *
+<select id="stockType">
+<option value="company">公司車</option>
+<option value="consign">寄賣</option>
+<option value="dealer">調做</option>
+</select>
 
-      <section id="panel-cost" class="panel">
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">車輛成本總覽</h3>
-          <div class="small-note">這裡會顯示總台數、在庫、已售、利潤，以及每台車成本明細。若目前是空白，代表你尚未建立車輛資料。</div>
-        </div>
-        <div class="stats">
-          <div class="stat"><div class="k">總台數</div><div class="v" id="statCount">0</div></div>
-          <div class="stat"><div class="k">在庫台數</div><div class="v" id="statStock">0</div></div>
-          <div class="stat"><div class="k">已售台數</div><div class="v" id="statSold">0</div></div>
-          <div class="stat"><div class="k">KPI 利潤總計</div><div class="v" id="statProfit">0</div></div>
-        </div>
-        <div class="card">
-          <h3>車輛成本總覽</h3>
-          <div id="costSummaryBox" class="list-box"></div>
-        </div>
-      </section>
+<div style="margin-top:10px">
+<button onclick="selectCompany('屏東鴻翊汽車')">屏東鴻翊汽車</button>
+<button onclick="selectCompany('鴻豪汽車商行')">鴻豪汽車商行</button>
+</div>
 
-      <section id="panel-sold" class="panel">
-        <div class="card">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <h3 style="margin:0">已售歷史總覽</h3>
-              <select id="soldCompanyFilter" onchange="renderSoldOverview()">
-                <option value="全部">全部公司</option>
-                <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
-                <option value="鴻豪汽車商行">鴻豪汽車商行</option>
-                <option value="寄賣">寄賣</option>
-                <option value="調作">調作</option>
-              </select>
               <select id="soldYearFilter" onchange="renderSoldOverview()"></select>
               <select id="soldMonthFilter" onchange="renderSoldOverview()"></select>
                           </div>
@@ -917,8 +872,8 @@
       const buyAmount = Number(form.buyAmount) || 0;
       const sellAmount = Number(form.sellAmount) || 0;
       const companyAdjust = Number(form.companyAdjust) || 0;
-      const invoiceTaxRate = Number(form.invoiceTaxRate ?? 0.05);
-      const businessTaxRate = Number(form.businessTaxRate ?? 0.012);
+      const invoiceTaxRate = Number(form.invoiceTaxRate ?? 5);
+      const businessTaxRate = Number(form.businessTaxRate ?? 1.2);
       const repairTotal = (form.repairItems || []).reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
       const isTaxable = TAXABLE_TYPES.includes(entryType);
 
@@ -957,8 +912,8 @@
       const entryType = document.getElementById("entryType").value;
       const buyAmount = Number(document.getElementById("buyAmount").value || 0);
       const companyAdjust = Number(document.getElementById("companyAdjust").value || 0);
-      const invoiceTaxRate = Number(document.getElementById("invoiceTaxRate").value || 0.05);
-      const businessTaxRate = Number(document.getElementById("businessTaxRate").value || 0.012);
+      const invoiceTaxRate = Number(document.getElementById("invoiceTaxRate").value || 5);
+      const businessTaxRate = Number(document.getElementById("businessTaxRate").value || 1.2);
       const repairItems = parseRepairItemsRaw(document.getElementById("repairItems").value);
       const repairTotal = repairItems.reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
       const isTaxable = TAXABLE_TYPES.includes(entryType);
@@ -1010,8 +965,8 @@
         buyAmount: document.getElementById("buyAmount").value.trim(),
         companyAdjust: document.getElementById("companyAdjust").value.trim() || 0,
         note: document.getElementById("note").value.trim(),
-        invoiceTaxRate: document.getElementById("invoiceTaxRate").value.trim() || 0.05,
-        businessTaxRate: document.getElementById("businessTaxRate").value.trim() || 0.012,
+        invoiceTaxRate: document.getElementById("invoiceTaxRate").value.trim() || 5,
+        businessTaxRate: document.getElementById("businessTaxRate").value.trim() || 1.2,
         repairItems: parseRepairItemsRaw(document.getElementById("repairItems").value),
         photos: { ...createPhotos },
         newOwner: "",
@@ -1063,8 +1018,8 @@
         if(el) el.value = "";
       });
       document.getElementById("entryType").value = "屏東鴻翊汽車";
-      document.getElementById("invoiceTaxRate").value = "0.05";
-      document.getElementById("businessTaxRate").value = "0.012";
+      document.getElementById("invoiceTaxRate").value = "5";
+      document.getElementById("businessTaxRate").value = "1.2";
       document.getElementById("repairCount").value = "";
       document.getElementById("repairPreviewTotal").value = "";
       document.getElementById("carPhotoInput").value = "";
@@ -1088,8 +1043,8 @@
       document.getElementById("buyAmount").value = item.buyAmount || "";
       document.getElementById("companyAdjust").value = item.companyAdjust || "";
       document.getElementById("note").value = item.note || "";
-      document.getElementById("invoiceTaxRate").value = item.invoiceTaxRate ?? 0.05;
-      document.getElementById("businessTaxRate").value = item.businessTaxRate ?? 0.012;
+      document.getElementById("invoiceTaxRate").value = item.invoiceTaxRate ?? 5;
+      document.getElementById("businessTaxRate").value = item.businessTaxRate ?? 1.2;
       document.getElementById("repairItems").value = (item.repairItems || []).map(x => `${x.name}:${x.amount}`).join("\n");
       createPhotos = { carPhoto:item.photos?.carPhoto || "", licensePhoto:item.photos?.licensePhoto || "" };
       updateRepairSummary();
@@ -1591,8 +1546,8 @@ document.getElementById("entryType").addEventListener("change", renderFormulaPre
 function calcProfit(){
   const buy = parseFloat(document.querySelector('[placeholder="例如 100000"]')?.value || 0);
   const sell = parseFloat(document.querySelector('[placeholder="例如 350000"]')?.value || 0);
-  const tax1 = 0.05;
-  const tax2 = 0.012;
+  const tax1 = 5;
+  const tax2 = 1.2;
 
   const tax = sell * (tax1 + tax2);
   const profit = sell - buy - tax;
@@ -1655,6 +1610,77 @@ function validateFlow(){
 }
 
 document.addEventListener("change", validateFlow);
+</script>
+
+
+<script>
+let salesData = JSON.parse(localStorage.getItem("salesData")||"[]");
+
+function saveSale(name, profit){
+  salesData.push({name, profit});
+  localStorage.setItem("salesData", JSON.stringify(salesData));
+  renderRanking();
+}
+
+function renderRanking(){
+  const countBox = document.getElementById("rankCountBox");
+  const kpiBox = document.getElementById("rankKpiBox");
+  if(!countBox || !kpiBox) return;
+
+  let countMap = {};
+  let profitMap = {};
+
+  salesData.forEach(s=>{
+    countMap[s.name]=(countMap[s.name]||0)+1;
+    profitMap[s.name]=(profitMap[s.name]||0)+s.profit;
+  });
+
+  countBox.innerHTML = Object.entries(countMap)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([n,v])=>`${n} - ${v}台`).join("");
+
+  kpiBox.innerHTML = Object.entries(profitMap)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([n,v])=>`${n} - $${v}`).join("");
+}
+
+renderRanking();
+</script>
+
+<script>
+let money = JSON.parse(localStorage.getItem("money")||"{}");
+
+function addMoney(type, amount){
+  money[type]=(money[type]||0)+amount;
+  localStorage.setItem("money", JSON.stringify(money));
+}
+</script>
+
+<script>
+function notify(msg){
+  console.log("LINE通知:", msg);
+}
+</script>
+
+<script>
+function selectCompany(name){
+  document.getElementById("transferInput").value = name;
+  document.getElementById("transferInput").disabled = true;
+}
+
+document.addEventListener("change", function(e){
+  if(e.target.id === "stockType"){
+    const input = document.getElementById("transferInput");
+    if(e.target.value === "consign" || e.target.value === "dealer"){
+      input.value = "";
+      input.disabled = false;
+      input.placeholder = "請輸入車主 / 車行名稱";
+    }else{
+      input.value = "屏東鴻翊汽車";
+      input.disabled = true;
+    }
+  }
+});
 </script>
 
 </body>
