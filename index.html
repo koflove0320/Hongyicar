@@ -837,15 +837,7 @@
         <button class="secondary" type="button" id="resetVehicleBtn">清空表單</button>
       </div>
       <div id="formHint" class="small-note" style="margin-top:10px"></div>
-    </div>
-
-    <div class="card">
-      <h3>資料總覽</h3>
-      <div class="small-note">這裡會顯示整備總額、稅金、利潤，以及目前金流與業績累積。</div>
-      <div class="photo-grid" id="previewPhotos"></div>
-      <div id="overviewBox" class="list-box" style="margin-top:12px"></div>
-    </div>
-  </div>
+    </div></div>
 
   <div class="card" style="margin-top:16px">
     <h3>已儲存車輛</h3>
@@ -2021,20 +2013,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return {buy, adjust, repairTotal, sell, taxable, invoiceTax, businessTax, profit};
   }
 
-  function updateOverview(){
-    const calc = calcTaxesAndProfit();
-    const box = $('overviewBox');
-    box.innerHTML = `
-      <div class="row-line"><div><strong>入庫類型</strong></div><div><span class="pill">${$('entryType').value}</span></div></div>
-      <div class="row-line"><div><strong>買入金額</strong></div><div><span class="pill">${calc.buy.toLocaleString('zh-TW')}</span></div></div>
-      <div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${calc.repairTotal.toLocaleString('zh-TW')}</span></div></div>
-      <div class="row-line"><div><strong>公司調作金額</strong></div><div><span class="pill">${calc.adjust.toLocaleString('zh-TW')}</span></div></div>
-      <div class="row-line"><div><strong>是否計稅</strong></div><div><span class="pill">${calc.taxable ? '需要計稅' : '不計稅'}</span></div></div>
-      <div class="row-line"><div><strong>發票稅</strong></div><div><span class="pill">${Math.round(calc.invoiceTax).toLocaleString('zh-TW')}</span></div></div>
-      <div class="row-line"><div><strong>營業稅</strong></div><div><span class="pill">${Math.round(calc.businessTax).toLocaleString('zh-TW')}</span></div></div>
-      <div class="row-line"><div><strong>預估利潤</strong></div><div><span class="pill">${Math.round(calc.profit).toLocaleString('zh-TW')}</span></div></div>
-    `;
-  }
+  function updateOverview(){ return; }
 
   async function updatePreviewPhotos(){
     const grid = $('previewPhotos');
