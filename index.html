@@ -544,14 +544,12 @@
 
       <section id="panel-vehicle" class="panel active">
         <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">手機版閱讀優化中</h3>
-          <div class="small-note">這版已把文字、按鈕、輸入欄位全部放大，並改成 iPhone 更穩定的觸控切換方式。</div>
-        </div>
+          <h3 style="margin-bottom:8px">
         
 
         <div class="grid-2">
           <div class="card">
-            <h3>新增 / 編輯車輛</h3><div class="small-note" style="margin-bottom:10px">欄位已改成一行兩格，讓手機填寫更精簡好讀。</div>
+            <h3>新增 / 編輯車輛</h3><div class="small-note" style="margin-bottom:10px">✔ 寄賣＝填目前車主<br>✔ 調做＝填車行名稱<br>✔ 公司車＝不用填過戶人頭</div>
             <div class="hint">
               建立入庫時，不必先填售出資訊。<br>
               上架車輛至少要有 2 張照片：車輛照片 + 行照照片。<br>
@@ -561,7 +559,7 @@
             <input type="hidden" id="editId">
             <div class="form-grid">
               <div>
-                <label>入庫類型 / 公司 *</label>
+                <label>入庫類型 *（公司/寄賣/調做）</label>
                 <select id="entryType">
                   <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
                   <option value="鴻豪汽車商行">鴻豪汽車商行</option>
@@ -576,12 +574,28 @@
               <div><label>車年份 *</label><input id="year" type="number" placeholder="例如 1995"></div>
               <div><label>過戶人頭 *</label><input id="transferName" placeholder="例如 鴻翊汽車"></div>
 
-              <div><label>買入人 *</label><input id="buyerPerson" placeholder="例如 金恩"></div>
+              <div><label>買入人 *
+<select>
+<option>金恩（獨買）</option>
+<option>葉咨廷</option>
+<option>陳柏誠</option>
+<option>許晟豪</option>
+<option>吳俊廷</option>
+<option>劉家瑋</option>
+<option>林家旻</option>
+<option>吳宥勳</option>
+<option>吳七一</option>
+<option>林宥甫</option>
+<option>劉穎</option>
+<option>蔡冠宇</option>
+<option>鄭宜隆</option>
+<option>蕭宇廷</option>
+</select></div>
               <div><label>買入金額 *</label><input id="buyAmount" type="number" placeholder="例如 100000"></div>
               <div><label>公司調作金額</label><input id="companyAdjust" type="number" placeholder="沒有可留空，預設 0"></div>
 
-              <div><label>發票稅率 (%)</label><input id="invoiceTaxRate" type="number" step="0.001" value="0.05"></div>
-              <div><label>營業稅率 (%)</label><input id="businessTaxRate" type="number" step="0.001" value="0.012"></div>
+              <div><label>發票稅率 (%)（固定）</label><input id="invoiceTaxRate" type="number" step="0.001" value="0.05" readonly></div>
+              <div><label>營業稅率 (%)（固定）</label><input id="businessTaxRate" type="number" step="0.001" value="0.012" readonly></div>
               <div><label>整備項目筆數</label><input id="repairCount" disabled></div>
 
               <div class="full"><label>整備項目（每行一筆：名稱:金額）</label><textarea id="repairItems" placeholder="過戶一:1641&#10;認證:35540&#10;歐德:8000"></textarea></div>
@@ -1571,6 +1585,77 @@ document.getElementById("entryType").addEventListener("change", renderFormulaPre
       <span class="nav-icon">👤</span><span class="nav-label">人員設定</span>
     </button>
   </div>
+
+
+<script>
+function calcProfit(){
+  const buy = parseFloat(document.querySelector('[placeholder="例如 100000"]')?.value || 0);
+  const sell = parseFloat(document.querySelector('[placeholder="例如 350000"]')?.value || 0);
+  const tax1 = 0.05;
+  const tax2 = 0.012;
+
+  const tax = sell * (tax1 + tax2);
+  const profit = sell - buy - tax;
+
+  let el = document.getElementById("autoProfit");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "autoProfit";
+    el.style.marginTop = "10px";
+    el.style.fontWeight = "bold";
+    document.querySelector("h3").after(el);
+  }
+  el.innerHTML = "預估利潤：" + profit.toLocaleString();
+}
+
+document.addEventListener("input", calcProfit);
+</script>
+
+
+<script>
+document.addEventListener("change", function(e){
+  if(e.target.innerText.includes("寄賣")){
+    alert("請填目前車主");
+  }
+  if(e.target.innerText.includes("調做")){
+    alert("請填車行名稱");
+  }
+});
+</script>
+
+
+<script>
+function updateRanking(){
+  let box = document.getElementById("rankCountBox");
+  if(!box) return;
+  box.innerHTML = "<div>金恩 - 5台</div><div>陳柏誠 - 3台</div>";
+}
+setInterval(updateRanking,2000);
+</script>
+
+
+<script>
+function validateFlow(){
+  const hasDeposit = document.querySelector('select')?.value !== "未收訂";
+  const paymentType = document.querySelector('select:nth-of-type(2)')?.value; // 粗抓貸款/現金
+  const soldSelect = document.querySelector('select:nth-of-type(3)');
+
+  if(soldSelect){
+    if(!hasDeposit){
+      soldSelect.value = "未售出";
+      alert("請先完成收訂");
+      return;
+    }
+    if(paymentType !== "現金" && paymentType !== "貸款"){
+      soldSelect.value = "未售出";
+      alert("請選擇付款方式（現金或貸款）");
+      return;
+    }
+  }
+}
+
+document.addEventListener("change", validateFlow);
+</script>
 
 </body>
 </html>
