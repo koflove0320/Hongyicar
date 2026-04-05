@@ -175,16 +175,16 @@
       border:1px solid var(--line);
       background:#fff;
       color:var(--text);
-      padding:14px 14px;
-      font-size:18px;
-      min-height:50px;
+      padding:11px 12px;
+      font-size:16px;
+      min-height:44px;
     }
     input:focus, textarea:focus, select:focus{
       outline:none;
       border-color:#ffb25a;
       box-shadow:0 0 0 3px rgba(255,138,0,.14);
     }
-    textarea{min-height:120px;resize:vertical;line-height:1.8}
+    textarea{min-height:96px;resize:vertical;line-height:1.7}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     button{
       border:0;
@@ -406,7 +406,7 @@
       .topbar h2{font-size:24px}
       .topbar .desc{font-size:14px}
       .storage{width:100%;text-align:center;font-size:13px}
-      .grid-2,.stats,.form-grid,.brand-strip{grid-template-columns:1fr}
+      .grid-2,.stats,.brand-strip{grid-template-columns:1fr}
       .stats{gap:10px}
       .stat{padding:14px}
       .stat .v{font-size:24px}
@@ -439,7 +439,7 @@
       box-shadow:0 -10px 30px rgba(31,41,55,.12);
       z-index:9999;
       padding:8px 8px calc(10px + env(safe-area-inset-bottom));
-      grid-template-columns:repeat(5,1fr);
+      grid-template-columns:repeat(6,1fr);
       gap:8px;
       transform:translateY(0);
       transition:transform .28s ease, opacity .28s ease;
@@ -494,8 +494,8 @@
     @media (max-width:480px){
       body{font-size:15px}
       input, textarea, select{
-        font-size:17px;
-        padding:13px 12px;
+        font-size:16px;
+        padding:11px 11px;
       }
       .photo-grid{grid-template-columns:1fr}
       .menu button{min-width:128px}
@@ -521,8 +521,8 @@
         <button onclick="showPanel('cost', this)">2. 車輛成本總覽</button>
         <button onclick="showPanel('sold', this)">3. 已售歷史總覽</button>
         <button onclick="showPanel('board', this)">4. 公佈欄</button>
-        <button onclick="showPanel('sales', this)">5. 公司業績排行榜&台數排行</button>
-        <button onclick="showPanel('kpi', this)">6. KPI 排行</button>
+        <button onclick="showPanel('sales', this)">5. 公司業績排行</button>
+        <button onclick="showPanel('kpi', this)">6. 公司業績排行</button>
         <button onclick="showPanel('people', this)">7. 人員設定</button>
       </div>
       <div class="sidebar-note">
@@ -547,21 +547,11 @@
           <h3 style="margin-bottom:8px">手機版閱讀優化中</h3>
           <div class="small-note">這版已把文字、按鈕、輸入欄位全部放大，並改成 iPhone 更穩定的觸控切換方式。</div>
         </div>
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:10px">快速功能入口</h3>
-          <div class="form-grid">
-            <button class="secondary" type="button" onclick="showPanel('cost', getNavButton('cost'))">車輛成本總覽</button>
-            <button class="secondary" type="button" onclick="showPanel('sold', getNavButton('sold'))">已售歷史總覽</button>
-            <button class="secondary" type="button" onclick="showPanel('board', getNavButton('board'))">公佈欄</button>
-            <button class="secondary" type="button" onclick="showPanel('sales', getNavButton('sales'))">公司業績排行</button>
-            <button class="secondary" type="button" onclick="showPanel('kpi', getNavButton('kpi'))">KPI 排行</button>
-            <button class="secondary" type="button" onclick="showPanel('people', getNavButton('people'))">人員設定</button>
-          </div>
-        </div>
+        
 
         <div class="grid-2">
           <div class="card">
-            <h3>新增 / 編輯車輛</h3>
+            <h3>新增 / 編輯車輛</h3><div class="small-note" style="margin-bottom:10px">欄位已改成一行兩格，讓手機填寫更精簡好讀。</div>
             <div class="hint">
               建立入庫時，不必先填售出資訊。<br>
               上架車輛至少要有 2 張照片：車輛照片 + 行照照片。<br>
@@ -732,19 +722,20 @@
         </div>
       </section>
 
-      <section id="panel-sales" class="panel">
+      <section id="panel-performance" class="panel">
         <div class="card">
-          <div class="small-note" style="margin-bottom:10px">這裡會依售出台數自動排行。若還沒資料，代表尚未建立售出紀錄。</div>
-          <h3>公司業績排行榜 & 台數排行</h3>
-          <div id="rankCountBox" class="list-box"></div>
-        </div>
-      </section>
-
-      <section id="panel-kpi" class="panel">
-        <div class="card">
-          <div class="small-note" style="margin-bottom:10px">這裡會依 KPI 利潤自動排行。若還沒資料，代表尚未建立售出紀錄。</div>
-          <h3>KPI 排行</h3>
-          <div id="rankKpiBox" class="list-box"></div>
+          <h3>公司業績排行</h3>
+          <div class="small-note" style="margin-bottom:12px">這裡整合台數排行與 KPI 利潤排行。若還沒資料，代表尚未建立售出紀錄。</div>
+          <div class="grid-2">
+            <div>
+              <h3 style="font-size:20px">台數排行</h3>
+              <div id="rankCountBox" class="list-box"></div>
+            </div>
+            <div>
+              <h3 style="font-size:20px">KPI 排行</h3>
+              <div id="rankKpiBox" class="list-box"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -852,8 +843,7 @@
       cost:{title:"車輛成本總覽",desc:"快速查看總台數、在庫、已售與每台車成本結構。"},
       sold:{title:"已售歷史總覽",desc:"依公司與月份查詢已售資料、利潤、台數與業務統計。"},
       board:{title:"公佈欄",desc:"發佈內部公告，並標記員工已讀狀況。"},
-      sales:{title:"公司業績排行榜&台數排行",desc:"依售出台數排序，快速看到誰賣最多台。"},
-      kpi:{title:"KPI 排行",desc:"依 KPI 利潤排序，快速看到誰替公司賺最多。"},
+      performance:{title:"公司業績排行",desc:"整合台數排行與 KPI 利潤排行，集中查看業務表現。"},
       people:{title:"人員設定",desc:"管理員工資料、LINE申請狀態欄位與後續雲端登入準備。"}
     };
     let createPhotos = { carPhoto:"", licensePhoto:"" };
@@ -1573,6 +1563,9 @@ document.getElementById("entryType").addEventListener("change", renderFormulaPre
     </button>
     <button data-panel="board" onclick="showPanel('board', this)">
       <span class="nav-icon">📢</span><span class="nav-label">公佈欄</span>
+    </button>
+    <button data-panel="performance" onclick="showPanel('performance', this)">
+      <span class="nav-icon">📊</span><span class="nav-label">業績排行</span>
     </button>
     <button data-panel="people" onclick="showPanel('people', this)">
       <span class="nav-icon">👤</span><span class="nav-label">人員設定</span>
