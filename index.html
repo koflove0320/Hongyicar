@@ -90,7 +90,7 @@
       line-height:1.7;
       color:rgba(255,255,255,.94);
     }
-    .main{padding:20px}
+    .main{padding:20px;padding-bottom:120px}
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -401,7 +401,7 @@
         border-radius:14px;
       }
       .sidebar-note{display:none}
-      .main{padding:12px}
+      .main{padding:12px;padding-bottom:120px}
       .topbar{margin-bottom:12px}
       .topbar h2{font-size:24px}
       .topbar .desc{font-size:14px}
@@ -661,7 +661,10 @@
         </div>
       </section>
 
-      <section id="panel-cost" class="panel"></div>
+      <section id="panel-cost" class="panel">
+        <div class="card" style="margin-bottom:14px">
+          <h3 style="margin-bottom:8px">車輛成本總覽</h3>
+          <div class="small-note">這裡會顯示總台數、在庫、已售、利潤，以及每台車成本明細。若目前是空白，代表你尚未建立車輛資料。</div>
         </div>
         <div class="stats">
           <div class="stat"><div class="k">總台數</div><div class="v" id="statCount">0</div></div>
@@ -709,6 +712,10 @@
       </section>
 
       <section id="panel-board" class="panel">
+        <div class="card" style="margin-bottom:14px">
+          <h3 style="margin-bottom:8px">公佈欄</h3>
+          <div class="small-note">這裡可以發佈內部公告，之後再配合員工登入與已讀連動。</div>
+        </div>
         <div class="grid-2">
           <div class="card">
             <h3>新增公告</h3>
@@ -727,6 +734,7 @@
 
       <section id="panel-sales" class="panel">
         <div class="card">
+          <div class="small-note" style="margin-bottom:10px">這裡會依售出台數自動排行。若還沒資料，代表尚未建立售出紀錄。</div>
           <h3>公司業績排行榜 & 台數排行</h3>
           <div id="rankCountBox" class="list-box"></div>
         </div>
@@ -734,12 +742,16 @@
 
       <section id="panel-kpi" class="panel">
         <div class="card">
+          <div class="small-note" style="margin-bottom:10px">這裡會依 KPI 利潤自動排行。若還沒資料，代表尚未建立售出紀錄。</div>
           <h3>KPI 排行</h3>
           <div id="rankKpiBox" class="list-box"></div>
         </div>
       </section>
 
-      <section id="panel-people" class="panel"></div>
+      <section id="panel-people" class="panel">
+        <div class="card" style="margin-bottom:14px">
+          <h3 style="margin-bottom:8px">人員設定</h3>
+          <div class="small-note">這裡可以新增員工資料、LINE 顯示名稱、申請狀態，為後續登入系統做準備。</div>
         </div>
         <div class="grid-2">
           <div class="card">
