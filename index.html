@@ -598,6 +598,20 @@
 }
 .hidden-field{display:none !important;}
 </style>
+
+<style>
+.view-toggle .active-view{
+  background:linear-gradient(180deg,#ff8a00,#ff6a00) !important;
+  color:#fff !important;
+}
+.saved-thumb{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:14px;
+  background:#f3f4f6;
+}
+</style>
 </head>
 <body>
   <div class="app">
@@ -885,8 +899,15 @@
     </div></div>
 
   <div class="card" style="margin-top:16px">
-    <h3>已儲存車輛</h3>
-    <div id="savedVehicleInner" class="list-box"></div>
+    <div class="toolbar">
+      <div class="toolbar-left"><h3>已儲存車輛</h3></div>
+      <div class="view-toggle">
+        <button class="secondary mini-btn" type="button" id="listViewBtn">列表顯示</button>
+        <button class="secondary mini-btn" type="button" id="cardViewBtnBtn">卡片顯示</button>
+      </div>
+    </div>
+    <div id="savedVehicleListView" class="list-box"></div>
+    <div id="savedVehicleCardView" class="cards-wrap" style="display:none"></div>
   </div>
 </section>
 
@@ -2077,17 +2098,31 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderInventory(){
     const rows = getJSON(INVENTORY_KEY);
-    const inner = $('savedVehicleInner');
-    if(!inner) return;
-    if(rows.length === 0){
-      inner.innerHTML = '<div class="small-note">目前還沒有資料</div>';
-      return;
+    const listBox = $('savedVehicleListView') || $('savedVehicleInner');
+    const cardBox = $('savedVehicleCardView');
+    if(listBox){
+      listBox.innerHTML = rows.length ? rows.map(r=>`
+        <div class="record-row">
+          <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+        </div>
+      `).join('') : '<div class="small-note">目前還沒有資料</div>';
     }
-    inner.innerHTML = rows.map(r=>`
-      <div class="record-row">
-        <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
-      </div>
-    `).join('');
+    if(cardBox){
+      cardBox.innerHTML = rows.length ? rows.map(r=>`
+        <div class="car-card">
+          <div class="car-photo">${r.carPhoto ? `<img class="saved-thumb" src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
+          <div class="car-body">
+            <div class="car-title">${r.brand} ${r.model}</div>
+            <div class="car-line">車牌：${r.plate}</div>
+            <div class="car-line">年份：${r.year}</div>
+            <div class="car-line">入庫：${r.entryType}</div>
+            <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
+            <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
+            <div class="car-line">狀態：${r.status}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="small-note">目前還沒有資料</div>';
+    }
   }
 
   function renderSoldHistory(){
@@ -2112,6 +2147,19 @@ document.addEventListener("DOMContentLoaded", function(){
       const arr = Object.entries(map).sort((a,b)=>b[1]-a[1]);
       $('soldSellerSummary').innerHTML = arr.length ? arr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
     }
+  }
+
+
+  function setSavedView(mode){
+    const listBox = $('savedVehicleListView');
+    const cardBox = $('savedVehicleCardView');
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBox) listBox.style.display = mode === 'list' ? 'grid' : 'none';
+    if(cardBox) cardBox.style.display = mode === 'card' ? 'grid' : 'none';
+    if(listBtn) listBtn.classList.toggle('active-view', mode === 'list');
+    if(cardBtn) cardBtn.classList.toggle('active-view', mode === 'card');
+    localStorage.setItem('hongyi_saved_view_mode', mode);
   }
 
   function renderPerformance(){
@@ -2460,13 +2508,31 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderInventory(){
     const rows = getJSON(INVENTORY_KEY);
-    const inner = $('savedVehicleInner');
-    if(!inner) return;
-    inner.innerHTML = rows.length ? rows.map(r=>`
-      <div class="record-row">
-        <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
-      </div>
-    `).join('') : '<div class="small-note">目前還沒有資料</div>';
+    const listBox = $('savedVehicleListView') || $('savedVehicleInner');
+    const cardBox = $('savedVehicleCardView');
+    if(listBox){
+      listBox.innerHTML = rows.length ? rows.map(r=>`
+        <div class="record-row">
+          <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+        </div>
+      `).join('') : '<div class="small-note">目前還沒有資料</div>';
+    }
+    if(cardBox){
+      cardBox.innerHTML = rows.length ? rows.map(r=>`
+        <div class="car-card">
+          <div class="car-photo">${r.carPhoto ? `<img class="saved-thumb" src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
+          <div class="car-body">
+            <div class="car-title">${r.brand} ${r.model}</div>
+            <div class="car-line">車牌：${r.plate}</div>
+            <div class="car-line">年份：${r.year}</div>
+            <div class="car-line">入庫：${r.entryType}</div>
+            <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
+            <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
+            <div class="car-line">狀態：${r.status}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="small-note">目前還沒有資料</div>';
+    }
   }
 
   function renderPerformance(){
@@ -2602,6 +2668,7 @@ document.addEventListener("DOMContentLoaded", function(){
     renderInventory();
     renderSoldHistory();
     renderPerformance();
+    setSavedView(localStorage.getItem('hongyi_saved_view_mode') || 'list');
     toast('車輛已儲存');
   }
 
@@ -2613,18 +2680,17 @@ document.addEventListener("DOMContentLoaded", function(){
     // rebind save button
     const oldBtn = $('saveVehicleBtn');
     if(oldBtn){
-      const newBtn = oldBtn.cloneNode(true);
-      oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-      newBtn.addEventListener('click', saveVehicleNew);
+      oldBtn.type = 'button';
+      oldBtn.onclick = function(e){ e.preventDefault(); saveVehicleNew(); };
     }
 
     const resetBtn = $('resetVehicleBtn');
     if(resetBtn){
-      const newReset = resetBtn.cloneNode(true);
-      resetBtn.parentNode.replaceChild(newReset, resetBtn);
-      newReset.addEventListener('click', function(){
+      resetBtn.type = 'button';
+      resetBtn.onclick = function(e){
+        e.preventDefault();
         location.reload();
-      });
+      };
     }
 
     qa('.entry-btn').forEach(btn=>{
@@ -2641,6 +2707,10 @@ document.addEventListener("DOMContentLoaded", function(){
     renderInventory();
     renderSoldHistory();
     renderPerformance();
+
+    if($('listViewBtn')) $('listViewBtn').onclick = function(){ setSavedView('list'); };
+    if($('cardViewBtnBtn')) $('cardViewBtnBtn').onclick = function(){ setSavedView('card'); };
+    setSavedView(localStorage.getItem('hongyi_saved_view_mode') || 'list');
   });
 })();
 </script>
