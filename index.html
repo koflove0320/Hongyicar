@@ -522,6 +522,59 @@
 }
 .hidden-note{display:none;}
 </style>
+
+<style>
+.save-toast{
+  position:fixed;
+  left:50%;
+  bottom:110px;
+  transform:translateX(-50%);
+  background:#111827;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:14px;
+  z-index:100000;
+  opacity:0;
+  transition:opacity .2s ease;
+}
+.save-toast.show{opacity:1;}
+</style>
+
+<style>
+.entry-type-wrap{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.entry-btn{
+  background:#eef2f7;
+  border:2px solid transparent;
+  color:#314055;
+  min-height:52px;
+}
+.entry-btn.active{
+  background:linear-gradient(180deg,#ff8a00,#ff6a00);
+  color:#fff;
+  border-color:#ff6a00;
+  box-shadow:0 8px 18px rgba(255,106,0,.22);
+  transform:translateY(-1px);
+}
+.sub-card{
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid #eee;
+}
+.hidden-field{display:none;}
+.record-row{
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+}
+@media (max-width:900px){
+  .entry-type-wrap{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+
 </head>
 <body>
   <div class="app">
@@ -556,121 +609,250 @@
         <div class="storage">目前儲存：本機瀏覽器 localStorage</div>
       </div>
 
-      <section id="panel-vehicle" class="panel active">
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">
-        
+      
+<section id="panel-vehicle" class="panel active">
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin-bottom:8px">車輛管理</h3>
+    <div class="small-note">入庫 → 收訂 → 付款方式（現金 / 貸款）→ 售出，全部在同一頁完成。</div>
+  </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <h3>新增 / 編輯車輛</h3><div class="small-note" style="margin-bottom:10px">✔ 寄賣＝填目前車主<br>✔ 調做＝填車行名稱<br>✔ 公司車＝不用填過戶人頭</div>
-            <div class="hint">
-              建立入庫時，不必先填售出資訊。<br>
-              上架車輛至少要有 2 張照片：車輛照片 + 行照照片。<br>
-              整備項目格式請使用「名稱:金額」，一行一筆，例如：烤漆:3000。<br>
-              入庫類型若為「寄賣 / 調作」則不計稅。
-            </div>
-            <input type="hidden" id="editId">
-            <div class="form-grid">
-              <div>
-                <label>入庫類型 *（公司/寄賣/調做）</label>
-                <select id="entryType">
-                  <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
-                  <option value="鴻豪汽車商行">鴻豪汽車商行</option>
-                  <option value="寄賣">寄賣</option>
-                  <option value="調作">調作</option>
-                </select>
-              </div>
-              <div><label>品牌 *</label><input id="brand" placeholder="例如 BMW"></div>
-              <div><label>車輛型號 *</label><input id="model" placeholder="例如 318TIA"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>新增 / 編輯車輛</h3>
+      <div class="small-note" style="margin-bottom:12px">公司車不需填過戶人頭；寄賣請填目前車主；調做請填車行名稱。</div>
+      <input type="hidden" id="editId">
 
-              <div><label>車牌號碼 *</label><input id="plate" placeholder="例如 YM-1025"></div>
-              <div><label>車年份 *</label><input id="year" type="number" placeholder="例如 1995"></div>
-              <div><label>過戶人頭 *</label><input id="transferName" placeholder="例如 鴻翊汽車"></div>
+      <div class="full" style="margin-bottom:12px">
+        <label>入庫公司 / 類型 *</label>
+        <div class="entry-type-wrap" id="entryTypeWrap">
+          <button type="button" class="entry-btn active" data-value="屏東鴻翊汽車">屏東鴻翊汽車</button>
+          <button type="button" class="entry-btn" data-value="鴻豪汽車商行">鴻豪汽車商行</button>
+          <button type="button" class="entry-btn" data-value="寄賣">寄賣</button>
+          <button type="button" class="entry-btn" data-value="調做">調做</button>
+        </div>
+        <input type="hidden" id="entryType" value="屏東鴻翊汽車">
+      </div>
 
-              <div><label>買入人 *
-<select>
-<option>金恩（獨買）</option>
-<option>葉咨廷</option>
-<option>陳柏誠</option>
-<option>許晟豪</option>
-<option>吳俊廷</option>
-<option>劉家瑋</option>
-<option>林家旻</option>
-<option>吳宥勳</option>
-<option>吳七一</option>
-<option>林宥甫</option>
-<option>劉穎</option>
-<option>蔡冠宇</option>
-<option>鄭宜隆</option>
-<option>蕭宇廷</option>
-</select></div>
-              <div><label>買入金額 *</label><input id="buyAmount" type="number" placeholder="例如 100000"></div>
-              <div><label>公司調作金額</label><input id="companyAdjust" type="number" placeholder="沒有可留空，預設 0"></div>
-
-              <div><label>發票稅率 (%)（固定）</label><input id="invoiceTaxRate" type="number" step="0.001" value="5" readonly></div>
-              <div><label>營業稅率 (%)（固定）</label><input id="businessTaxRate" type="number" step="0.001" value="1.2" readonly></div>
-              <div><label>整備項目筆數</label><input id="repairCount" disabled></div>
-
-              <div class="full"><label>整備項目（每行一筆：名稱:金額）</label><textarea id="repairItems" placeholder="過戶一:1641&#10;認證:35540&#10;歐德:8000"></textarea></div>
-
-              <div><label>車輛照片 *</label><input id="carPhotoInput" type="file" accept="image/*"></div>
-              <div><label>行照照片 *</label><input id="licensePhotoInput" type="file" accept="image/*"></div>
-              <div><label>整備總額預覽</label><input id="repairPreviewTotal" disabled></div>
-
-              <div class="full"><label>備註</label><input id="note" placeholder="例如 檢驗日期、保險、收藏"></div>
-              <div class="full"><div class="photo-grid" id="createPhotoPreview"></div></div>
-            </div>
-            <div class="actions">
-              <button class="primary" onclick="saveVehicle()">儲存入庫</button>
-              <button class="secondary" onclick="resetVehicleForm()">清空表單</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>
+      <div class="form-grid">
+        <div>
+          <label>品牌 *</label>
+          <input id="brand" placeholder="例如 BMW">
+        </div>
+        <div>
+          <label>車輛型號 *</label>
+          <input id="model" placeholder="例如 318TIA">
         </div>
 
-        <div class="card" style="margin-top:16px">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <h3 style="margin:0">在庫車輛列表</h3>
-              <input id="searchInput" class="search" placeholder="搜尋品牌 / 型號 / 車牌 / 人名" oninput="renderVehicles()">
-            </div>
-            <div class="toolbar-right">
-              <div class="view-toggle">
-                <button id="tableViewBtn" class="primary" onclick="setVehicleView('table')">表格檢視</button>
-                <button id="cardViewBtn" class="secondary" onclick="setVehicleView('card')">卡片檢視</button>
-              </div>
-            </div>
-          </div>
-          <div id="tableView" class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>台數</th>
-                  <th>入庫類型</th>
-                  <th>品牌</th>
-                  <th>型號</th>
-                  <th>車牌</th>
-                  <th>買入金額</th>
-                  <th>整備總額</th>
-                  <th>售出金額</th>
-                  <th>調作金額</th>
-                  <th>發票稅</th>
-                  <th>營業稅</th>
-                  <th>利潤</th>
-                  <th>KPI利潤</th>
-                  <th>照片</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="vehicleTableBody"></tbody>
-            </table>
-          </div>
-          <div id="cardView" class="cards-wrap" style="display:none"></div>
+        <div>
+          <label>車牌號碼 *</label>
+          <input id="plate" placeholder="例如 YM-1025">
         </div>
-      </section>
+        <div>
+          <label>車年份 *</label>
+          <input id="year" type="number" placeholder="例如 1995">
+        </div>
+
+        <div id="transferField" class="full hidden-field">
+          <label id="transferLabel">過戶人頭 / 車主名稱 *</label>
+          <input id="transferName" placeholder="寄賣請填車主，調做請填車行名稱">
+        </div>
+
+        <div>
+          <label>買入人 *</label>
+          <select id="buyerPerson">
+            <option value="金恩（獨買）">金恩（獨買）</option>
+            <option value="葉咨廷">葉咨廷</option>
+            <option value="陳柏誠">陳柏誠</option>
+            <option value="許晟豪">許晟豪</option>
+            <option value="吳俊廷">吳俊廷</option>
+            <option value="劉家瑋">劉家瑋</option>
+            <option value="林家旻">林家旻</option>
+            <option value="吳宥勳">吳宥勳</option>
+            <option value="吳七一">吳七一</option>
+            <option value="林宥甫">林宥甫</option>
+            <option value="劉穎">劉穎</option>
+            <option value="蔡冠宇">蔡冠宇</option>
+            <option value="鄭宜隆">鄭宜隆</option>
+            <option value="蕭宇廷">蕭宇廷</option>
+          </select>
+        </div>
+        <div>
+          <label>買入金額 *</label>
+          <input id="buyAmount" type="number" placeholder="例如 100000">
+        </div>
+
+        <div>
+          <label>公司調作金額</label>
+          <input id="companyAdjust" type="number" placeholder="沒有可留空，預設 0">
+        </div>
+        <div>
+          <label>整備項目筆數</label>
+          <input id="repairCount" readonly>
+        </div>
+
+        <div>
+          <label>發票稅率 (%)（固定）</label>
+          <input id="invoiceTaxRate" value="5" readonly>
+        </div>
+        <div>
+          <label>營業稅率 (%)（固定）</label>
+          <input id="businessTaxRate" value="1.2" readonly>
+        </div>
+
+        <div class="full">
+          <label>整備項目（每行一筆：名稱:金額）</label>
+          <textarea id="repairItems" placeholder="過戶一:1641&#10;認證:35540&#10;歐德:8000"></textarea>
+        </div>
+
+        <div>
+          <label>車輛照片 *</label>
+          <input id="carPhotoInput" type="file" accept="image/*">
+        </div>
+        <div>
+          <label>行照照片 *</label>
+          <input id="licensePhotoInput" type="file" accept="image/*">
+        </div>
+
+        <div class="full">
+          <label>備註</label>
+          <input id="note" placeholder="例如 檢驗日期、保險、收藏">
+        </div>
+      </div>
+
+      <div class="sub-card hidden-field" id="depositSection">
+        <h3 style="font-size:20px">收訂資訊</h3>
+        <div class="form-grid">
+          <div>
+            <label>是否收訂</label>
+            <select id="hasDeposit">
+              <option value="未收訂">未收訂</option>
+              <option value="已收訂">已收訂</option>
+            </select>
+          </div>
+          <div>
+            <label>收訂金額</label>
+            <input id="depositAmount" type="number" placeholder="例如 30000">
+          </div>
+          <div>
+            <label>收訂照片</label>
+            <input id="depositPhoto" type="file" accept="image/*">
+          </div>
+          <div>
+            <label>款項位置</label>
+            <select id="depositAccount">
+              <option value="">請選擇</option>
+              <option value="公司帳戶">公司帳戶</option>
+              <option value="個人帳戶">個人帳戶</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card hidden-field" id="paymentSection">
+        <h3 style="font-size:20px">付款方式</h3>
+        <div class="form-grid">
+          <div>
+            <label>付款方式</label>
+            <select id="paymentType">
+              <option value="">請選擇</option>
+              <option value="現金">現金</option>
+              <option value="貸款">貸款</option>
+            </select>
+          </div>
+          <div>
+            <label>貸款公司</label>
+            <input id="loanCompany" placeholder="如現金可留空">
+          </div>
+          <div>
+            <label>貸款業務</label>
+            <select id="loanAgent">
+              <option value="">請選擇</option>
+              <option value="中租怡婷">中租怡婷</option>
+              <option value="裕融若榛">裕融若榛</option>
+              <option value="和潤子豪">和潤子豪</option>
+              <option value="和潤萱宇">和潤萱宇</option>
+              <option value="匯豐仕謙">匯豐仕謙</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div id="loanOtherWrap" class="hidden-field">
+            <label>其他貸款業務</label>
+            <input id="loanAgentOther" placeholder="手動填寫">
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card hidden-field" id="soldSection">
+        <h3 style="font-size:20px">售出資料</h3>
+        <div class="form-grid">
+          <div>
+            <label>是否售出</label>
+            <select id="soldStatus">
+              <option value="未售出">未售出</option>
+              <option value="已售出">已售出</option>
+            </select>
+          </div>
+          <div>
+            <label>售出業務</label>
+            <select id="sellerPerson">
+              <option value="">請選擇</option>
+              <option value="葉咨廷">葉咨廷</option>
+              <option value="陳柏誠">陳柏誠</option>
+              <option value="許晟豪">許晟豪</option>
+              <option value="吳俊廷">吳俊廷</option>
+              <option value="劉家瑋">劉家瑋</option>
+              <option value="林家旻">林家旻</option>
+              <option value="吳宥勳">吳宥勳</option>
+              <option value="吳七一">吳七一</option>
+              <option value="林宥甫">林宥甫</option>
+              <option value="劉穎">劉穎</option>
+              <option value="蔡冠宇">蔡冠宇</option>
+              <option value="鄭宜隆">鄭宜隆</option>
+              <option value="蕭宇廷">蕭宇廷</option>
+            </select>
+          </div>
+
+          <div>
+            <label>新車主</label>
+            <input id="newOwner" placeholder="例如 王小明">
+          </div>
+          <div>
+            <label>新車主行照</label>
+            <input id="newOwnerLicensePhoto" type="file" accept="image/*">
+          </div>
+
+          <div>
+            <label>公司底價</label>
+            <input id="companyFloorPrice" type="number" placeholder="例如 300000">
+          </div>
+          <div>
+            <label>售出金額</label>
+            <input id="sellAmount" type="number" placeholder="例如 350000">
+          </div>
+        </div>
+      </div>
+
+      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
+        <button class="primary" type="button" id="saveVehicleBtn">儲存入庫</button>
+        <button class="secondary" type="button" id="resetVehicleBtn">清空表單</button>
+      </div>
+      <div id="formHint" class="small-note" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h3>資料總覽</h3>
+      <div class="small-note">這裡會顯示整備總額、稅金、利潤，以及目前金流與業績累積。</div>
+      <div class="photo-grid" id="previewPhotos"></div>
+      <div id="overviewBox" class="list-box" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>已儲存車輛</h3>
+    <div id="savedVehicleInner" class="list-box"></div>
+  </div>
+</section>
+
 
       <section id="panel-cost" class="panel">
         <div class="card" style="margin-bottom:14px">
@@ -734,7 +916,7 @@
               <div class="full"><label>公告標題 *</label><input id="announcementTitle" placeholder="例如：本週貸款案件資料補齊規範"></div>
               <div class="full"><label>公告內容 *</label><textarea id="announcementContent" placeholder="輸入公告內容..."></textarea></div>
             </div>
-            <div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
+            <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
           </div>
           <div class="card">
             <h3>公告列表</h3>
@@ -743,22 +925,24 @@
         </div>
       </section>
 
-      <section id="panel-performance" class="panel">
-        <div class="card">
-          <h3>公司業績排行</h3>
-          <div class="small-note" style="margin-bottom:12px">這裡整合台數排行與 KPI 利潤排行。若還沒資料，代表尚未建立售出紀錄。</div>
-          <div class="grid-2">
-            <div>
-              <h3 style="font-size:20px">台數排行</h3>
-              <div id="rankCountBox" class="list-box"></div>
-            </div>
-            <div>
-              <h3 style="font-size:20px">KPI 排行</h3>
-              <div id="rankKpiBox" class="list-box"></div>
-            </div>
-          </div>
-        </div>
-      </section>
+      
+<section id="panel-performance" class="panel">
+  <div class="card">
+    <h3>公司業績排行</h3>
+    <div class="small-note" style="margin-bottom:12px">整合台數排行與 KPI 利潤排行。售出後會自動併入排行。</div>
+    <div class="grid-2">
+      <div>
+        <h3 style="font-size:20px">台數排行</h3>
+        <div id="rankCountBox" class="list-box"></div>
+      </div>
+      <div>
+        <h3 style="font-size:20px">KPI 排行</h3>
+        <div id="rankKpiBox" class="list-box"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       <section id="panel-people" class="panel">
         <div class="card" style="margin-bottom:14px">
@@ -794,7 +978,7 @@
               </div>
               <div class="full"><label>備註</label><input id="employeeNote" placeholder="例如 負責貸款案件 / 等待 LINE 綁定"></div>
             </div>
-            <div class="actions">
+            <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
               <button class="primary" onclick="saveEmployee()">儲存員工</button>
               <button class="secondary" onclick="resetEmployeeForm()">清空</button>
             </div>
@@ -819,7 +1003,7 @@
         <div><label>售出金額 *</label><input id="saleSellAmount" type="number" placeholder="例如 280000"></div>
         <div><label>售出日期 *</label><input id="saleDate" type="date"></div>
       </div>
-      <div class="actions">
+      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
         <button class="success" onclick="saveSaleInfo()">儲存售出資料</button>
         <button class="secondary" onclick="closeSaleModal()">取消</button>
       </div>
@@ -830,7 +1014,7 @@
     <div class="modal-content">
       <h3>照片查看</h3>
       <div class="photo-grid" id="photosModalGrid"></div>
-      <div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
+      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
     </div>
   </div>
 
@@ -840,7 +1024,7 @@
       <div class="image-preview-wrap">
         <img id="imagePreviewTarget" src="" alt="放大照片" onclick="closeImagePreview()">
       </div>
-      <div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
+      <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
     </div>
   </div>
 
@@ -1243,7 +1427,7 @@
               <div class="car-line">買入金額：${fmtNum(x.buyAmount)} ｜ 整備總額：${fmtNum(x.repairTotal)}</div>
               <div class="car-line">調作金額：${fmtNum(x.companyAdjust)} ｜ 預估利潤：<span class="${x.profit >= 0 ? "good":"bad"}">${fmtNum(x.profit)}</span></div>
               <div class="car-line">整備項目：${repairText || "—"}</div>
-              <div class="actions">
+              <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">
                 <button class="mini-btn secondary" onclick="showPhotos('${x.id}')">照片</button>
                 <button class="mini-btn secondary" onclick="editVehicle('${x.id}')">編輯入庫</button>
                 <button class="mini-btn success" onclick="openSaleModal('${x.id}')">後續售出</button>
@@ -1384,7 +1568,7 @@
           </div>
           <div style="margin-top:10px;line-height:1.9;font-size:16px">${a.content}</div>
           <div class="small-note" style="margin-top:10px">已讀人數：${(a.readBy || []).length}</div>
-          <div class="actions">${readButtons || '<span class="small-note">請先建立員工資料後再標記已讀</span>'}</div>
+          <div class="small-note" id="afterCreateHint" style="margin-top:14px">請先儲存入庫資料，儲存完成後才會開啟：收訂資訊、付款方式、售出資料。</div><div class="actions">${readButtons || '<span class="small-note">請先建立員工資料後再標記已讀</span>'}</div>
         </div>`;
       });
     }
@@ -1709,5 +1893,388 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 });
 </script>
+
+
+
+
+<script>
+(function(){
+  const INVENTORY_KEY = 'hongyi_inventory_records_v2';
+  const CREATED_FLAG_KEY = 'hongyi_vehicle_created_flag_v1';
+  const SALES_KEY = 'hongyi_sales_records_v2';
+  const MONEY_KEY = 'hongyi_money_records_v2';
+
+  function $(id){ return document.getElementById(id); }
+  function q(sel){ return document.querySelector(sel); }
+  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+  function toast(msg){
+    let t = $('saveToast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'saveToast';
+      t.className = 'save-toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function getJSON(key){
+    try{ return JSON.parse(localStorage.getItem(key) || '[]'); }
+    catch(e){ return []; }
+  }
+  function setJSON(key, val){
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+
+  function readFile(file){
+    return new Promise((resolve,reject)=>{
+      if(!file){ resolve(''); return; }
+      const r = new FileReader();
+      r.onload = ()=>resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function parseRepairTotal(){
+    const txt = $('repairItems').value || '';
+    const rows = txt.split(/\n+/).filter(Boolean);
+    let total = 0;
+    rows.forEach(line=>{
+      const parts = line.split(':');
+      if(parts.length >= 2){
+        total += Number(parts.slice(1).join(':').replace(/,/g,'').trim()) || 0;
+      }
+    });
+    $('repairCount').value = rows.length;
+    return total;
+  }
+
+  function updateTransferField(){
+    const entry = $('entryType').value;
+    const wrap = $('transferField');
+    const label = $('transferLabel');
+    const input = $('transferName');
+
+    if(entry === '寄賣'){
+      wrap.classList.remove('hidden-field');
+      label.textContent = '目前車主 *';
+      input.placeholder = '請輸入目前車主';
+      input.value = '';
+      input.readOnly = false;
+    }else if(entry === '調做'){
+      wrap.classList.remove('hidden-field');
+      label.textContent = '車行名稱 *';
+      input.placeholder = '請輸入車行名稱';
+      input.value = '';
+      input.readOnly = false;
+    }else{
+      wrap.classList.add('hidden-field');
+      input.value = entry;
+      input.readOnly = true;
+    }
+    updateOverview();
+  }
+
+  function setEntryType(value){
+    $('entryType').value = value;
+    qa('.entry-btn').forEach(b=>b.classList.toggle('active', b.dataset.value === value));
+    updateTransferField();
+  }
+
+
+  function setWorkflowVisible(visible){
+    ['depositSection','paymentSection','soldSection'].forEach(function(id){
+      var el = $(id);
+      if(el) el.classList.toggle('hidden-field', !visible);
+    });
+    var hint = $('afterCreateHint');
+    if(hint) hint.style.display = visible ? 'none' : 'block';
+  }
+
+  function updateLoanOther(){
+    $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
+  }
+
+  function calcTaxesAndProfit(){
+    const entry = $('entryType').value;
+    const buy = Number($('buyAmount').value || 0);
+    const adjust = Number($('companyAdjust').value || 0);
+    const repairTotal = parseRepairTotal();
+    const sell = Number($('sellAmount').value || 0);
+    const invoiceRate = Number($('invoiceTaxRate').value || 5) / 100;
+    const businessRate = Number($('businessTaxRate').value || 1.2) / 100;
+    const taxable = entry === '屏東鴻翊汽車' || entry === '鴻豪汽車商行';
+
+    let invoiceTax = 0;
+    let businessTax = 0;
+    if(taxable && sell > 0){
+      const baseProfit = sell - (buy + repairTotal);
+      invoiceTax = Math.max(baseProfit, 0) * invoiceRate;
+      businessTax = sell * businessRate;
+    }
+    const profit = sell > 0 ? sell - buy - repairTotal - invoiceTax - businessTax + adjust : 0;
+    return {buy, adjust, repairTotal, sell, taxable, invoiceTax, businessTax, profit};
+  }
+
+  function updateOverview(){
+    const calc = calcTaxesAndProfit();
+    const box = $('overviewBox');
+    box.innerHTML = `
+      <div class="row-line"><div><strong>入庫類型</strong></div><div><span class="pill">${$('entryType').value}</span></div></div>
+      <div class="row-line"><div><strong>買入金額</strong></div><div><span class="pill">${calc.buy.toLocaleString('zh-TW')}</span></div></div>
+      <div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${calc.repairTotal.toLocaleString('zh-TW')}</span></div></div>
+      <div class="row-line"><div><strong>公司調作金額</strong></div><div><span class="pill">${calc.adjust.toLocaleString('zh-TW')}</span></div></div>
+      <div class="row-line"><div><strong>是否計稅</strong></div><div><span class="pill">${calc.taxable ? '需要計稅' : '不計稅'}</span></div></div>
+      <div class="row-line"><div><strong>發票稅</strong></div><div><span class="pill">${Math.round(calc.invoiceTax).toLocaleString('zh-TW')}</span></div></div>
+      <div class="row-line"><div><strong>營業稅</strong></div><div><span class="pill">${Math.round(calc.businessTax).toLocaleString('zh-TW')}</span></div></div>
+      <div class="row-line"><div><strong>預估利潤</strong></div><div><span class="pill">${Math.round(calc.profit).toLocaleString('zh-TW')}</span></div></div>
+    `;
+  }
+
+  async function updatePreviewPhotos(){
+    const grid = $('previewPhotos');
+    grid.innerHTML = '';
+    const car = $('carPhotoInput').files[0];
+    const lic = $('licensePhotoInput').files[0];
+    if(car){
+      const d = await readFile(car);
+      grid.innerHTML += `<div class="photo-box"><img src="${d}"><div class="cap">車輛照片</div></div>`;
+    }
+    if(lic){
+      const d = await readFile(lic);
+      grid.innerHTML += `<div class="photo-box"><img src="${d}"><div class="cap">行照照片</div></div>`;
+    }
+  }
+
+  function renderInventory(){
+    const rows = getJSON(INVENTORY_KEY);
+    const inner = $('savedVehicleInner');
+    if(!inner) return;
+    if(rows.length === 0){
+      inner.innerHTML = '<div class="small-note">目前還沒有資料</div>';
+      return;
+    }
+    inner.innerHTML = rows.map(r=>`
+      <div class="record-row">
+        <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+      </div>
+    `).join('');
+  }
+
+  function renderSoldHistory(){
+    const rows = getJSON(SALES_KEY);
+    if($('soldListBox')){
+      $('soldListBox').innerHTML = rows.length ? rows.map(r=>`
+        <div class="row-line">
+          <div>
+            <strong style="font-size:19px">${r.brand} ${r.model}</strong>
+            <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出業務：${r.sellerPerson} ｜ 新車主：${r.newOwner || '—'}</div>
+          </div>
+          <div>
+            <span class="pill">售出 ${Number(r.sellAmount).toLocaleString('zh-TW')}</span>
+            <span class="pill">利潤 ${Math.round(r.profit).toLocaleString('zh-TW')}</span>
+          </div>
+        </div>
+      `).join('') : '<div class="empty">目前沒有已售資料</div>';
+    }
+    if($('soldSellerSummary')){
+      const map = {};
+      rows.forEach(r=>{ map[r.sellerPerson] = (map[r.sellerPerson] || 0) + 1; });
+      const arr = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+      $('soldSellerSummary').innerHTML = arr.length ? arr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+    }
+  }
+
+  function renderPerformance(){
+    const rows = getJSON(SALES_KEY);
+    const countMap = {};
+    const profitMap = {};
+    rows.forEach(r=>{
+      if(r.sellerPerson){
+        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
+        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
+      }
+    });
+    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
+    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
+
+    if($('rankCountBox')){
+      $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    }
+    if($('rankKpiBox')){
+      $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${Math.round(v).toLocaleString('zh-TW')}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    }
+  }
+
+  function resetForm(){
+    $('brand').value = '';
+    $('model').value = '';
+    $('plate').value = '';
+    $('year').value = '';
+    $('transferName').value = '';
+    $('buyerPerson').value = '金恩（獨買）';
+    $('buyAmount').value = '';
+    $('companyAdjust').value = '';
+    $('repairItems').value = '';
+    $('repairCount').value = '';
+    $('carPhotoInput').value = '';
+    $('licensePhotoInput').value = '';
+    $('note').value = '';
+
+    $('hasDeposit').value = '未收訂';
+    $('depositAmount').value = '';
+    $('depositPhoto').value = '';
+    $('depositAccount').value = '';
+
+    $('paymentType').value = '';
+    $('loanCompany').value = '';
+    $('loanAgent').value = '';
+    $('loanAgentOther').value = '';
+    updateLoanOther();
+
+    $('soldStatus').value = '未售出';
+    $('sellerPerson').value = '';
+    $('newOwner').value = '';
+    $('newOwnerLicensePhoto').value = '';
+    $('companyFloorPrice').value = '';
+    $('sellAmount').value = '';
+
+    setEntryType('屏東鴻翊汽車');
+    $('previewPhotos').innerHTML = '';
+    $('formHint').textContent = '';
+    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
+    updateOverview();
+  }
+
+  async function saveVehicle(){
+    const entryType = $('entryType').value;
+    if(!$('brand').value.trim()) return toast('請填品牌');
+    if(!$('model').value.trim()) return toast('請填車輛型號');
+    if(!$('plate').value.trim()) return toast('請填車牌號碼');
+    if(!$('year').value.trim()) return toast('請填車年份');
+    if((entryType === '寄賣' || entryType === '調做') && !$('transferName').value.trim()) return toast('請填寫對應人頭資料');
+    if(!$('buyAmount').value.trim()) return toast('請填買入金額');
+
+    if($('hasDeposit').value === '已收訂'){
+      if(!$('depositAmount').value.trim()) return toast('已收訂時請填收訂金額');
+      if(!$('depositAccount').value.trim()) return toast('已收訂時請選款項位置');
+      if(!$('depositPhoto').files[0]) return toast('已收訂時請上傳收訂照片');
+    }
+
+    if($('soldStatus').value === '已售出'){
+      if(!$('paymentType').value) return toast('售出前請選付款方式（現金或貸款）');
+      if($('paymentType').value === '貸款'){
+        if(!$('loanCompany').value.trim()) return toast('貸款件請填貸款公司');
+        if(!$('loanAgent').value.trim()) return toast('貸款件請選貸款業務');
+        if($('loanAgent').value === '其他' && !$('loanAgentOther').value.trim()) return toast('請填寫其他貸款業務');
+      }
+      if(!$('sellerPerson').value.trim()) return toast('已售出請選售出業務');
+      if(!$('sellAmount').value.trim()) return toast('已售出請填售出金額');
+    }
+
+    const carPhoto = await readFile($('carPhotoInput').files[0]);
+    const licensePhoto = await readFile($('licensePhotoInput').files[0]);
+    const depositPhoto = await readFile($('depositPhoto').files[0]);
+    const newOwnerLicensePhoto = await readFile($('newOwnerLicensePhoto').files[0]);
+
+    const calc = calcTaxesAndProfit();
+    const record = {
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      entryType,
+      brand: $('brand').value.trim(),
+      model: $('model').value.trim(),
+      plate: $('plate').value.trim(),
+      year: $('year').value.trim(),
+      transferName: (entryType === '寄賣' || entryType === '調做') ? $('transferName').value.trim() : entryType,
+      buyerPerson: $('buyerPerson').value.trim(),
+      buyAmount: Number($('buyAmount').value) || 0,
+      companyAdjust: Number($('companyAdjust').value) || 0,
+      invoiceTaxRate: 5,
+      businessTaxRate: 1.2,
+      repairItems: $('repairItems').value,
+      repairTotal: calc.repairTotal,
+      note: $('note').value.trim(),
+      carPhoto,
+      licensePhoto,
+      hasDeposit: $('hasDeposit').value,
+      depositAmount: Number($('depositAmount').value) || 0,
+      depositPhoto,
+      depositAccount: $('depositAccount').value,
+      paymentType: $('paymentType').value,
+      loanCompany: $('loanCompany').value.trim(),
+      loanAgent: $('loanAgent').value === '其他' ? $('loanAgentOther').value.trim() : $('loanAgent').value,
+      soldStatus: $('soldStatus').value,
+      sellerPerson: $('sellerPerson').value,
+      newOwner: $('newOwner').value.trim(),
+      newOwnerLicensePhoto,
+      companyFloorPrice: Number($('companyFloorPrice').value) || 0,
+      sellAmount: Number($('sellAmount').value) || 0,
+      invoiceTax: calc.invoiceTax,
+      businessTax: calc.businessTax,
+      profit: calc.profit,
+      status: $('soldStatus').value === '已售出' ? '已售' : '在庫'
+    };
+
+    const rows = getJSON(INVENTORY_KEY);
+    rows.unshift(record);
+    setJSON(INVENTORY_KEY, rows);
+
+    if(record.soldStatus === '已售出'){
+      const sales = getJSON(SALES_KEY);
+      sales.unshift(record);
+      setJSON(SALES_KEY, sales);
+
+      // 金流簡單累積
+      const money = getJSON(MONEY_KEY);
+      money.push({
+        time: record.createdAt,
+        type: record.depositAccount || '未指定',
+        amount: record.depositAmount || 0,
+        plate: record.plate
+      });
+      setJSON(MONEY_KEY, money);
+    }
+
+    localStorage.setItem(CREATED_FLAG_KEY, '1');
+    setWorkflowVisible(true);
+    renderInventory();
+    renderSoldHistory();
+    renderPerformance();
+    toast('車輛已儲存，已開啟收訂 / 付款 / 售出流程');
+    resetForm();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    qa('.entry-btn').forEach(btn=>{
+      btn.addEventListener('click', function(){ setEntryType(btn.dataset.value); });
+    });
+
+    $('repairItems').addEventListener('input', updateOverview);
+    $('buyAmount').addEventListener('input', updateOverview);
+    $('companyAdjust').addEventListener('input', updateOverview);
+    $('sellAmount').addEventListener('input', updateOverview);
+    $('carPhotoInput').addEventListener('change', updatePreviewPhotos);
+    $('licensePhotoInput').addEventListener('change', updatePreviewPhotos);
+    $('loanAgent').addEventListener('change', updateLoanOther);
+    $('saveVehicleBtn').addEventListener('click', saveVehicle);
+    $('resetVehicleBtn').addEventListener('click', resetForm);
+
+    setEntryType('屏東鴻翊汽車');
+    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
+    updateLoanOther();
+    updateOverview();
+    renderInventory();
+    renderSoldHistory();
+    renderPerformance();
+  });
+})();
+</script>
+
 </body>
 </html>
