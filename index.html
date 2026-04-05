@@ -785,6 +785,10 @@
           <label>整備項目筆數</label>
           <input id="repairCount" readonly>
         </div>
+        <div>
+          <label>整備總額</label>
+          <input id="repairPreviewTotal" readonly>
+        </div>
 
         <div>
           <label>發票稅率 (%)（固定）</label>
@@ -3044,6 +3048,70 @@ function renderInventory(){
     <div id="flowModalBody"></div>
   </div>
 </div>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function fmtMoney(n){
+    return (Number(n) || 0).toLocaleString('zh-TW');
+  }
+
+  function getRepairRows(){
+    if (Array.isArray(window.repairData)) return window.repairData;
+    return [];
+  }
+
+  function refreshRepairTotalOnly(){
+    const rows = getRepairRows();
+    const total = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+    if ($('repairCount')) $('repairCount').value = rows.length;
+    if ($('repairPreviewTotal')) $('repairPreviewTotal').value = fmtMoney(total);
+    if ($('repairItems')) {
+      $('repairItems').value = rows.map(r => `${r.date || ''} ${r.name}:${r.amount}`).join("\n");
+    }
+    return total;
+  }
+
+  // Wrap the existing renderRepairList so every add/delete immediately同步整備總額
+  function patchRenderRepairList(){
+    if (typeof window.renderRepairList !== 'function') return false;
+    if (window.__repairListPatched__) return true;
+
+    const original = window.renderRepairList;
+    window.renderRepairList = function(){
+      const result = original.apply(this, arguments);
+      refreshRepairTotalOnly();
+      return result;
+    };
+    window.__repairListPatched__ = true;
+    return true;
+  }
+
+  function patchSaveVehicleNew(){
+    if (typeof window.saveVehicleNew !== 'function') return false;
+    if (window.__saveVehicleNewPatched__) return true;
+
+    const original = window.saveVehicleNew;
+    window.saveVehicleNew = async function(){
+      refreshRepairTotalOnly();
+      return await original.apply(this, arguments);
+    };
+    window.__saveVehicleNewPatched__ = true;
+    return true;
+  }
+
+  function bootRepairPatch(){
+    patchRenderRepairList();
+    patchSaveVehicleNew();
+    refreshRepairTotalOnly();
+  }
+
+  document.addEventListener('DOMContentLoaded', bootRepairPatch);
+  window.addEventListener('load', bootRepairPatch);
+})();
+</script>
 
 </body>
 </html>
