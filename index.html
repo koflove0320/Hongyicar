@@ -575,6 +575,29 @@
 }
 </style>
 
+
+<style>
+.repair-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border:1px solid #eee;
+  border-radius:14px;
+  background:#fff;
+}
+.repair-row .meta{font-size:14px;color:#314055;line-height:1.6}
+.repair-row .amt{font-weight:900;color:#ff7a00}
+.entry-btn.active{
+  background:linear-gradient(180deg,#ff8a00,#ff6a00) !important;
+  color:#fff !important;
+  border-color:#ff6a00 !important;
+  box-shadow:0 8px 18px rgba(255,106,0,.22) !important;
+  transform:translateY(-1px);
+}
+.hidden-field{display:none !important;}
+</style>
 </head>
 <body>
   <div class="app">
@@ -699,10 +722,32 @@
           <input id="businessTaxRate" value="1.2" readonly>
         </div>
 
-        <div class="full">
-          <label>整備項目（每行一筆：名稱:金額）</label>
-          <textarea id="repairItems" placeholder="過戶一:1641&#10;認證:35540&#10;歐德:8000"></textarea>
+        
+    <div class="full">
+      <label>整備項目</label>
+      <div class="repair-builder">
+        <div class="form-grid">
+          <div>
+            <label style="font-size:13px">時間</label>
+            <input id="repairDate" type="date">
+          </div>
+          <div>
+            <label style="font-size:13px">項目</label>
+            <input id="repairName" placeholder="例如 烤漆">
+          </div>
+          <div>
+            <label style="font-size:13px">金額</label>
+            <input id="repairAmount" type="number" placeholder="例如 3000">
+          </div>
+          <div style="display:flex;align-items:end">
+            <button class="secondary" type="button" id="addRepairBtn" style="width:100%">新增整備項目</button>
+          </div>
         </div>
+        <div id="repairList" class="list-box" style="margin-top:10px"></div>
+      </div>
+      <textarea id="repairItems" style="display:none"></textarea>
+    </div>
+    
 
         <div>
           <label>車輛照片 *</label>
@@ -2248,6 +2293,351 @@ document.addEventListener("DOMContentLoaded", function(){
     setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
     updateLoanOther();
     updateOverview();
+    renderInventory();
+    renderSoldHistory();
+    renderPerformance();
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const INVENTORY_KEY = 'hongyi_inventory_records_v3';
+  const SALES_KEY = 'hongyi_sales_records_v3';
+  const MONEY_KEY = 'hongyi_money_records_v3';
+  const CREATED_FLAG_KEY = 'hongyi_vehicle_created_flag_v3';
+
+  function $(id){ return document.getElementById(id); }
+  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+  function toast(msg){
+    let t = $('saveToast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'saveToast';
+      t.style.cssText = 'position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:100000;opacity:0;transition:.2s;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>t.style.opacity='0', 1800);
+  }
+
+  function getJSON(key){
+    try{ return JSON.parse(localStorage.getItem(key) || '[]'); }
+    catch(e){ return []; }
+  }
+  function setJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+  function readFile(file){
+    return new Promise((resolve,reject)=>{
+      if(!file){ resolve(''); return; }
+      const r = new FileReader();
+      r.onload = ()=>resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function setWorkflowVisible(visible){
+    ['depositSection','paymentSection','soldSection'].forEach(id=>{
+      const el = $(id);
+      if(el) el.classList.toggle('hidden-field', !visible);
+    });
+    const hint = $('afterCreateHint');
+    if(hint) hint.style.display = visible ? 'none' : 'block';
+  }
+
+  function updateTransferField(){
+    const entry = $('entryType') ? $('entryType').value : '屏東鴻翊汽車';
+    const wrap = $('transferField');
+    const label = $('transferLabel');
+    const input = $('transferName');
+    if(!wrap || !label || !input) return;
+
+    if(entry === '寄賣'){
+      wrap.classList.remove('hidden-field');
+      label.textContent = '目前車主 *';
+      input.placeholder = '請輸入目前車主';
+      input.readOnly = false;
+      input.value = '';
+    }else if(entry === '調做'){
+      wrap.classList.remove('hidden-field');
+      label.textContent = '車行名稱 *';
+      input.placeholder = '請輸入車行名稱';
+      input.readOnly = false;
+      input.value = '';
+    }else{
+      wrap.classList.add('hidden-field');
+      input.value = entry;
+      input.readOnly = true;
+    }
+  }
+
+  function setEntryType(value){
+    if($('entryType')) $('entryType').value = value;
+    qa('.entry-btn').forEach(b=>b.classList.toggle('active', b.dataset.value === value));
+    updateTransferField();
+  }
+
+  let repairData = [];
+
+  function syncRepairHidden(){
+    const hidden = $('repairItems');
+    if(hidden){
+      hidden.value = repairData.map(r => `${r.date || ''} ${r.name}:${r.amount}`).join("\n");
+    }
+    if($('repairCount')) $('repairCount').value = repairData.length;
+  }
+
+  function renderRepairList(){
+    const box = $('repairList');
+    if(!box) return;
+    if(repairData.length === 0){
+      box.innerHTML = '<div class="small-note">目前還沒有整備項目</div>';
+      syncRepairHidden();
+      return;
+    }
+    box.innerHTML = repairData.map((r, idx)=>`
+      <div class="repair-row">
+        <div class="meta">${r.date || '未填日期'}｜${r.name}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="amt">${Number(r.amount).toLocaleString('zh-TW')}</div>
+          <button type="button" class="danger mini-btn" data-repair-del="${idx}">刪除</button>
+        </div>
+      </div>
+    `).join('');
+    syncRepairHidden();
+
+    qa('[data-repair-del]').forEach(btn=>{
+      btn.onclick = function(){
+        const idx = Number(btn.getAttribute('data-repair-del'));
+        repairData.splice(idx,1);
+        renderRepairList();
+      };
+    });
+  }
+
+  function parseRepairTotal(){
+    return repairData.reduce((sum, r)=>sum + (Number(r.amount) || 0), 0);
+  }
+
+  function addRepairItem(){
+    const date = $('repairDate') ? $('repairDate').value : '';
+    const name = $('repairName') ? $('repairName').value.trim() : '';
+    const amount = $('repairAmount') ? $('repairAmount').value.trim() : '';
+    if(!name) return toast('請填整備項目');
+    if(!amount) return toast('請填整備金額');
+    repairData.push({date, name, amount:Number(amount) || 0});
+    if($('repairDate')) $('repairDate').value = '';
+    if($('repairName')) $('repairName').value = '';
+    if($('repairAmount')) $('repairAmount').value = '';
+    renderRepairList();
+  }
+
+  function calcTaxesAndProfit(){
+    const entry = $('entryType') ? $('entryType').value : '';
+    const buy = Number($('buyAmount') ? $('buyAmount').value : 0) || 0;
+    const adjust = Number($('companyAdjust') ? $('companyAdjust').value : 0) || 0;
+    const sell = Number($('sellAmount') ? $('sellAmount').value : 0) || 0;
+    const repairTotal = parseRepairTotal();
+    const invoiceRate = 5 / 100;
+    const businessRate = 1.2 / 100;
+    const taxable = entry === '屏東鴻翊汽車' || entry === '鴻豪汽車商行';
+
+    let invoiceTax = 0;
+    let businessTax = 0;
+    if(taxable && sell > 0){
+      const baseProfit = sell - (buy + repairTotal);
+      invoiceTax = Math.max(baseProfit, 0) * invoiceRate;
+      businessTax = sell * businessRate;
+    }
+    const profit = sell > 0 ? sell - buy - repairTotal - invoiceTax - businessTax + adjust : 0;
+    return {buy, adjust, sell, repairTotal, taxable, invoiceTax, businessTax, profit};
+  }
+
+  function renderInventory(){
+    const rows = getJSON(INVENTORY_KEY);
+    const inner = $('savedVehicleInner');
+    if(!inner) return;
+    inner.innerHTML = rows.length ? rows.map(r=>`
+      <div class="record-row">
+        <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
+      </div>
+    `).join('') : '<div class="small-note">目前還沒有資料</div>';
+  }
+
+  function renderPerformance(){
+    const rows = getJSON(SALES_KEY);
+    const countMap = {};
+    const profitMap = {};
+    rows.forEach(r=>{
+      if(r.sellerPerson){
+        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
+        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
+      }
+    });
+    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
+    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
+
+    if($('rankCountBox')){
+      $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    }
+    if($('rankKpiBox')){
+      $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${Math.round(v).toLocaleString('zh-TW')}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    }
+  }
+
+  function renderSoldHistory(){
+    const rows = getJSON(SALES_KEY);
+    if($('soldListBox')){
+      $('soldListBox').innerHTML = rows.length ? rows.map(r=>`
+        <div class="row-line">
+          <div>
+            <strong style="font-size:19px">${r.brand} ${r.model}</strong>
+            <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出業務：${r.sellerPerson} ｜ 新車主：${r.newOwner || '—'}</div>
+          </div>
+          <div>
+            <span class="pill">售出 ${Number(r.sellAmount).toLocaleString('zh-TW')}</span>
+            <span class="pill">利潤 ${Math.round(r.profit).toLocaleString('zh-TW')}</span>
+          </div>
+        </div>
+      `).join('') : '<div class="empty">目前沒有已售資料</div>';
+    }
+  }
+
+  async function saveVehicleNew(){
+    const entryType = $('entryType') ? $('entryType').value : '';
+    if(!$('brand') || !$('brand').value.trim()) return toast('請填品牌');
+    if(!$('model') || !$('model').value.trim()) return toast('請填車輛型號');
+    if(!$('plate') || !$('plate').value.trim()) return toast('請填車牌號碼');
+    if(!$('year') || !$('year').value.trim()) return toast('請填車年份');
+    if((entryType === '寄賣' || entryType === '調做') && (!$('transferName') || !$('transferName').value.trim())) return toast('請填寫對應人頭資料');
+    if(!$('buyerPerson') || !$('buyerPerson').value.trim()) return toast('請選買入人');
+    if(!$('buyAmount') || !$('buyAmount').value.trim()) return toast('請填買入金額');
+    if(!$('carPhotoInput') || !$('carPhotoInput').files[0]) return toast('請上傳車輛照片');
+    if(!$('licensePhotoInput') || !$('licensePhotoInput').files[0]) return toast('請上傳行照照片');
+
+    if($('hasDeposit') && $('hasDeposit').value === '已收訂'){
+      if(!$('depositAmount').value.trim()) return toast('已收訂時請填收訂金額');
+      if(!$('depositAccount').value.trim()) return toast('已收訂時請選款項位置');
+      if(!$('depositPhoto').files[0]) return toast('已收訂時請上傳收訂照片');
+    }
+
+    if($('soldStatus') && $('soldStatus').value === '已售出'){
+      if(!$('paymentType').value) return toast('售出前請選付款方式');
+      if($('paymentType').value === '貸款'){
+        if(!$('loanCompany').value.trim()) return toast('貸款件請填貸款公司');
+        if(!$('loanAgent').value.trim()) return toast('貸款件請選貸款業務');
+        if($('loanAgent').value === '其他' && !$('loanAgentOther').value.trim()) return toast('請填寫其他貸款業務');
+      }
+      if(!$('sellerPerson').value.trim()) return toast('已售出請選售出業務');
+      if(!$('sellAmount').value.trim()) return toast('已售出請填售出金額');
+    }
+
+    const calc = calcTaxesAndProfit();
+    const record = {
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      entryType,
+      brand: $('brand').value.trim(),
+      model: $('model').value.trim(),
+      plate: $('plate').value.trim(),
+      year: $('year').value.trim(),
+      transferName: (entryType === '寄賣' || entryType === '調做') ? $('transferName').value.trim() : entryType,
+      buyerPerson: $('buyerPerson').value.trim(),
+      buyAmount: Number($('buyAmount').value) || 0,
+      companyAdjust: Number($('companyAdjust').value) || 0,
+      invoiceTaxRate: 5,
+      businessTaxRate: 1.2,
+      repairItems: repairData.slice(),
+      repairTotal: calc.repairTotal,
+      note: $('note').value.trim(),
+      carPhoto: await readFile($('carPhotoInput').files[0]),
+      licensePhoto: await readFile($('licensePhotoInput').files[0]),
+      hasDeposit: $('hasDeposit') ? $('hasDeposit').value : '未收訂',
+      depositAmount: $('depositAmount') ? Number($('depositAmount').value) || 0 : 0,
+      depositPhoto: $('depositPhoto') ? await readFile($('depositPhoto').files[0]) : '',
+      depositAccount: $('depositAccount') ? $('depositAccount').value : '',
+      paymentType: $('paymentType') ? $('paymentType').value : '',
+      loanCompany: $('loanCompany') ? $('loanCompany').value.trim() : '',
+      loanAgent: $('loanAgent') ? ($('loanAgent').value === '其他' ? $('loanAgentOther').value.trim() : $('loanAgent').value) : '',
+      soldStatus: $('soldStatus') ? $('soldStatus').value : '未售出',
+      sellerPerson: $('sellerPerson') ? $('sellerPerson').value : '',
+      newOwner: $('newOwner') ? $('newOwner').value.trim() : '',
+      newOwnerLicensePhoto: $('newOwnerLicensePhoto') ? await readFile($('newOwnerLicensePhoto').files[0]) : '',
+      companyFloorPrice: $('companyFloorPrice') ? Number($('companyFloorPrice').value) || 0 : 0,
+      sellAmount: $('sellAmount') ? Number($('sellAmount').value) || 0 : 0,
+      invoiceTax: calc.invoiceTax,
+      businessTax: calc.businessTax,
+      profit: calc.profit,
+      status: ($('soldStatus') && $('soldStatus').value === '已售出') ? '已售' : '在庫'
+    };
+
+    const inventory = getJSON(INVENTORY_KEY);
+    inventory.unshift(record);
+    setJSON(INVENTORY_KEY, inventory);
+
+    if(record.soldStatus === '已售出'){
+      const sales = getJSON(SALES_KEY);
+      sales.unshift(record);
+      setJSON(SALES_KEY, sales);
+    }
+
+    if(record.depositAmount > 0){
+      const money = getJSON(MONEY_KEY);
+      money.unshift({
+        time: record.createdAt,
+        type: record.depositAccount || '未指定',
+        amount: record.depositAmount,
+        plate: record.plate
+      });
+      setJSON(MONEY_KEY, money);
+    }
+
+    localStorage.setItem(CREATED_FLAG_KEY, '1');
+    setWorkflowVisible(true);
+    renderInventory();
+    renderSoldHistory();
+    renderPerformance();
+    toast('車輛已儲存');
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // hard-set tax values
+    if($('invoiceTaxRate')) { $('invoiceTaxRate').value = '5'; $('invoiceTaxRate').readOnly = true; }
+    if($('businessTaxRate')) { $('businessTaxRate').value = '1.2'; $('businessTaxRate').readOnly = true; }
+
+    // rebind save button
+    const oldBtn = $('saveVehicleBtn');
+    if(oldBtn){
+      const newBtn = oldBtn.cloneNode(true);
+      oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+      newBtn.addEventListener('click', saveVehicleNew);
+    }
+
+    const resetBtn = $('resetVehicleBtn');
+    if(resetBtn){
+      const newReset = resetBtn.cloneNode(true);
+      resetBtn.parentNode.replaceChild(newReset, resetBtn);
+      newReset.addEventListener('click', function(){
+        location.reload();
+      });
+    }
+
+    qa('.entry-btn').forEach(btn=>{
+      btn.addEventListener('click', function(){ setEntryType(btn.dataset.value); });
+    });
+    if($('addRepairBtn')) $('addRepairBtn').addEventListener('click', addRepairItem);
+    if($('loanAgent')) $('loanAgent').addEventListener('change', function(){
+      $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
+    });
+
+    setEntryType($('entryType') ? $('entryType').value : '屏東鴻翊汽車');
+    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
+    renderRepairList();
     renderInventory();
     renderSoldHistory();
     renderPerformance();
