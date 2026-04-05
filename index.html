@@ -1,13 +1,12 @@
 
 <!DOCTYPE html>
+
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>鴻翊汽車｜智慧管理系統 v7</title>
-  
-  
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>鴻翊汽車｜智慧管理系統 v7</title>
+<style>
     :root{
       --orange:#ff8a00;
       --orange2:#ff6a00;
@@ -506,9 +505,6 @@
       .bottom-nav{display:grid}
     }
   </style>
-
-
-
 <style>
 .inline-note{
   margin:10px 15px 0;
@@ -522,7 +518,6 @@
 }
 .hidden-note{display:none;}
 </style>
-
 <style>
 .save-toast{
   position:fixed;
@@ -540,7 +535,6 @@
 }
 .save-toast.show{opacity:1;}
 </style>
-
 <style>
 .entry-type-wrap{
   display:grid;
@@ -574,8 +568,6 @@
   .entry-type-wrap{grid-template-columns:repeat(2,1fr);}
 }
 </style>
-
-
 <style>
 .repair-row{
   display:flex;
@@ -598,7 +590,6 @@
 }
 .hidden-field{display:none !important;}
 </style>
-
 <style>
 .view-toggle .active-view{
   background:linear-gradient(180deg,#ff8a00,#ff6a00) !important;
@@ -612,7 +603,6 @@
   background:#f3f4f6;
 }
 </style>
-
 <style>
 .vehicle-actions{
   display:flex;
@@ -656,7 +646,6 @@
   color:#314055;
 }
 </style>
-
 <style>
 .flow-modal,
 .flow-modal *{
@@ -671,2302 +660,522 @@
   z-index:100003;
 }
 </style>
-</head>
+<style>
+@media (min-width: 901px){
+  #panel-vehicle .form-grid{
+    grid-template-columns:repeat(3,1fr) !important;
+  }
+  #panel-vehicle .grid-2{
+    grid-template-columns:1.45fr .75fr !important;
+  }
+}
+@media (min-width: 901px) and (max-width: 1200px){
+  #panel-vehicle .form-grid{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+}
+</style>
+<style>
+#panel-cost{display:none !important;}
+@media (max-width:900px){
+  #panel-vehicle .stats{grid-template-columns:1fr 1fr !important;}
+}
+</style></head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <h1>鴻翊汽車</h1>
-        <div class="sub">智慧管理系統 v7<br>側邊分頁式｜支援手機與電腦｜內部使用</div>
+<div class="app">
+<aside class="sidebar">
+<div class="brand">
+<h1>鴻翊汽車</h1>
+<div class="sub">智慧管理系統 v7<br/>側邊分頁式｜支援手機與電腦｜內部使用</div>
+</div>
+<div class="menu">
+<button class="active" onclick="showPanel('vehicle', this)">1. 車輛管理</button>
+<button onclick="showPanel('cost', this)">2. 車輛成本總覽</button>
+<button onclick="showPanel('sold', this)">1. 已售歷史總覽</button>
+<button onclick="showPanel('board', this)">2. 公佈欄</button>
+<button onclick="showPanel('sales', this)">3. 公司業績排行</button>
+<button onclick="showPanel('kpi', this)">6. 公司業績排行</button>
+<button onclick="showPanel('people', this)">7. 人員設定</button>
+</div>
+<div class="sidebar-note">
+        儲存位置：<br/>
+        1. 程式是你下載的 HTML 檔<br/>
+        2. 資料存在這台裝置瀏覽器的 localStorage<br/>
+        3. 同裝置關掉再開還在，換裝置不會同步<br/>4. LINE 登入要真正可用，下一步要接雲端資料庫與 LINE Login
       </div>
-      <div class="menu">
-        <button class="active" onclick="showPanel('vehicle', this)">1. 車輛管理</button>
-        <button onclick="showPanel('cost', this)">2. 車輛成本總覽</button>
-        <button onclick="showPanel('sold', this)">3. 已售歷史總覽</button>
-        <button onclick="showPanel('board', this)">4. 公佈欄</button>
-        <button onclick="showPanel('sales', this)">5. 公司業績排行</button>
-        <button onclick="showPanel('kpi', this)">6. 公司業績排行</button>
-        <button onclick="showPanel('people', this)">7. 人員設定</button>
-      </div>
-      <div class="sidebar-note">
-        儲存位置：<br>
-        1. 程式是你下載的 HTML 檔<br>
-        2. 資料存在這台裝置瀏覽器的 localStorage<br>
-        3. 同裝置關掉再開還在，換裝置不會同步<br>4. LINE 登入要真正可用，下一步要接雲端資料庫與 LINE Login
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <div>
-          <h2 id="pageTitle">車輛管理</h2>
-          <div class="desc" id="pageDesc">完整新增車輛、入庫公司選擇、整備總額自動彙總、利潤自動計算，以及後續售出功能。</div>
-        </div>
-        <div class="storage">目前儲存：本機瀏覽器 localStorage</div>
-      </div>
-
-      
-<section id="panel-vehicle" class="panel active">
-  <div class="card" style="margin-bottom:14px">
-    <h3 style="margin-bottom:8px">車輛管理</h3>
-    <div class="small-note">入庫 → 收訂 → 付款方式（現金 / 貸款）→ 售出，全部在同一頁完成。</div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <h3>新增 / 編輯車輛</h3>
-      <div class="small-note" style="margin-bottom:12px">公司車不需填過戶人頭；寄賣請填目前車主；調做請填車行名稱。</div>
-      <input type="hidden" id="editId">
-
-      <div class="full" style="margin-bottom:12px">
-        <label>入庫公司 / 類型 *</label>
-        <div class="entry-type-wrap" id="entryTypeWrap">
-          <button type="button" class="entry-btn active" data-value="屏東鴻翊汽車">屏東鴻翊汽車</button>
-          <button type="button" class="entry-btn" data-value="鴻豪汽車商行">鴻豪汽車商行</button>
-          <button type="button" class="entry-btn" data-value="寄賣">寄賣</button>
-          <button type="button" class="entry-btn" data-value="調做">調做</button>
-        </div>
-        <input type="hidden" id="entryType" value="屏東鴻翊汽車">
-      </div>
-
-      <div class="form-grid">
-        <div>
-          <label>品牌 *</label>
-          <input id="brand" placeholder="例如 BMW">
-        </div>
-        <div>
-          <label>車輛型號 *</label>
-          <input id="model" placeholder="例如 318TIA">
-        </div>
-
-        <div>
-          <label>車牌號碼 *</label>
-          <input id="plate" placeholder="例如 YM-1025">
-        </div>
-        <div>
-          <label>車年份 *</label>
-          <input id="year" type="number" placeholder="例如 1995">
-        </div>
-
-        <div id="transferField" class="full hidden-field">
-          <label id="transferLabel">過戶人頭 / 車主名稱 *</label>
-          <input id="transferName" placeholder="寄賣請填車主，調做請填車行名稱">
-        </div>
-
-        <div>
-          <label>買入人 *</label>
-          <select id="buyerPerson">
-            <option value="金恩（獨買）">金恩（獨買）</option>
-            <option value="葉咨廷">葉咨廷</option>
-            <option value="陳柏誠">陳柏誠</option>
-            <option value="許晟豪">許晟豪</option>
-            <option value="吳俊廷">吳俊廷</option>
-            <option value="劉家瑋">劉家瑋</option>
-            <option value="林家旻">林家旻</option>
-            <option value="吳宥勳">吳宥勳</option>
-            <option value="吳七一">吳七一</option>
-            <option value="林宥甫">林宥甫</option>
-            <option value="劉穎">劉穎</option>
-            <option value="蔡冠宇">蔡冠宇</option>
-            <option value="鄭宜隆">鄭宜隆</option>
-            <option value="蕭宇廷">蕭宇廷</option>
-          </select>
-        </div>
-        <div>
-          <label>買入金額 *</label>
-          <input id="buyAmount" type="number" placeholder="例如 100000">
-        </div>
-
-        <div>
-          <label>公司調作金額</label>
-          <input id="companyAdjust" type="number" placeholder="沒有可留空，預設 0">
-        </div>
-        <div>
-          <label>整備項目筆數</label>
-          <input id="repairCount" readonly>
-        </div>
-        <div>
-          <label>整備總額</label>
-          <input id="repairPreviewTotal" readonly>
-        </div>
-
-        <div>
-          <label>發票稅率 (%)（固定）</label>
-          <input id="invoiceTaxRate" value="5" readonly>
-        </div>
-        <div>
-          <label>營業稅率 (%)（固定）</label>
-          <input id="businessTaxRate" value="1.2" readonly>
-        </div>
-
-        
-    <div class="full">
-      <label>整備項目</label>
-      <div class="repair-builder">
-        <div class="form-grid">
-          <div>
-            <label style="font-size:13px">時間</label>
-            <input id="repairDate" type="date">
-          </div>
-          <div>
-            <label style="font-size:13px">項目</label>
-            <input id="repairName" placeholder="例如 烤漆">
-          </div>
-          <div>
-            <label style="font-size:13px">金額</label>
-            <input id="repairAmount" type="number" placeholder="例如 3000">
-          </div>
-          <div style="display:flex;align-items:end">
-            <button class="secondary" type="button" id="addRepairBtn" style="width:100%">新增整備項目</button>
-          </div>
-        </div>
-        <div id="repairList" class="list-box" style="margin-top:10px"></div>
-      </div>
-      <textarea id="repairItems" style="display:none"></textarea>
-    </div>
-    
-
-        <div>
-          <label>車輛照片 *</label>
-          <input id="carPhotoInput" type="file" accept="image/*">
-        </div>
-        <div>
-          <label>行照照片 *</label>
-          <input id="licensePhotoInput" type="file" accept="image/*">
-        </div>
-
-        <div class="full">
-          <label>備註</label>
-          <input id="note" placeholder="例如 檢驗日期、保險、收藏">
-        </div>
-      </div>
-
-      <div class="sub-card hidden-field" id="depositSection">
-        <h3 style="font-size:20px">收訂資訊</h3>
-        <div class="form-grid">
-          <div>
-            <label>是否收訂</label>
-            <select id="hasDeposit">
-              <option value="未收訂">未收訂</option>
-              <option value="已收訂">已收訂</option>
-            </select>
-          </div>
-          <div>
-            <label>收訂金額</label>
-            <input id="depositAmount" type="number" placeholder="例如 30000">
-          </div>
-          <div>
-            <label>收訂照片</label>
-            <input id="depositPhoto" type="file" accept="image/*">
-          </div>
-          <div>
-            <label>款項位置</label>
-            <select id="depositAccount">
-              <option value="">請選擇</option>
-              <option value="公司帳戶">公司帳戶</option>
-              <option value="個人帳戶">個人帳戶</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="sub-card hidden-field" id="paymentSection">
-        <h3 style="font-size:20px">付款方式</h3>
-        <div class="form-grid">
-          <div>
-            <label>付款方式</label>
-            <select id="paymentType">
-              <option value="">請選擇</option>
-              <option value="現金">現金</option>
-              <option value="貸款">貸款</option>
-            </select>
-          </div>
-          <div>
-            <label>貸款公司</label>
-            <input id="loanCompany" placeholder="如現金可留空">
-          </div>
-          <div>
-            <label>貸款業務</label>
-            <select id="loanAgent">
-              <option value="">請選擇</option>
-              <option value="中租怡婷">中租怡婷</option>
-              <option value="裕融若榛">裕融若榛</option>
-              <option value="和潤子豪">和潤子豪</option>
-              <option value="和潤萱宇">和潤萱宇</option>
-              <option value="匯豐仕謙">匯豐仕謙</option>
-              <option value="其他">其他</option>
-            </select>
-          </div>
-          <div id="loanOtherWrap" class="hidden-field">
-            <label>其他貸款業務</label>
-            <input id="loanAgentOther" placeholder="手動填寫">
-          </div>
-        </div>
-      </div>
-
-      <div class="sub-card hidden-field" id="soldSection">
-        <h3 style="font-size:20px">售出資料</h3>
-        <div class="form-grid">
-          <div>
-            <label>是否售出</label>
-            <select id="soldStatus">
-              <option value="未售出">未售出</option>
-              <option value="已售出">已售出</option>
-            </select>
-          </div>
-          <div>
-            <label>售出業務</label>
-            <select id="sellerPerson">
-              <option value="">請選擇</option>
-              <option value="葉咨廷">葉咨廷</option>
-              <option value="陳柏誠">陳柏誠</option>
-              <option value="許晟豪">許晟豪</option>
-              <option value="吳俊廷">吳俊廷</option>
-              <option value="劉家瑋">劉家瑋</option>
-              <option value="林家旻">林家旻</option>
-              <option value="吳宥勳">吳宥勳</option>
-              <option value="吳七一">吳七一</option>
-              <option value="林宥甫">林宥甫</option>
-              <option value="劉穎">劉穎</option>
-              <option value="蔡冠宇">蔡冠宇</option>
-              <option value="鄭宜隆">鄭宜隆</option>
-              <option value="蕭宇廷">蕭宇廷</option>
-            </select>
-          </div>
-
-          <div>
-            <label>新車主</label>
-            <input id="newOwner" placeholder="例如 王小明">
-          </div>
-          <div>
-            <label>新車主行照</label>
-            <input id="newOwnerLicensePhoto" type="file" accept="image/*">
-          </div>
-
-          <div>
-            <label>公司底價</label>
-            <input id="companyFloorPrice" type="number" placeholder="例如 300000">
-          </div>
-          <div>
-            <label>售出金額</label>
-            <input id="sellAmount" type="number" placeholder="例如 350000">
-          </div>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="primary" type="button" id="saveVehicleBtn">儲存入庫</button>
-        <button class="secondary" type="button" id="resetVehicleBtn">清空表單</button>
-      </div>
-      <div id="formHint" class="small-note" style="margin-top:10px"></div>
-    </div></div>
-
-  <div class="card" style="margin-top:16px">
-    <div class="toolbar">
-      <div class="toolbar-left"><h3>已儲存車輛</h3></div>
-      <div class="view-toggle">
-        <button class="secondary mini-btn" type="button" id="listViewBtn">列表顯示</button>
-        <button class="secondary mini-btn" type="button" id="cardViewBtnBtn">卡片顯示</button>
-      </div>
-    </div>
-    <div id="savedVehicleListView" class="list-box"></div>
-    <div id="savedVehicleCardView" class="cards-wrap" style="display:none"></div>
-  </div>
+</aside>
+<main class="main">
+<div class="topbar">
+<div>
+<h2 id="pageTitle">車輛管理</h2>
+<div class="desc" id="pageDesc">完整新增車輛、入庫公司選擇、整備總額自動彙總、利潤自動計算，以及後續售出功能。</div>
+</div>
+<div class="storage">目前儲存：本機瀏覽器 localStorage</div>
+</div>
+<section class="panel active" id="panel-vehicle">
+<div class="card">
+<div class="toolbar">
+<div class="toolbar-left">
+<h3 style="margin:0">車輛總覽</h3>
+<input class="search" id="vehicleSearch" placeholder="搜尋品牌 / 型號 / 車牌"/>
+</div>
+<div class="toolbar-right">
+<button class="primary" id="openCreateVehicleBtn" type="button">新增 / 編輯車輛</button>
+<div class="view-toggle">
+<button class="secondary mini-btn active-view" id="listViewBtn" type="button">表格檢視</button>
+<button class="secondary mini-btn" id="cardViewBtnBtn" type="button">卡片檢視</button>
+</div>
+</div>
+</div>
+<div class="stats">
+<div class="stat"><div class="k">在庫台數</div><div class="v" id="statStock">0</div></div>
+<div class="stat"><div class="k">已售台數</div><div class="v" id="statSold">0</div></div>
+<div class="stat"><div class="k">整備總額</div><div class="v" id="statRepairTotal">0</div></div>
+<div class="stat"><div class="k">利潤總計</div><div class="v" id="statProfit">0</div></div>
+</div>
+</div>
+<div class="list-box" id="savedVehicleListView"></div><div class="cards-wrap" id="savedVehicleCardView" style="display:none"></div></section>
+<section class="panel" id="panel-cost" style="display:none !important;">
+<div class="card" style="margin-bottom:14px">
+<h3 style="margin-bottom:8px">車輛成本總覽</h3>
+<div class="small-note">這裡會顯示總台數、在庫、已售、利潤，以及每台車成本明細。若目前是空白，代表你尚未建立車輛資料。</div>
+</div>
+<div class="stats">
+<div class="stat"><div class="k">總台數</div><div class="v" id="statCount">0</div></div>
+<div class="stat"><div class="k">在庫台數</div><div class="v" id="statStock">0</div></div>
+<div class="stat"><div class="k">已售台數</div><div class="v" id="statSold">0</div></div>
+<div class="stat"><div class="k">KPI 利潤總計</div><div class="v" id="statProfit">0</div></div>
+</div>
+<div class="card">
+<h3>車輛成本總覽</h3>
+<div class="list-box" id="costSummaryBox"></div>
+</div>
 </section>
-
-
-      <section id="panel-cost" class="panel">
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">車輛成本總覽</h3>
-          <div class="small-note">這裡會顯示總台數、在庫、已售、利潤，以及每台車成本明細。若目前是空白，代表你尚未建立車輛資料。</div>
-        </div>
-        <div class="stats">
-          <div class="stat"><div class="k">總台數</div><div class="v" id="statCount">0</div></div>
-          <div class="stat"><div class="k">在庫台數</div><div class="v" id="statStock">0</div></div>
-          <div class="stat"><div class="k">已售台數</div><div class="v" id="statSold">0</div></div>
-          <div class="stat"><div class="k">KPI 利潤總計</div><div class="v" id="statProfit">0</div></div>
-        </div>
-        <div class="card">
-          <h3>車輛成本總覽</h3>
-          <div id="costSummaryBox" class="list-box"></div>
-        </div>
-      </section>
-
-      <section id="panel-sold" class="panel">
-        <div class="card">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <h3 style="margin:0">已售歷史總覽</h3>
-              <select id="soldCompanyFilter" onchange="renderSoldOverview()">
-                <option value="全部">全部公司</option>
-                <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
-                <option value="鴻豪汽車商行">鴻豪汽車商行</option>
-                <option value="寄賣">寄賣</option>
-                <option value="調作">調作</option>
-              </select>
-              <select id="soldYearFilter" onchange="renderSoldOverview()"></select>
-              <select id="soldMonthFilter" onchange="renderSoldOverview()"></select>
-                          </div>
-          </div>
-          <div class="stats" style="margin-top:8px">
-            <div class="stat"><div class="k">本條件售出總台數</div><div class="v" id="soldFilterCount">0</div></div>
-            <div class="stat"><div class="k">本條件利潤總額</div><div class="v" id="soldFilterProfit">0</div></div>
-            <div class="stat"><div class="k">公司別統計</div><div class="v" id="soldFilterCompany">—</div></div>
-            <div class="stat"><div class="k">月份篩選</div><div class="v" id="soldFilterMonth">全部</div></div>
-          </div>
-          <div style="margin-top:14px">
-            <h3 style="font-size:22px">業務售出台數統計</h3>
-            <div id="soldSellerSummary" class="list-box"></div>
-          </div>
-          <div style="margin-top:14px">
-            <h3 style="font-size:22px">已售車輛明細</h3>
-            <div id="soldListBox" class="list-box"></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="panel-board" class="panel">
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">公佈欄</h3>
-          <div class="small-note">這裡可以發佈內部公告，之後再配合員工登入與已讀連動。</div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <h3>新增公告</h3>
-            <div class="form-grid">
-              <div class="full"><label>公告標題 *</label><input id="announcementTitle" placeholder="例如：本週貸款案件資料補齊規範"></div>
-              <div class="full"><label>公告內容 *</label><textarea id="announcementContent" placeholder="輸入公告內容..."></textarea></div>
-            </div>
-            <div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
-          </div>
-          <div class="card">
-            <h3>公告列表</h3>
-            <div id="announcementList" class="list-box"></div>
-          </div>
-        </div>
-      </section>
-
-      
-<section id="panel-performance" class="panel">
-  <div class="card">
-    <h3>公司業績排行</h3>
-    <div class="small-note" style="margin-bottom:12px">整合台數排行與 KPI 利潤排行。售出後會自動併入排行。</div>
-    <div class="grid-2">
-      <div>
-        <h3 style="font-size:20px">台數排行</h3>
-        <div id="rankCountBox" class="list-box"></div>
-      </div>
-      <div>
-        <h3 style="font-size:20px">KPI 排行</h3>
-        <div id="rankKpiBox" class="list-box"></div>
-      </div>
-    </div>
-  </div>
+<section class="panel" id="panel-sold">
+<div class="card">
+<div class="toolbar">
+<div class="toolbar-left">
+<h3 style="margin:0">已售歷史總覽</h3>
+<select id="soldCompanyFilter" onchange="renderSoldOverview()">
+<option value="全部">全部公司</option>
+<option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
+<option value="鴻豪汽車商行">鴻豪汽車商行</option>
+<option value="寄賣">寄賣</option>
+<option value="調作">調作</option>
+</select>
+<select id="soldYearFilter" onchange="renderSoldOverview()"></select>
+<select id="soldMonthFilter" onchange="renderSoldOverview()"></select>
+</div>
+</div>
+<div class="stats" style="margin-top:8px">
+<div class="stat"><div class="k">本條件售出總台數</div><div class="v" id="soldFilterCount">0</div></div>
+<div class="stat"><div class="k">本條件利潤總額</div><div class="v" id="soldFilterProfit">0</div></div>
+<div class="stat"><div class="k">公司別統計</div><div class="v" id="soldFilterCompany">—</div></div>
+<div class="stat"><div class="k">月份篩選</div><div class="v" id="soldFilterMonth">全部</div></div>
+</div>
+<div style="margin-top:14px">
+<h3 style="font-size:22px">業務售出台數統計</h3>
+<div class="list-box" id="soldSellerSummary"></div>
+</div>
+<div style="margin-top:14px">
+<h3 style="font-size:22px">已售車輛明細</h3>
+<div class="list-box" id="soldListBox"></div>
+</div>
+</div>
 </section>
-
-
-      <section id="panel-people" class="panel">
-        <div class="card" style="margin-bottom:14px">
-          <h3 style="margin-bottom:8px">人員設定</h3>
-          <div class="small-note">這裡可以新增員工資料、LINE 顯示名稱、申請狀態，為後續登入系統做準備。</div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <h3>新增 / 編輯員工</h3>
-            <div class="hint">
-              這版先把「LINE 登入要用到的欄位」預留好，包含 LINE 名稱、申請狀態、核准狀態。<br>
+<section class="panel" id="panel-board">
+<div class="card" style="margin-bottom:14px">
+<h3 style="margin-bottom:8px">公佈欄</h3>
+<div class="small-note">這裡可以發佈內部公告，之後再配合員工登入與已讀連動。</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<h3>新增公告</h3>
+<div class="form-grid">
+<div class="full"><label>公告標題 *</label><input id="announcementTitle" placeholder="例如：本週貸款案件資料補齊規範"/></div>
+<div class="full"><label>公告內容 *</label><textarea id="announcementContent" placeholder="輸入公告內容..."></textarea></div>
+</div>
+<div class="actions"><button class="primary" onclick="saveAnnouncement()">發佈公告</button></div>
+</div>
+<div class="card">
+<h3>公告列表</h3>
+<div class="list-box" id="announcementList"></div>
+</div>
+</div>
+</section>
+<section class="panel" id="panel-performance">
+<div class="card">
+<h3>公司業績排行</h3>
+<div class="small-note" style="margin-bottom:12px">整合台數排行與 KPI 利潤排行。售出後會自動併入排行。</div>
+<div class="grid-2">
+<div>
+<h3 style="font-size:20px">台數排行</h3>
+<div class="list-box" id="rankCountBox"></div>
+</div>
+<div>
+<h3 style="font-size:20px">KPI 排行</h3>
+<div class="list-box" id="rankKpiBox"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="panel" id="panel-people">
+<div class="card" style="margin-bottom:14px">
+<h3 style="margin-bottom:8px">人員設定</h3>
+<div class="small-note">這裡可以新增員工資料、LINE 顯示名稱、申請狀態，為後續登入系統做準備。</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<h3>新增 / 編輯員工</h3>
+<div class="hint">
+              這版先把「LINE 登入要用到的欄位」預留好，包含 LINE 名稱、申請狀態、核准狀態。<br/>
               目前這個檔案仍是本機版，真正的 LINE 一鍵登入、邀請網址、後台核准，仍需要正式雲端資料庫與網站部署後才能正式啟用。
             </div>
-            <input type="hidden" id="employeeEditId">
-            <div class="form-grid">
-              <div><label>員工姓名 *</label><input id="employeeName" placeholder="例如 陳柏誠"></div>
-              <div><label>職稱</label><input id="employeeRole" placeholder="例如 業務"></div>
-              <div><label>電話</label><input id="employeePhone" placeholder="例如 09xx-xxx-xxx"></div>
-              <div><label>LINE 顯示名稱</label><input id="employeeLineName" placeholder="例如 柏誠 LINE"></div>
-              <div><label>申請狀態</label>
-                <select id="employeeApplyStatus">
-                  <option value="未申請">未申請</option>
-                  <option value="待審核">待審核</option>
-                  <option value="已核准">已核准</option>
-                  <option value="停用">停用</option>
-                </select>
-              </div>
-              <div><label>登入方式</label>
-                <select id="employeeLoginType">
-                  <option value="LINE">LINE</option>
-                  <option value="帳密">帳密</option>
-                </select>
-              </div>
-              <div class="full"><label>備註</label><input id="employeeNote" placeholder="例如 負責貸款案件 / 等待 LINE 綁定"></div>
-            </div>
-            <div class="actions">
-              <button class="primary" onclick="saveEmployee()">儲存員工</button>
-              <button class="secondary" onclick="resetEmployeeForm()">清空</button>
-            </div>
-          </div>
-          <div class="card">
-            <h3>員工 / 帳號申請清單</h3>
-            <div id="employeeList" class="list-box"></div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+<input id="employeeEditId" type="hidden"/>
+<div class="form-grid">
+<div><label>員工姓名 *</label><input id="employeeName" placeholder="例如 陳柏誠"/></div>
+<div><label>職稱</label><input id="employeeRole" placeholder="例如 業務"/></div>
+<div><label>電話</label><input id="employeePhone" placeholder="例如 09xx-xxx-xxx"/></div>
+<div><label>LINE 顯示名稱</label><input id="employeeLineName" placeholder="例如 柏誠 LINE"/></div>
+<div><label>申請狀態</label>
+<select id="employeeApplyStatus">
+<option value="未申請">未申請</option>
+<option value="待審核">待審核</option>
+<option value="已核准">已核准</option>
+<option value="停用">停用</option>
+</select>
+</div>
+<div><label>登入方式</label>
+<select id="employeeLoginType">
+<option value="LINE">LINE</option>
+<option value="帳密">帳密</option>
+</select>
+</div>
+<div class="full"><label>備註</label><input id="employeeNote" placeholder="例如 負責貸款案件 / 等待 LINE 綁定"/></div>
+</div>
+<div class="actions">
+<button class="primary" onclick="saveEmployee()">儲存員工</button>
+<button class="secondary" onclick="resetEmployeeForm()">清空</button>
+</div>
+</div>
+<div class="card">
+<h3>員工 / 帳號申請清單</h3>
+<div class="list-box" id="employeeList"></div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<div class="modal" id="saleModal">
+<div class="modal-content">
+<h3>後續售出資料</h3>
+<div class="hint">補填：新車主、售出人、售出金額、售出日期。填完會自動移到已售歷史總覽。</div>
+<input id="saleEditId" type="hidden"/>
+<div class="form-grid" style="margin-top:12px">
+<div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"/></div>
+<div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"/></div>
+<div><label>售出金額 *</label><input id="saleSellAmount" placeholder="例如 280000" type="number"/></div>
+<div><label>售出日期 *</label><input id="saleDate" type="date"/></div>
+</div>
+<div class="actions">
+<button class="success" onclick="saveSaleInfo()">儲存售出資料</button>
+<button class="secondary" onclick="closeSaleModal()">取消</button>
+</div>
+</div>
+</div>
+<div class="modal" id="photosModal">
+<div class="modal-content">
+<h3>照片查看</h3>
+<div class="photo-grid" id="photosModalGrid"></div>
+<div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
+</div>
+</div>
+<div class="modal" id="imagePreviewModal">
+<div class="modal-content">
+<h3>放大照片</h3>
+<div class="image-preview-wrap">
+<img alt="放大照片" id="imagePreviewTarget" onclick="closeImagePreview()" src=""/>
+</div>
+<div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
+</div>
+</div>
+<div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+<div class="viewer-close" onclick="closeImageViewer();event.stopPropagation()">×</div>
+<img alt="放大照片" id="imageViewerImg" onclick="event.stopPropagation()" src=""/>
+</div>
+<div class="bottom-nav" id="bottomNav">
 
-  <div class="modal" id="saleModal">
-    <div class="modal-content">
-      <h3>後續售出資料</h3>
-      <div class="hint">補填：新車主、售出人、售出金額、售出日期。填完會自動移到已售歷史總覽。</div>
-      <input type="hidden" id="saleEditId">
-      <div class="form-grid" style="margin-top:12px">
-        <div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"></div>
-        <div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"></div>
-        <div><label>售出金額 *</label><input id="saleSellAmount" type="number" placeholder="例如 280000"></div>
-        <div><label>售出日期 *</label><input id="saleDate" type="date"></div>
-      </div>
-      <div class="actions">
-        <button class="success" onclick="saveSaleInfo()">儲存售出資料</button>
-        <button class="secondary" onclick="closeSaleModal()">取消</button>
-      </div>
-    </div>
-  </div>
+<button data-panel="sold" onclick="showPanel('sold', this)">
+<span class="nav-icon">📚</span><span class="nav-label">已售歷史</span>
+</button>
+<button data-panel="board" onclick="showPanel('board', this)">
+<span class="nav-icon">📢</span><span class="nav-label">公佈欄</span>
+</button>
+<button data-panel="performance" onclick="showPanel('performance', this)">
+<span class="nav-icon">📊</span><span class="nav-label">業績排行</span>
+</button>
+<button data-panel="people" onclick="showPanel('people', this)">
+<span class="nav-icon">👤</span><span class="nav-label">人員設定</span>
+</button>
+</div>
+<div class="flow-modal" id="flowModal">
+<div class="flow-modal-card">
+<div class="flow-modal-head">
+<h3 id="flowModalTitle">流程作業</h3>
+<button class="flow-modal-close secondary" id="flowModalClose" type="button">關閉</button>
+</div>
+<div id="flowModalBody"></div>
+</div>
+</div>
+<div class="modal" id="vehicleDetailModal">
+<div class="modal-content">
+<h3>車輛詳情</h3>
+<div class="list-box" id="vehicleDetailBody"></div>
+<div class="actions"><button class="secondary" onclick="document.getElementById('vehicleDetailModal').style.display='none'">關閉</button></div>
+</div>
+</div>
+<div class="modal" id="repairModal">
+<div class="modal-content">
+<h3>車輛整備</h3>
+<input id="repairVehicleId" type="hidden"/>
+<div class="form-grid">
+<div>
+<label>日期</label>
+<input id="repairModalDate" type="date"/>
+</div>
+<div>
+<label>項目名稱</label>
+<input id="repairModalName" placeholder="例如 烤漆"/>
+</div>
+<div>
+<label>金額</label>
+<input id="repairModalAmount" placeholder="例如 3000" type="number"/>
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="addRepairToVehicle()">新增整備項目</button>
+<button class="secondary" onclick="closeRepairModal()">關閉</button>
+</div>
+<div class="small-note" style="margin-top:8px">新增後會自動更新整備總額。</div>
+<div class="list-box" id="repairModalList" style="margin-top:12px"></div>
+</div>
+</div>
+<script>
+(() => {
+  const DB_NAME = 'hongyi_v949_local_db';
+  const STORE = 'vehicles';
+  let db;
 
-  <div class="modal" id="photosModal">
-    <div class="modal-content">
-      <h3>照片查看</h3>
-      <div class="photo-grid" id="photosModalGrid"></div>
-      <div class="actions"><button class="secondary" onclick="closePhotosModal()">關閉</button></div>
-    </div>
-  </div>
+  const $ = (id) => document.getElementById(id);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  <div class="modal" id="imagePreviewModal">
-    <div class="modal-content">
-      <h3>放大照片</h3>
-      <div class="image-preview-wrap">
-        <img id="imagePreviewTarget" src="" alt="放大照片" onclick="closeImagePreview()">
-      </div>
-      <div class="actions"><button class="secondary" onclick="closeImagePreview()">關閉</button></div>
-    </div>
-  </div>
+  function fmt(n){ return (Number(n)||0).toLocaleString('zh-TW'); }
 
-  
-  <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
-    <div class="viewer-close" onclick="closeImageViewer();event.stopPropagation()">×</div>
-    <img id="imageViewerImg" src="" alt="放大照片" onclick="event.stopPropagation()">
-  </div>
-
-  <script>
-
-    const KEYS = {
-      inventory: "hongyi_inventory_v7",
-      employees: "hongyi_employees_v7",
-      announcements: "hongyi_announcements_v7",
-      view: "hongyi_vehicle_view_v7"
-    };
-    const TAXABLE_TYPES = ["屏東鴻翊汽車", "鴻豪汽車商行"];
-    const PANEL_META = {
-      vehicle:{title:"車輛管理",desc:"完整新增車輛、入庫公司選擇、整備總額自動彙總、利潤自動計算，以及後續售出功能。"},
-      cost:{title:"車輛成本總覽",desc:"快速查看總台數、在庫、已售與每台車成本結構。"},
-      sold:{title:"已售歷史總覽",desc:"依公司與月份查詢已售資料、利潤、台數與業務統計。"},
-      board:{title:"公佈欄",desc:"發佈內部公告，並標記員工已讀狀況。"},
-      performance:{title:"公司業績排行",desc:"整合台數排行與 KPI 利潤排行，集中查看業務表現。"},
-      people:{title:"人員設定",desc:"管理員工資料、LINE申請狀態欄位與後續雲端登入準備。"}
-    };
-    let createPhotos = { carPhoto:"", licensePhoto:"" };
-
-    function load(key){ try { return JSON.parse(localStorage.getItem(key)) || []; } catch(e){ return []; } }
-    function save(key,data){ localStorage.setItem(key, JSON.stringify(data)); }
-    function fmtNum(v){ return (Number(v)||0).toLocaleString("zh-TW"); }
-
-    function showPanel(name, btn){
-      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-      const panel = document.getElementById("panel-" + name);
-      if(panel) panel.classList.add("active");
-
-      document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.remove("active"));
-
-      if(btn) btn.classList.add("active");
-      const sideBtn = document.querySelector('.menu button[onclick*="\'' + name + '\'"]');
-      if(sideBtn) sideBtn.classList.add("active");
-      const bottomBtn = document.querySelector('.bottom-nav button[data-panel="' + name + '"]');
-      if(bottomBtn) bottomBtn.classList.add("active");
-
-      if (PANEL_META[name]) {
-        document.getElementById("pageTitle").textContent = PANEL_META[name].title;
-        document.getElementById("pageDesc").textContent = PANEL_META[name].desc;
-      }
-
-      const nav = document.getElementById("bottomNav");
-      if(nav) nav.classList.remove("hidden");
-
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function parseRepairItemsRaw(text){
-      const lines = (text || "").split("\n").map(x => x.trim()).filter(Boolean);
-      const items = [];
-      for(const line of lines){
-        const parts = line.split(":");
-        const name = (parts[0] || "").trim();
-        const amount = Number((parts.slice(1).join(":") || "0").replace(/,/g,"").trim()) || 0;
-        if(name) items.push({ name, amount });
-      }
-      return items;
-    }
-
-    function updateRepairSummary(){
-      const items = parseRepairItemsRaw(document.getElementById("repairItems").value);
-      const total = items.reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
-      document.getElementById("repairCount").value = items.length;
-      document.getElementById("repairPreviewTotal").value = fmtNum(total);
-      renderFormulaPreview();
-      return items;
-    }
-
-    function calcRecord(form){
-      const entryType = form.entryType || "屏東鴻翊汽車";
-      const buyAmount = Number(form.buyAmount) || 0;
-      const sellAmount = Number(form.sellAmount) || 0;
-      const companyAdjust = Number(form.companyAdjust) || 0;
-      const invoiceTaxRate = Number(form.invoiceTaxRate ?? 0.05);
-      const businessTaxRate = Number(form.businessTaxRate ?? 0.012);
-      const repairTotal = (form.repairItems || []).reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
-      const isTaxable = TAXABLE_TYPES.includes(entryType);
-
-      let invoiceTax = 0;
-      let businessTax = 0;
-      let profit = 0;
-
-      if (sellAmount > 0) {
-        if (entryType === "調作") {
-          const baseProfit = companyAdjust - buyAmount - repairTotal;
-          invoiceTax = isTaxable ? Math.max(baseProfit,0) * (invoiceTaxRate / 100) : 0;
-          businessTax = isTaxable ? sellAmount * (businessTaxRate / 100) : 0;
-          profit = companyAdjust - buyAmount - repairTotal - invoiceTax - businessTax;
-        } else {
-          const baseProfit = sellAmount - (buyAmount + repairTotal);
-          invoiceTax = isTaxable ? Math.max(baseProfit,0) * (invoiceTaxRate / 100) : 0;
-          businessTax = isTaxable ? sellAmount * (businessTaxRate / 100) : 0;
-          profit = sellAmount - (buyAmount + repairTotal) - invoiceTax - businessTax;
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if(!d.objectStoreNames.contains(STORE)){
+          d.createObjectStore(STORE, { keyPath: 'id' });
         }
-      }
-
-      const kpiProfit = profit; // 排行與利潤一致
-      const totalCost = buyAmount + repairTotal;
-      const status = sellAmount > 0 ? "已售" : "在庫";
-
-      return {
-        ...form,
-        entryType, buyAmount, sellAmount, companyAdjust, invoiceTaxRate, businessTaxRate,
-        repairTotal, invoiceTax, businessTax, profit, kpiProfit, totalCost, status,
-        isTaxable
       };
-    }
-
-    function renderFormulaPreview(){
-      const box = document.getElementById("formulaPreviewBox");
-      const entryType = document.getElementById("entryType").value;
-      const buyAmount = Number(document.getElementById("buyAmount").value || 0);
-      const companyAdjust = Number(document.getElementById("companyAdjust").value || 0);
-      const invoiceTaxRate = Number(document.getElementById("invoiceTaxRate").value || 0.05);
-      const businessTaxRate = Number(document.getElementById("businessTaxRate").value || 0.012);
-      const repairItems = parseRepairItemsRaw(document.getElementById("repairItems").value);
-      const repairTotal = repairItems.reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
-      const isTaxable = TAXABLE_TYPES.includes(entryType);
-
-      box.innerHTML = `
-        <div class="row-line"><div><strong>入庫類型</strong></div><div><span class="pill">${entryType}</span></div></div>
-        <div class="row-line"><div><strong>車輛成本</strong></div><div><span class="pill">${fmtNum(buyAmount)}</span></div></div>
-        <div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${fmtNum(repairTotal)}</span></div></div>
-        <div class="row-line"><div><strong>調作金額</strong></div><div><span class="pill">${fmtNum(companyAdjust)}</span></div></div>
-        <div class="row-line"><div><strong>是否計稅</strong></div><div><span class="pill">${isTaxable ? "需要計稅" : "不計稅"}</span></div></div>
-        <div class="row-line"><div><strong>發票稅率</strong></div><div><span class="pill">${invoiceTaxRate}%</span></div></div>
-        <div class="row-line"><div><strong>營業稅率</strong></div><div><span class="pill">${businessTaxRate}%</span></div></div>
-      `;
-    }
-
-    function fileToBase64(file){
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function handleCreatePhotoInput(inputId, type){
-      const file = document.getElementById(inputId).files[0];
-      if(!file) return;
-      createPhotos[type] = await fileToBase64(file);
-      renderCreatePhotoPreview();
-    }
-
-    function renderCreatePhotoPreview(){
-      const wrap = document.getElementById("createPhotoPreview");
-      wrap.innerHTML = "";
-      if(createPhotos.carPhoto) wrap.innerHTML += `<div class="photo-box"><img src="${createPhotos.carPhoto}"><div class="cap">車輛照片</div></div>`;
-      if(createPhotos.licensePhoto) wrap.innerHTML += `<div class="photo-box"><img src="${createPhotos.licensePhoto}"><div class="cap">行照照片</div></div>`;
-    }
-
-    function getVehicleFormData(){
-      return {
-        id: document.getElementById("editId").value || String(Date.now()),
-        entryType: document.getElementById("entryType").value,
-        brand: document.getElementById("brand").value.trim(),
-        model: document.getElementById("model").value.trim(),
-        plate: document.getElementById("plate").value.trim(),
-        year: document.getElementById("year").value.trim(),
-        transferName: document.getElementById("transferName").value.trim(),
-        buyerPerson: document.getElementById("buyerPerson").value.trim(),
-        buyAmount: document.getElementById("buyAmount").value.trim(),
-        companyAdjust: document.getElementById("companyAdjust").value.trim() || 0,
-        note: document.getElementById("note").value.trim(),
-        invoiceTaxRate: document.getElementById("invoiceTaxRate").value.trim() || 0.05,
-        businessTaxRate: document.getElementById("businessTaxRate").value.trim() || 0.012,
-        repairItems: parseRepairItemsRaw(document.getElementById("repairItems").value),
-        photos: { ...createPhotos },
-        newOwner: "",
-        sellerPerson: "",
-        sellAmount: 0,
-        saleDate: ""
-      };
-    }
-
-    function validateVehicle(raw){
-      const required = [["entryType","入庫類型"],["brand","品牌"],["model","車輛型號"],["plate","車牌號碼"],["year","車年份"],["transferName","過戶人頭"],["buyerPerson","買入人"],["buyAmount","買入金額"]];
-      for(const [key, label] of required){
-        if(!String(raw[key] ?? "").trim()){ alert("請填寫：" + label); return false; }
-      }
-      if(!raw.photos?.carPhoto || !raw.photos?.licensePhoto){ alert("上架車輛至少需要 2 張照片：車輛照片 + 行照照片"); return false; }
-      return true;
-    }
-
-    function saveVehicle(){
-      const raw = getVehicleFormData();
-      if(!validateVehicle(raw)) return;
-      const record = calcRecord(raw);
-      const data = load(KEYS.inventory);
-      const idx = data.findIndex(x => x.id === record.id);
-
-      if(idx >= 0){
-        const old = data[idx];
-        record.newOwner = old.newOwner || record.newOwner;
-        record.sellerPerson = old.sellerPerson || record.sellerPerson;
-        record.sellAmount = old.sellAmount || record.sellAmount;
-        record.saleDate = old.saleDate || record.saleDate;
-        data[idx] = calcRecord(record);
-      } else {
-        data.push(record);
-      }
-
-      save(KEYS.inventory, data);
-      resetVehicleForm();
-      bindMobileMenu();
-    initBottomNavBehavior();
-    enforceMobileCardView();
-    renderAll();
-      alert("入庫資料已儲存");
-    }
-
-    function resetVehicleForm(){
-      ["editId","brand","model","plate","year","transferName","buyerPerson","buyAmount","companyAdjust","note","repairItems","saleDate"].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.value = "";
-      });
-      document.getElementById("entryType").value = "屏東鴻翊汽車";
-      document.getElementById("invoiceTaxRate").value = "0.05";
-      document.getElementById("businessTaxRate").value = "0.012";
-      document.getElementById("repairCount").value = "";
-      document.getElementById("repairPreviewTotal").value = "";
-      document.getElementById("carPhotoInput").value = "";
-      document.getElementById("licensePhotoInput").value = "";
-      createPhotos = { carPhoto:"", licensePhoto:"" };
-      renderCreatePhotoPreview();
-      renderFormulaPreview();
-    }
-
-    function editVehicle(id){
-      const item = load(KEYS.inventory).find(x => x.id === id);
-      if(!item) return;
-      document.getElementById("editId").value = item.id;
-      document.getElementById("entryType").value = item.entryType || "屏東鴻翊汽車";
-      document.getElementById("brand").value = item.brand || "";
-      document.getElementById("model").value = item.model || "";
-      document.getElementById("plate").value = item.plate || "";
-      document.getElementById("year").value = item.year || "";
-      document.getElementById("transferName").value = item.transferName || "";
-      document.getElementById("buyerPerson").value = item.buyerPerson || "";
-      document.getElementById("buyAmount").value = item.buyAmount || "";
-      document.getElementById("companyAdjust").value = item.companyAdjust || "";
-      document.getElementById("note").value = item.note || "";
-      document.getElementById("invoiceTaxRate").value = item.invoiceTaxRate ?? 0.05;
-      document.getElementById("businessTaxRate").value = item.businessTaxRate ?? 0.012;
-      document.getElementById("repairItems").value = (item.repairItems || []).map(x => `${x.name}:${x.amount}`).join("\n");
-      createPhotos = { carPhoto:item.photos?.carPhoto || "", licensePhoto:item.photos?.licensePhoto || "" };
-      updateRepairSummary();
-      renderCreatePhotoPreview();
-      showPanel("vehicle", document.querySelectorAll(".menu button")[0]);
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    function deleteVehicle(id){
-      if(!confirm("確定刪除這筆車輛資料？")) return;
-      save(KEYS.inventory, load(KEYS.inventory).filter(x => x.id !== id));
-      renderAll();
-    }
-
-    function openSaleModal(id){
-      const item = load(KEYS.inventory).find(x => x.id === id);
-      if(!item) return;
-      document.getElementById("saleEditId").value = item.id;
-      document.getElementById("saleNewOwner").value = item.newOwner || "";
-      document.getElementById("saleSellerPerson").value = item.sellerPerson || "";
-      document.getElementById("saleSellAmount").value = item.sellAmount || "";
-      document.getElementById("saleDate").value = item.saleDate || "";
-      document.getElementById("saleModal").style.display = "flex";
-    }
-
-    function closeSaleModal(){ document.getElementById("saleModal").style.display = "none"; }
-
-    function saveSaleInfo(){
-      const id = document.getElementById("saleEditId").value;
-      const newOwner = document.getElementById("saleNewOwner").value.trim();
-      const sellerPerson = document.getElementById("saleSellerPerson").value.trim();
-      const sellAmount = document.getElementById("saleSellAmount").value.trim();
-      const saleDate = document.getElementById("saleDate").value;
-      if(!newOwner || !sellerPerson || !sellAmount || !saleDate){
-        alert("請完整填寫：新車主、售出人、售出金額、售出日期");
-        return;
-      }
-      const data = load(KEYS.inventory);
-      const idx = data.findIndex(x => x.id === id);
-      if(idx < 0) return;
-      const updated = { ...data[idx], newOwner, sellerPerson, sellAmount, saleDate };
-      data[idx] = calcRecord(updated);
-      save(KEYS.inventory, data);
-      closeSaleModal();
-      renderAll();
-      alert("售出資料已更新，並自動移到已售歷史總覽");
-    }
-
-    function showPhotos(id){
-      const item = load(KEYS.inventory).find(x => x.id === id);
-      if(!item) return;
-      const grid = document.getElementById("photosModalGrid");
-      grid.innerHTML = "";
-      if(item.photos?.carPhoto) grid.innerHTML += `<div class="photo-box"><img src="${item.photos.carPhoto}" onclick="openImagePreview('${item.photos.carPhoto}')"><div class="cap">車輛照片（點圖可放大）</div></div>`;
-      if(item.photos?.licensePhoto) grid.innerHTML += `<div class="photo-box"><img src="${item.photos.licensePhoto}" onclick="openImagePreview('${item.photos.licensePhoto}')"><div class="cap">行照照片（點圖可放大）</div></div>`;
-      document.getElementById("photosModal").style.display = "flex";
-    }
-    function closePhotosModal(){ document.getElementById("photosModal").style.display = "none"; }
-
-    function openImageViewer(src){
-      const viewer = document.getElementById("imageViewer");
-      const img = document.getElementById("imageViewerImg");
-      img.src = src;
-      viewer.style.display = "flex";
-    }
-    function closeImageViewer(){
-      const viewer = document.getElementById("imageViewer");
-      const img = document.getElementById("imageViewerImg");
-      viewer.style.display = "none";
-      img.src = "";
-    }
-
-    function openImagePreview(src){
-      document.getElementById("imagePreviewTarget").src = src;
-      document.getElementById("imagePreviewModal").style.display = "flex";
-    }
-    function closeImagePreview(){
-      document.getElementById("imagePreviewModal").style.display = "none";
-      document.getElementById("imagePreviewTarget").src = "";
-    }
-
-    function setVehicleView(mode){
-      localStorage.setItem(KEYS.view, mode);
-      document.getElementById("tableView").style.display = mode === "table" ? "block" : "none";
-      document.getElementById("cardView").style.display = mode === "card" ? "grid" : "none";
-      document.getElementById("tableViewBtn").className = mode === "table" ? "primary" : "secondary";
-      document.getElementById("cardViewBtn").className = mode === "card" ? "primary" : "secondary";
-    }
-
-    function renderVehicles(){
-      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-      let data = load(KEYS.inventory).filter(x => x.status !== "已售"); // 在庫 only
-      if(keyword){
-        data = data.filter(x => {
-          const hay = [x.entryType,x.brand,x.model,x.plate,x.transferName,x.buyerPerson,x.note,...(x.repairItems || []).map(i => i.name)].join(" ").toLowerCase();
-          return hay.includes(keyword);
-        });
-      }
-      const tbody = document.getElementById("vehicleTableBody");
-      const cards = document.getElementById("cardView");
-      tbody.innerHTML = "";
-      cards.innerHTML = "";
-
-      if(data.length === 0){
-        tbody.innerHTML = `<tr><td colspan="15" class="empty">目前沒有在庫車輛</td></tr>`;
-        cards.innerHTML = `<div class="empty">目前沒有在庫車輛</div>`;
-        return;
-      }
-
-      data.forEach((x, i) => {
-        const photoBtn = (x.photos?.carPhoto || x.photos?.licensePhoto) ? `<button class="mini-btn secondary" onclick="showPhotos('${x.id}')">查看照片</button>` : `<span class="muted">無</span>`;
-        tbody.innerHTML += `
-          <tr>
-            <td>${i+1}</td>
-            <td>${x.entryType || ""}</td>
-            <td>${x.brand || ""}</td>
-            <td>${x.model || ""}</td>
-            <td>${x.plate || ""}</td>
-            <td>${fmtNum(x.buyAmount)}</td>
-            <td>${fmtNum(x.repairTotal)}</td>
-            <td>${Number(x.sellAmount) ? fmtNum(x.sellAmount) : '<span class="muted">待填</span>'}</td>
-            <td>${fmtNum(x.companyAdjust)}</td>
-            <td>${fmtNum(x.invoiceTax)}</td>
-            <td>${fmtNum(x.businessTax)}</td>
-            <td class="${x.profit >= 0 ? "good":"bad"}">${fmtNum(x.profit)}</td>
-            <td class="${x.kpiProfit >= 0 ? "good":"bad"}">${fmtNum(x.kpiProfit)}</td>
-            <td>${photoBtn}</td>
-            <td>
-              <button class="mini-btn secondary" onclick="editVehicle('${x.id}')">編輯入庫</button>
-              <button class="mini-btn success" onclick="openSaleModal('${x.id}')">後續售出</button>
-              <button class="mini-btn danger" onclick="deleteVehicle('${x.id}')">刪除</button>
-            </td>
-          </tr>`;
-        const carImg = x.photos?.carPhoto ? `<img src="${x.photos.carPhoto}">` : `<div class="muted">無照片</div>`;
-        const repairText = (x.repairItems || []).map(r => `${r.name}:${fmtNum(r.amount)}`).join(" / ");
-        cards.innerHTML += `
-          <div class="car-card">
-            <div class="car-photo">${carImg}</div>
-            <div class="car-body">
-              <span class="status stock">在庫</span>
-              <div class="car-title">${x.brand || ""} ${x.model || ""}</div>
-              <div class="car-line">入庫類型：${x.entryType || "—"} ｜ 車牌：${x.plate || "—"} ｜ 年份：${x.year || "—"}</div>
-              <div class="car-line">買入人：${x.buyerPerson || "—"} ｜ 過戶人頭：${x.transferName || "—"}</div>
-              <div class="car-line">買入金額：${fmtNum(x.buyAmount)} ｜ 整備總額：${fmtNum(x.repairTotal)}</div>
-              <div class="car-line">調作金額：${fmtNum(x.companyAdjust)} ｜ 預估利潤：<span class="${x.profit >= 0 ? "good":"bad"}">${fmtNum(x.profit)}</span></div>
-              <div class="car-line">整備項目：${repairText || "—"}</div>
-              <div class="actions">
-                <button class="mini-btn secondary" onclick="showPhotos('${x.id}')">照片</button>
-                <button class="mini-btn secondary" onclick="editVehicle('${x.id}')">編輯入庫</button>
-                <button class="mini-btn success" onclick="openSaleModal('${x.id}')">後續售出</button>
-                <button class="mini-btn danger" onclick="deleteVehicle('${x.id}')">刪除</button>
-              </div>
-            </div>
-          </div>`;
-      });
-    }
-
-    function renderCostOverview(){
-      const all = load(KEYS.inventory);
-      const totalCount = all.length;
-      const totalStock = all.filter(x => x.status === "在庫").length;
-      const totalSold = all.filter(x => x.status === "已售").length;
-      const totalProfit = all.reduce((s, x) => s + (Number(x.kpiProfit) || 0), 0);
-
-      document.getElementById("statCount").textContent = fmtNum(totalCount);
-      document.getElementById("statStock").textContent = fmtNum(totalStock);
-      document.getElementById("statSold").textContent = fmtNum(totalSold);
-      const p = document.getElementById("statProfit");
-      p.textContent = fmtNum(totalProfit);
-      p.className = "v " + (totalProfit >= 0 ? "good":"bad");
-
-      const box = document.getElementById("costSummaryBox");
-      box.innerHTML = "";
-      if(all.length === 0){
-        box.innerHTML = `<div class="empty">目前沒有車輛資料</div>`;
-        return;
-      }
-      all.slice().sort((a,b) => (Number(b.totalCost)||0) - (Number(a.totalCost)||0)).forEach(x => {
-        box.innerHTML += `<div class="row-line">
-          <div><strong style="font-size:20px">${x.brand || ""} ${x.model || ""}</strong><div class="small-note">${x.entryType || ""} ｜ ${x.plate || "—"} ｜ ${x.status || "在庫"}</div></div>
-          <div>
-            <span class="pill">車成本 ${fmtNum(x.buyAmount)}</span>
-            <span class="pill">整備 ${fmtNum(x.repairTotal)}</span>
-            <span class="pill">總成本 ${fmtNum(x.totalCost)}</span>
-            <span class="pill">KPI ${fmtNum(x.kpiProfit)}</span>
-          </div>
-        </div>`;
-      });
-    }
-
-    function renderSoldOverview(){
-      const company = document.getElementById("soldCompanyFilter").value;
-      const year = document.getElementById("soldYearFilter").value;
-      const month = document.getElementById("soldMonthFilter").value;
-      let sold = load(KEYS.inventory).filter(x => x.status === "已售");
-      if(company !== "全部") sold = sold.filter(x => x.entryType === company);
-      if(year !== "全部") sold = sold.filter(x => (x.saleDate || "").slice(0,4) === year);
-      if(month !== "全部") sold = sold.filter(x => (x.saleDate || "").slice(5,7) === month.padStart(2,"0"));
-
-      document.getElementById("soldFilterCount").textContent = fmtNum(sold.length);
-      const profit = sold.reduce((s,x) => s + (Number(x.profit) || 0), 0);
-      const profitEl = document.getElementById("soldFilterProfit");
-      profitEl.textContent = fmtNum(profit);
-      profitEl.className = "v " + (profit >= 0 ? "good":"bad");
-      document.getElementById("soldFilterCompany").textContent = company === "全部" ? "全部公司" : company;
-      document.getElementById("soldFilterMonth").textContent = [year, month].filter(x => x && x !== "全部").join("-") || "全部";
-
-      const sellerMap = {};
-      sold.forEach(x => { sellerMap[x.sellerPerson] = (sellerMap[x.sellerPerson] || 0) + 1; });
-      const sellerBox = document.getElementById("soldSellerSummary");
-      sellerBox.innerHTML = "";
-      const sellerArr = Object.entries(sellerMap).sort((a,b) => b[1]-a[1]);
-      if(sellerArr.length === 0) sellerBox.innerHTML = `<div class="empty">此條件下沒有業務售出資料</div>`;
-      else sellerArr.forEach(([name,count], idx) => {
-        sellerBox.innerHTML += `<div class="row-line"><div><strong>#${idx+1} ${name}</strong></div><div><span class="pill">${count} 台</span></div></div>`;
-      });
-
-      const listBox = document.getElementById("soldListBox");
-      listBox.innerHTML = "";
-      if(sold.length === 0){
-        listBox.innerHTML = `<div class="empty">此條件下沒有已售資料</div>`;
-        return;
-      }
-      sold.sort((a,b) => (b.saleDate || "").localeCompare(a.saleDate || ""));
-      sold.forEach(x => {
-        listBox.innerHTML += `<div class="row-line">
-          <div>
-            <strong style="font-size:19px">${x.brand} ${x.model}</strong>
-            <div class="small-note">${x.entryType} ｜ ${x.plate} ｜ 售出日：${x.saleDate || "—"} ｜ 售出人：${x.sellerPerson || "—"} ｜ 新車主：${x.newOwner || "—"}</div>
-          </div>
-          <div>
-            <span class="pill">售出 ${fmtNum(x.sellAmount)}</span>
-            <span class="pill">整備 ${fmtNum(x.repairTotal)}</span>
-            <span class="pill">利潤 ${fmtNum(x.profit)}</span>
-            <button class="mini-btn secondary" onclick="showPhotos('${x.id}')">查看照片</button>
-          </div>
-        </div>`;
-      });
-    }
-
-    function saveAnnouncement(){
-      const title = document.getElementById("announcementTitle").value.trim();
-      const content = document.getElementById("announcementContent").value.trim();
-      if(!title || !content){ alert("請填寫公告標題與內容"); return; }
-      const data = load(KEYS.announcements);
-      data.unshift({id:String(Date.now()), title, content, createdAt:new Date().toLocaleString("zh-TW"), readBy:[]});
-      save(KEYS.announcements, data);
-      document.getElementById("announcementTitle").value = "";
-      document.getElementById("announcementContent").value = "";
-      renderAnnouncements();
-    }
-
-    function toggleRead(announcementId, employeeName){
-      const data = load(KEYS.announcements);
-      const idx = data.findIndex(x => x.id === announcementId);
-      if(idx < 0) return;
-      const set = new Set(data[idx].readBy || []);
-      if(set.has(employeeName)) set.delete(employeeName); else set.add(employeeName);
-      data[idx].readBy = Array.from(set);
-      save(KEYS.announcements, data);
-      renderAnnouncements();
-    }
-
-    function deleteAnnouncement(id){
-      if(!confirm("確定刪除這則公告？")) return;
-      save(KEYS.announcements, load(KEYS.announcements).filter(x => x.id !== id));
-      renderAnnouncements();
-    }
-
-    function renderAnnouncements(){
-      const box = document.getElementById("announcementList");
-      const data = load(KEYS.announcements);
-      const employees = load(KEYS.employees);
-      box.innerHTML = "";
-      if(data.length === 0){ box.innerHTML = `<div class="empty">目前沒有公告</div>`; return; }
-      data.forEach(a => {
-        const readButtons = employees.map(emp => {
-          const active = (a.readBy || []).includes(emp.name);
-          return `<button class="${active ? 'success' : 'secondary'}" style="padding:8px 12px;font-size:14px" onclick="toggleRead('${a.id}', ${JSON.stringify(emp.name)})">${emp.name}${active ? ' 已讀' : ''}</button>`;
-        }).join("");
-        box.innerHTML += `<div class="row-line" style="display:block">
-          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
-            <div><div style="font-size:21px;font-weight:900">${a.title}</div><div class="small-note">${a.createdAt}</div></div>
-            <button class="danger" onclick="deleteAnnouncement('${a.id}')">刪除</button>
-          </div>
-          <div style="margin-top:10px;line-height:1.9;font-size:16px">${a.content}</div>
-          <div class="small-note" style="margin-top:10px">已讀人數：${(a.readBy || []).length}</div>
-          <div class="actions">${readButtons || '<span class="small-note">請先建立員工資料後再標記已讀</span>'}</div>
-        </div>`;
-      });
-    }
-
-    function renderSalesRanking(){
-      const sold = load(KEYS.inventory).filter(x => x.status === "已售" && x.sellerPerson);
-      const countMap = {};
-      sold.forEach(x => { countMap[x.sellerPerson] = (countMap[x.sellerPerson] || 0) + 1; });
-      const arr = Object.entries(countMap).sort((a,b) => b[1]-a[1]);
-      const box = document.getElementById("rankCountBox");
-      box.innerHTML = "";
-      if(arr.length === 0){ box.innerHTML = `<div class="empty">目前還沒有售出資料</div>`; return; }
-      arr.forEach(([name,value], idx) => {
-        box.innerHTML += `<div class="row-line"><div style="font-size:20px;font-weight:900">#${idx+1} ${name}</div><div><span class="pill">${value} 台</span></div></div>`;
-      });
-    }
-
-    function renderKpiRanking(){
-      const sold = load(KEYS.inventory).filter(x => x.status === "已售" && x.sellerPerson);
-      const kpiMap = {};
-      sold.forEach(x => { kpiMap[x.sellerPerson] = (kpiMap[x.sellerPerson] || 0) + (Number(x.kpiProfit) || 0); });
-      const arr = Object.entries(kpiMap).sort((a,b) => b[1]-a[1]);
-      const box = document.getElementById("rankKpiBox");
-      box.innerHTML = "";
-      if(arr.length === 0){ box.innerHTML = `<div class="empty">目前還沒有售出資料</div>`; return; }
-      arr.forEach(([name,value], idx) => {
-        box.innerHTML += `<div class="row-line"><div style="font-size:20px;font-weight:900">#${idx+1} ${name}</div><div><span class="pill">${fmtNum(value)}</span></div></div>`;
-      });
-    }
-
-    function saveEmployee(){
-      const id = document.getElementById("employeeEditId").value || String(Date.now());
-      const name = document.getElementById("employeeName").value.trim();
-      if(!name){ alert("請填寫員工姓名"); return; }
-      const emp = { id, name, role:document.getElementById("employeeRole").value.trim(), phone:document.getElementById("employeePhone").value.trim(), lineName:document.getElementById("employeeLineName").value.trim(), applyStatus:document.getElementById("employeeApplyStatus").value, loginType:document.getElementById("employeeLoginType").value, note:document.getElementById("employeeNote").value.trim() };
-      const data = load(KEYS.employees);
-      const idx = data.findIndex(x => x.id === id);
-      if(idx >= 0) data[idx] = emp; else data.push(emp);
-      save(KEYS.employees, data);
-      resetEmployeeForm();
-      renderEmployees();
-      renderAnnouncements();
-    }
-
-    function editEmployee(id){
-      const emp = load(KEYS.employees).find(x => x.id === id);
-      if(!emp) return;
-      document.getElementById("employeeEditId").value = emp.id;
-      document.getElementById("employeeName").value = emp.name || "";
-      document.getElementById("employeeRole").value = emp.role || "";
-      document.getElementById("employeePhone").value = emp.phone || "";
-      document.getElementById("employeeLineName").value = emp.lineName || "";
-      document.getElementById("employeeApplyStatus").value = emp.applyStatus || "未申請";
-      document.getElementById("employeeLoginType").value = emp.loginType || "LINE";
-      document.getElementById("employeeNote").value = emp.note || "";
-      showPanel("people", document.querySelectorAll(".menu button")[6]);
-    }
-
-    function deleteEmployee(id){
-      if(!confirm("確定刪除員工？")) return;
-      save(KEYS.employees, load(KEYS.employees).filter(x => x.id !== id));
-      renderEmployees();
-      renderAnnouncements();
-    }
-
-function approveEmployee(id){
-      const data = load(KEYS.employees);
-      const idx = data.findIndex(x => x.id === id);
-      if(idx < 0) return;
-      data[idx].applyStatus = "已核准";
-      save(KEYS.employees, data);
-      renderEmployees();
-    }
-
-    function resetEmployeeForm(){
-      ["employeeEditId","employeeName","employeeRole","employeePhone","employeeLineName","employeeNote"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("employeeApplyStatus").value = "未申請";
-      document.getElementById("employeeLoginType").value = "LINE";
-    }
-
-    function renderEmployees(){
-      const box = document.getElementById("employeeList");
-      const data = load(KEYS.employees);
-      box.innerHTML = "";
-      if(data.length === 0){ box.innerHTML = `<div class="empty">目前沒有員工資料</div>`; return; }
-      data.forEach(x => {
-        box.innerHTML += `<div class="row-line">
-          <div>
-            <div style="font-size:20px;font-weight:900">${x.name}</div>
-            <div class="small-note">
-              ${x.role || "未填職稱"} ｜ ${x.phone || "未填電話"} ｜ LINE：${x.lineName || "未填"} ｜ ${x.loginType || "LINE"} ｜ 狀態：${x.applyStatus || "未申請"}
-            </div>
-            <div class="small-note">${x.note || "—"}</div>
-          </div>
-          <div class="actions" style="margin-top:0">
-            <button class="secondary" onclick="approveEmployee('${x.id}')">一鍵核准</button>
-            <button class="secondary" onclick="editEmployee('${x.id}')">編輯</button>
-            <button class="danger" onclick="deleteEmployee('${x.id}')">刪除</button>
-          </div>
-        </div>`;
-      });
-    }
-
-    
-    function initSoldDateDropdowns(){
-      const yearSel = document.getElementById("soldYearFilter");
-      const monthSel = document.getElementById("soldMonthFilter");
-      if(!yearSel || !monthSel) return;
-
-      const currentYear = yearSel.value || "全部";
-      const currentMonth = monthSel.value || "全部";
-      const records = load(KEYS.inventory).filter(x => x.saleDate);
-      const years = Array.from(new Set(records.map(x => (x.saleDate || "").slice(0,4)).filter(Boolean))).sort((a,b) => b.localeCompare(a));
-      yearSel.innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join("");
-      monthSel.innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i) => {
-        const m = String(i+1).padStart(2,"0");
-        return `<option value="${m}">${m}月</option>`;
-      }).join("");
-      if ([...yearSel.options].some(o => o.value === currentYear)) yearSel.value = currentYear;
-      if ([...monthSel.options].some(o => o.value === currentMonth)) monthSel.value = currentMonth;
-    }
-
-function renderAll(){
-      initSoldDateDropdowns();
-      renderFormulaPreview();
-      renderVehicles();
-      renderCostOverview();
-      renderSoldOverview();
-      renderAnnouncements();
-      renderSalesRanking();
-      renderKpiRanking();
-      renderEmployees();
-      setVehicleView(localStorage.getItem(KEYS.view) || "table");
-    }
-
-    
-    function getNavButton(name){
-      return document.querySelector('.bottom-nav button[data-panel="' + name + '"]') || document.querySelector('.menu button[onclick*="\'' + name + '\'"]');
-    }
-
-    function bindMobileMenu(){
-      [...document.querySelectorAll('.menu button'), ...document.querySelectorAll('.bottom-nav button')].forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.addEventListener('touchend', function(e){
-          e.preventDefault();
-          btn.click();
-        }, {passive:false});
-      });
-    }
-
-    let lastScrollY = 0;
-    function initBottomNavBehavior(){
-      const nav = document.getElementById('bottomNav');
-      if(!nav) return;
-
-      window.addEventListener('scroll', function(){
-        const y = window.scrollY || window.pageYOffset;
-        if (window.innerWidth > 900) return;
-
-        if (y > lastScrollY && y > 120){
-          nav.classList.add('hidden');
-        } else {
-          nav.classList.remove('hidden');
-        }
-        lastScrollY = y;
-      }, {passive:true});
-    }
-
-    function enforceMobileCardView(){
-      if (window.innerWidth <= 900) {
-        setVehicleView('card');
-      }
-    }
-
-document.getElementById("entryType").addEventListener("change", renderFormulaPreview);
-    document.getElementById("carPhotoInput").addEventListener("change", () => handleCreatePhotoInput("carPhotoInput","carPhoto"));
-    document.getElementById("licensePhotoInput").addEventListener("change", () => handleCreatePhotoInput("licensePhotoInput","licensePhoto"));
-    document.getElementById("repairItems").addEventListener("input", updateRepairSummary);
-    document.getElementById("buyAmount").addEventListener("input", renderFormulaPreview);
-    document.getElementById("companyAdjust").addEventListener("input", renderFormulaPreview);
-    document.getElementById("invoiceTaxRate").addEventListener("input", renderFormulaPreview);
-    document.getElementById("businessTaxRate").addEventListener("input", renderFormulaPreview);
-
-    resetVehicleForm();
-    renderAll();
-  </script>
-
-  <div class="bottom-nav" id="bottomNav">
-    <button data-panel="vehicle" class="active" onclick="showPanel('vehicle', this)">
-      <span class="nav-icon">🚗</span><span class="nav-label">車輛管理</span>
-    </button>
-    <button data-panel="cost" onclick="showPanel('cost', this)">
-      <span class="nav-icon">💰</span><span class="nav-label">成本總覽</span>
-    </button>
-    <button data-panel="sold" onclick="showPanel('sold', this)">
-      <span class="nav-icon">📚</span><span class="nav-label">已售歷史</span>
-    </button>
-    <button data-panel="board" onclick="showPanel('board', this)">
-      <span class="nav-icon">📢</span><span class="nav-label">公佈欄</span>
-    </button>
-    <button data-panel="performance" onclick="showPanel('performance', this)">
-      <span class="nav-icon">📊</span><span class="nav-label">業績排行</span>
-    </button>
-    <button data-panel="people" onclick="showPanel('people', this)">
-      <span class="nav-icon">👤</span><span class="nav-label">人員設定</span>
-    </button>
-  </div>
-
-
-<script>
-function calcProfit(){
-  const buy = parseFloat(document.querySelector('[placeholder="例如 100000"]')?.value || 0);
-  const sell = parseFloat(document.querySelector('[placeholder="例如 350000"]')?.value || 0);
-  const tax1 = 0.05;
-  const tax2 = 0.012;
-
-  const tax = sell * (tax1 + tax2);
-  const profit = sell - buy - tax;
-
-  let el = document.getElementById("autoProfit");
-  if(!el){
-    el = document.createElement("div");
-    el.id = "autoProfit";
-    el.style.marginTop = "10px";
-    el.style.fontWeight = "bold";
-    document.querySelector("h3").after(el);
-  }
-  el.innerHTML = "預估利潤：" + profit.toLocaleString();
-}
-
-document.addEventListener("input", calcProfit);
-</script>
-
-
-<script>
-function updateRanking(){
-  let box = document.getElementById("rankCountBox");
-  if(!box) return;
-  box.innerHTML = "<div>金恩 - 5台</div><div>陳柏誠 - 3台</div>";
-}
-setInterval(updateRanking,2000);
-</script>
-
-
-<script>
-let salesData = JSON.parse(localStorage.getItem("salesData")||"[]");
-
-function saveSale(name, profit){
-  salesData.push({name, profit});
-  localStorage.setItem("salesData", JSON.stringify(salesData));
-  renderRanking();
-}
-
-function renderRanking(){
-  const countBox = document.getElementById("rankCountBox");
-  const kpiBox = document.getElementById("rankKpiBox");
-  if(!countBox || !kpiBox) return;
-
-  let countMap = {};
-  let profitMap = {};
-
-  salesData.forEach(s=>{
-    countMap[s.name]=(countMap[s.name]||0)+1;
-    profitMap[s.name]=(profitMap[s.name]||0)+s.profit;
-  });
-
-  countBox.innerHTML = Object.entries(countMap)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([n,v])=>`${n} - ${v}台`).join("");
-
-  kpiBox.innerHTML = Object.entries(profitMap)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([n,v])=>`${n} - $${v}`).join("");
-}
-
-renderRanking();
-</script>
-
-<script>
-let money = JSON.parse(localStorage.getItem("money")||"{}");
-
-function addMoney(type, amount){
-  money[type]=(money[type]||0)+amount;
-  localStorage.setItem("money", JSON.stringify(money));
-}
-</script>
-
-<script>
-function notify(msg){
-  console.log("LINE通知:", msg);
-}
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  var root = document.querySelector(".container") || document.body;
-  var note = document.createElement("div");
-  note.id = "paymentHint";
-  note.className = "inline-note hidden-note";
-  note.textContent = "提醒：售出前請先選付款方式（現金或貸款）。";
-  if (root.firstChild) {
-    root.insertBefore(note, root.firstChild);
-  } else {
-    root.appendChild(note);
-  }
-
-  var selects = Array.from(document.querySelectorAll("select"));
-  var paymentSelect = selects.find(function(s){
-    return Array.from(s.options).some(function(o){
-      return o.text.indexOf("現金") >= 0 || o.text.indexOf("貸款") >= 0;
-    });
-  });
-
-  if(paymentSelect){
-    paymentSelect.addEventListener("change", function(){
-      if(paymentSelect.value){
-        note.classList.add("hidden-note");
-      } else {
-        note.classList.remove("hidden-note");
-      }
+      req.onsuccess = () => { db = req.result; resolve(); };
+      req.onerror = () => reject(req.error);
     });
   }
-});
-</script>
 
-
-
-
-<script>
-(function(){
-  const INVENTORY_KEY = 'hongyi_inventory_records_v2';
-  const CREATED_FLAG_KEY = 'hongyi_vehicle_created_flag_v1';
-  const SALES_KEY = 'hongyi_sales_records_v2';
-  const MONEY_KEY = 'hongyi_money_records_v2';
-
-  function $(id){ return document.getElementById(id); }
-  function q(sel){ return document.querySelector(sel); }
-  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
-
-  function toast(msg){
-    let t = $('saveToast');
-    if(!t){
-      t = document.createElement('div');
-      t.id = 'saveToast';
-      t.className = 'save-toast';
-      document.body.appendChild(t);
-    }
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+  function dbGetAll(){
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
   }
 
-  function getJSON(key){
-    try{ return JSON.parse(localStorage.getItem(key) || '[]'); }
-    catch(e){ return []; }
-  }
-  function setJSON(key, val){
-    localStorage.setItem(key, JSON.stringify(val));
+  function dbGet(id){
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
   }
 
-  function readFile(file){
-    return new Promise((resolve,reject)=>{
+  function dbPut(record){
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(record);
+      req.onsuccess = () => resolve(record);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function fileToDataURL(file){
+    return new Promise((resolve, reject) => {
       if(!file){ resolve(''); return; }
-      const r = new FileReader();
-      r.onload = ()=>resolve(r.result);
-      r.onerror = reject;
-      r.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
     });
   }
 
-  function parseRepairTotal(){
-    const txt = $('repairItems').value || '';
-    const rows = txt.split(/\n+/).filter(Boolean);
-    let total = 0;
-    rows.forEach(line=>{
-      const parts = line.split(':');
-      if(parts.length >= 2){
-        total += Number(parts.slice(1).join(':').replace(/,/g,'').trim()) || 0;
-      }
-    });
-    $('repairCount').value = rows.length;
-    return total;
-  }
-
-  function updateTransferField(){
-    const entry = $('entryType').value;
-    const wrap = $('transferField');
-    const label = $('transferLabel');
-    const input = $('transferName');
-
-    if(entry === '寄賣'){
-      wrap.classList.remove('hidden-field');
-      label.textContent = '目前車主 *';
-      input.placeholder = '請輸入目前車主';
-      input.value = '';
-      input.readOnly = false;
-    }else if(entry === '調做'){
-      wrap.classList.remove('hidden-field');
-      label.textContent = '車行名稱 *';
-      input.placeholder = '請輸入車行名稱';
-      input.value = '';
-      input.readOnly = false;
-    }else{
-      wrap.classList.add('hidden-field');
-      input.value = entry;
-      input.readOnly = true;
-    }
-    updateOverview();
-  }
-
-  function setEntryType(value){
-    $('entryType').value = value;
-    qa('.entry-btn').forEach(b=>b.classList.toggle('active', b.dataset.value === value));
-    updateTransferField();
-  }
-
-
-  function setWorkflowVisible(visible){ return; }
-
-  function updateLoanOther(){
-    $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
-  }
-
-  function calcTaxesAndProfit(){
-    const entry = $('entryType').value;
-    const buy = Number($('buyAmount').value || 0);
-    const adjust = Number($('companyAdjust').value || 0);
-    const repairTotal = parseRepairTotal();
-    const sell = Number($('sellAmount').value || 0);
-    const invoiceRate = Number($('invoiceTaxRate').value || 5) / 100;
-    const businessRate = Number($('businessTaxRate').value || 1.2) / 100;
-    const taxable = entry === '屏東鴻翊汽車' || entry === '鴻豪汽車商行';
-
-    let invoiceTax = 0;
-    let businessTax = 0;
-    if(taxable && sell > 0){
-      const baseProfit = sell - (buy + repairTotal);
-      invoiceTax = Math.max(baseProfit, 0) * invoiceRate;
-      businessTax = sell * businessRate;
-    }
-    const profit = sell > 0 ? sell - buy - repairTotal - invoiceTax - businessTax + adjust : 0;
-    return {buy, adjust, repairTotal, sell, taxable, invoiceTax, businessTax, profit};
-  }
-
-  function updateOverview(){ return; }
-
-  async function updatePreviewPhotos(){
-    const grid = $('previewPhotos');
-    grid.innerHTML = '';
-    const car = $('carPhotoInput').files[0];
-    const lic = $('licensePhotoInput').files[0];
-    if(car){
-      const d = await readFile(car);
-      grid.innerHTML += `<div class="photo-box"><img src="${d}"><div class="cap">車輛照片</div></div>`;
-    }
-    if(lic){
-      const d = await readFile(lic);
-      grid.innerHTML += `<div class="photo-box"><img src="${d}"><div class="cap">行照照片</div></div>`;
-    }
-  }
-
-  
-function renderInventory(){
-    const rows = getJSON(INVENTORY_KEY);
-    const listBox = $('savedVehicleListView') || $('savedVehicleInner');
-    const cardBox = $('savedVehicleCardView');
-    if(listBox){
-      listBox.innerHTML = rows.length ? rows.map(r=>`
-        <div class="record-row">
-          <div>
-            <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
-            <div class="vehicle-actions">
-              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
-              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
-            </div>
-          </div>
-        </div>
-      `).join('') : '<div class="small-note">目前還沒有資料</div>';
-    }
-    if(cardBox){
-      cardBox.innerHTML = rows.length ? rows.map(r=>`
-        <div class="car-card">
-          <div class="car-photo">${r.carPhoto ? `<img class="saved-thumb" src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
-          <div class="car-body">
-            <div class="car-title">${r.brand} ${r.model}</div>
-            <div class="car-line">車牌：${r.plate}</div>
-            <div class="car-line">年份：${r.year}</div>
-            <div class="car-line">入庫：${r.entryType}</div>
-            <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
-            <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
-            <div class="car-line">狀態：${r.status}</div>
-            <div class="vehicle-actions">
-              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
-              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
-            </div>
-          </div>
-        </div>
-      `).join('') : '<div class="small-note">目前還沒有資料</div>';
-    }
-    bindInventoryActionButtons();
-  }
-
-  function renderSoldHistory(){
-    const rows = getJSON(SALES_KEY);
-    if($('soldListBox')){
-      $('soldListBox').innerHTML = rows.length ? rows.map(r=>`
-        <div class="row-line">
-          <div>
-            <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-            <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出業務：${r.sellerPerson} ｜ 新車主：${r.newOwner || '—'}</div>
-          </div>
-          <div>
-            <span class="pill">售出 ${Number(r.sellAmount).toLocaleString('zh-TW')}</span>
-            <span class="pill">利潤 ${Math.round(r.profit).toLocaleString('zh-TW')}</span>
-          </div>
-        </div>
-      `).join('') : '<div class="empty">目前沒有已售資料</div>';
-    }
-    if($('soldSellerSummary')){
-      const map = {};
-      rows.forEach(r=>{ map[r.sellerPerson] = (map[r.sellerPerson] || 0) + 1; });
-      const arr = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-      $('soldSellerSummary').innerHTML = arr.length ? arr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
-    }
-  }
-
-
-
-  function findInventoryById(id){
-    return getJSON(INVENTORY_KEY).find(r => String(r.id) === String(id));
-  }
-
-  function updateInventoryRecord(updated){
-    const rows = getJSON(INVENTORY_KEY).map(r => String(r.id) === String(updated.id) ? updated : r);
-    setJSON(INVENTORY_KEY, rows);
-  }
-
-  function upsertSaleRecord(record){
-    let rows = getJSON(SALES_KEY);
-    const idx = rows.findIndex(r => String(r.id) === String(record.id));
-    if(idx >= 0) rows[idx] = record;
-    else rows.unshift(record);
-    setJSON(SALES_KEY, rows);
-  }
-
-  function openFlowModal(title, bodyHtml){
-    $('flowModalTitle').textContent = title;
-    $('flowModalBody').innerHTML = bodyHtml;
-    $('flowModal').classList.add('show');
-  }
-
-  function closeFlowModal(){
-    $('flowModal').classList.remove('show');
-    $('flowModalBody').innerHTML = '';
-  }
-
-
-  function bindModalGlobalEvents(){
-    if($('flowModalClose')){
-      $('flowModalClose').onclick = function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        closeFlowModal();
-      };
-    }
-    if($('flowModal')){
-      $('flowModal').onclick = function(e){
-        if(e.target === $('flowModal')){
-          closeFlowModal();
-        }
-      };
-    }
-
-    document.addEventListener('click', async function(e){
-      const target = e.target.closest('button');
-      if(!target) return;
-
-      if(target.id === 'saveDepositFlowBtn'){
-        e.preventDefault();
-        const id = target.getAttribute('data-id');
-        const row = findInventoryById(id);
-        if(!row) return toast('找不到車輛資料');
-        if(!$('modalDepositAmount').value.trim()) return toast('請填收訂金額');
-        if(!$('modalDepositAccount').value.trim()) return toast('請選款項位置');
-        if(!$('modalPaymentType').value.trim()) return toast('請選付款方式（現金或貸款）');
-        if($('modalPaymentType').value === '貸款'){
-          if(!$('modalLoanCompany').value.trim()) return toast('貸款請填貸款公司');
-          if(!$('modalLoanAgent').value.trim()) return toast('貸款請選貸款業務');
-          if($('modalLoanAgent').value === '其他' && !$('modalLoanAgentOther').value.trim()) return toast('請填其他貸款業務');
-        }
-
-        row.hasDeposit = '已收訂';
-        row.depositAmount = Number($('modalDepositAmount').value) || 0;
-        row.depositAccount = $('modalDepositAccount').value;
-        row.paymentType = $('modalPaymentType').value;
-        row.loanCompany = $('modalLoanCompany').value.trim();
-        row.loanAgent = $('modalLoanAgent').value === '其他' ? $('modalLoanAgentOther').value.trim() : $('modalLoanAgent').value;
-        if($('modalDepositPhoto').files[0]) row.depositPhoto = await readFile($('modalDepositPhoto').files[0]);
-
-        updateInventoryRecord(row);
-        const money = getJSON(MONEY_KEY);
-        money.unshift({time:new Date().toISOString(), type:row.depositAccount, amount:row.depositAmount, plate:row.plate});
-        setJSON(MONEY_KEY, money);
-        renderInventory();
-        closeFlowModal();
-        toast('收訂資料已儲存');
-      }
-
-      if(target.id === 'saveSellFlowBtn'){
-        e.preventDefault();
-        const id = target.getAttribute('data-id');
-        const row = findInventoryById(id);
-        if(!row) return toast('找不到車輛資料');
-        if(!row.hasDeposit || row.hasDeposit !== '已收訂') return toast('請先完成收訂');
-        if(!row.paymentType) return toast('請先在收訂作業中選擇付款方式');
-        if(!$('modalSellerPerson').value.trim()) return toast('請選售出業務');
-        if(!$('modalSellAmount').value.trim()) return toast('請填售出金額');
-
-        row.sellerPerson = $('modalSellerPerson').value;
-        row.newOwner = $('modalNewOwner').value.trim();
-        row.companyFloorPrice = Number($('modalCompanyFloorPrice').value) || 0;
-        row.sellAmount = Number($('modalSellAmount').value) || 0;
-        if($('modalNewOwnerLicense').files[0]) row.newOwnerLicensePhoto = await readFile($('modalNewOwnerLicense').files[0]);
-        row.soldStatus = '已售出';
-        row.status = '已售';
-
-        const taxable = row.entryType === '屏東鴻翊汽車' || row.entryType === '鴻豪汽車商行';
-        const repairTotal = Number(row.repairTotal || 0);
-        const buy = Number(row.buyAmount || 0);
-        row.invoiceTax = taxable ? Math.max(row.sellAmount - (buy + repairTotal), 0) * 0.05 : 0;
-        row.businessTax = taxable ? row.sellAmount * 0.012 : 0;
-        row.profit = row.sellAmount - buy - repairTotal - row.invoiceTax - row.businessTax + Number(row.companyAdjust || 0);
-
-        updateInventoryRecord(row);
-        upsertSaleRecord(row);
-        renderInventory();
-        renderSoldHistory();
-        renderPerformance();
-        closeFlowModal();
-        toast('售出資料已儲存');
-      }
-    }, true);
-
-    document.addEventListener('change', function(e){
-      const target = e.target;
-      if(target && target.id === 'modalLoanAgent'){
-        $('modalLoanOtherWrap').classList.toggle('hidden-field', $('modalLoanAgent').value !== '其他');
-      }
-    }, true);
-  }
-
-  function bindInventoryActionButtons(){
-    qa('[data-action="deposit"]').forEach(btn=>{
-      btn.onclick = function(){
-        const id = btn.getAttribute('data-id');
-        const row = findInventoryById(id);
-        if(!row) return;
-        openFlowModal('收訂作業 - ' + row.brand + ' ' + row.model, `
-          <div class="form-grid">
-            <div>
-              <label>是否收訂</label>
-              <select id="modalHasDeposit">
-                <option value="已收訂">已收訂</option>
-              </select>
-            </div>
-            <div>
-              <label>收訂金額</label>
-              <input id="modalDepositAmount" type="number" value="${row.depositAmount || ''}" placeholder="例如 30000">
-            </div>
-            <div>
-              <label>收訂照片</label>
-              <input id="modalDepositPhoto" type="file" accept="image/*">
-            </div>
-            <div>
-              <label>款項位置</label>
-              <select id="modalDepositAccount">
-                <option value="">請選擇</option>
-                <option value="公司帳戶" ${row.depositAccount==='公司帳戶'?'selected':''}>公司帳戶</option>
-                <option value="個人帳戶" ${row.depositAccount==='個人帳戶'?'selected':''}>個人帳戶</option>
-              </select>
-            </div>
-            <div>
-              <label>付款方式</label>
-              <select id="modalPaymentType">
-                <option value="">請選擇</option>
-                <option value="現金" ${row.paymentType==='現金'?'selected':''}>現金</option>
-                <option value="貸款" ${row.paymentType==='貸款'?'selected':''}>貸款</option>
-              </select>
-            </div>
-            <div>
-              <label>貸款公司</label>
-              <input id="modalLoanCompany" value="${row.loanCompany || ''}" placeholder="如現金可留空">
-            </div>
-            <div>
-              <label>貸款業務</label>
-              <select id="modalLoanAgent">
-                <option value="">請選擇</option>
-                <option value="中租怡婷" ${row.loanAgent==='中租怡婷'?'selected':''}>中租怡婷</option>
-                <option value="裕融若榛" ${row.loanAgent==='裕融若榛'?'selected':''}>裕融若榛</option>
-                <option value="和潤子豪" ${row.loanAgent==='和潤子豪'?'selected':''}>和潤子豪</option>
-                <option value="和潤萱宇" ${row.loanAgent==='和潤萱宇'?'selected':''}>和潤萱宇</option>
-                <option value="匯豐仕謙" ${row.loanAgent==='匯豐仕謙'?'selected':''}>匯豐仕謙</option>
-                <option value="其他" ${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?'selected':''}>其他</option>
-              </select>
-            </div>
-            <div id="modalLoanOtherWrap" class="${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?'':'hidden-field'}">
-              <label>其他貸款業務</label>
-              <input id="modalLoanAgentOther" value="${row.loanAgent && !['中租怡婷','裕融若榛','和潤子豪','和潤萱宇','匯豐仕謙'].includes(row.loanAgent)?row.loanAgent:''}" placeholder="手動填寫">
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="primary" id="saveDepositFlowBtn">儲存收訂</button>
-          </div>
-        `);
-
-        $('modalLoanAgent').onchange = function(){
-          $('modalLoanOtherWrap').classList.toggle('hidden-field', $('modalLoanAgent').value !== '其他');
-        };
-
-        document.getElementById('saveDepositFlowBtn').setAttribute('data-id', id); $('saveDepositFlowBtn').onclick = null; /* delegated */ if(false){
-          if(!$('modalDepositAmount').value.trim()) return toast('請填收訂金額');
-          if(!$('modalDepositAccount').value.trim()) return toast('請選款項位置');
-          if(!$('modalPaymentType').value.trim()) return toast('請選付款方式（現金或貸款）');
-          if($('modalPaymentType').value === '貸款'){
-            if(!$('modalLoanCompany').value.trim()) return toast('貸款請填貸款公司');
-            if(!$('modalLoanAgent').value.trim()) return toast('貸款請選貸款業務');
-            if($('modalLoanAgent').value === '其他' && !$('modalLoanAgentOther').value.trim()) return toast('請填其他貸款業務');
-          }
-          row.hasDeposit = '已收訂';
-          row.depositAmount = Number($('modalDepositAmount').value) || 0;
-          row.depositAccount = $('modalDepositAccount').value;
-          row.paymentType = $('modalPaymentType').value;
-          row.loanCompany = $('modalLoanCompany').value.trim();
-          row.loanAgent = $('modalLoanAgent').value === '其他' ? $('modalLoanAgentOther').value.trim() : $('modalLoanAgent').value;
-          if($('modalDepositPhoto').files[0]) row.depositPhoto = await readFile($('modalDepositPhoto').files[0]);
-          updateInventoryRecord(row);
-          const money = getJSON(MONEY_KEY);
-          money.unshift({time:new Date().toISOString(), type:row.depositAccount, amount:row.depositAmount, plate:row.plate});
-          setJSON(MONEY_KEY, money);
-          renderInventory();
-          closeFlowModal();
-          toast('收訂資料已儲存');
-        }
-      };
-    });
-
-    qa('[data-action="sell"]').forEach(btn=>{
-      btn.onclick = function(){
-        const id = btn.getAttribute('data-id');
-        const row = findInventoryById(id);
-        if(!row) return;
-        openFlowModal('售出作業 - ' + row.brand + ' ' + row.model, `
-          <div class="form-grid">
-            <div>
-              <label>售出業務</label>
-              <select id="modalSellerPerson">
-                <option value="">請選擇</option>
-                ${['葉咨廷','陳柏誠','許晟豪','吳俊廷','劉家瑋','林家旻','吳宥勳','吳七一','林宥甫','劉穎','蔡冠宇','鄭宜隆','蕭宇廷'].map(n=>`<option value="${n}" ${row.sellerPerson===n?'selected':''}>${n}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label>新車主</label>
-              <input id="modalNewOwner" value="${row.newOwner || ''}" placeholder="例如 王小明">
-            </div>
-            <div>
-              <label>新車主行照</label>
-              <input id="modalNewOwnerLicense" type="file" accept="image/*">
-            </div>
-            <div>
-              <label>公司底價</label>
-              <input id="modalCompanyFloorPrice" type="number" value="${row.companyFloorPrice || ''}" placeholder="例如 300000">
-            </div>
-            <div>
-              <label>售出金額</label>
-              <input id="modalSellAmount" type="number" value="${row.sellAmount || ''}" placeholder="例如 350000">
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="primary" id="saveSellFlowBtn">儲存售出</button>
-          </div>
-        `);
-
-        document.getElementById('saveSellFlowBtn').setAttribute('data-id', id); $('saveSellFlowBtn').onclick = null; /* delegated */ if(false){
-          if(!row.hasDeposit || row.hasDeposit !== '已收訂') return toast('請先完成收訂');
-          if(!row.paymentType) return toast('請先在收訂作業中選擇付款方式');
-          if(!$('modalSellerPerson').value.trim()) return toast('請選售出業務');
-          if(!$('modalSellAmount').value.trim()) return toast('請填售出金額');
-
-          row.sellerPerson = $('modalSellerPerson').value;
-          row.newOwner = $('modalNewOwner').value.trim();
-          row.companyFloorPrice = Number($('modalCompanyFloorPrice').value) || 0;
-          row.sellAmount = Number($('modalSellAmount').value) || 0;
-          if($('modalNewOwnerLicense').files[0]) row.newOwnerLicensePhoto = await readFile($('modalNewOwnerLicense').files[0]);
-          row.soldStatus = '已售出';
-          row.status = '已售';
-
-          const taxable = row.entryType === '屏東鴻翊汽車' || row.entryType === '鴻豪汽車商行';
-          const repairTotal = Number(row.repairTotal || 0);
-          const buy = Number(row.buyAmount || 0);
-          row.invoiceTax = taxable ? Math.max(row.sellAmount - (buy + repairTotal), 0) * 0.05 : 0;
-          row.businessTax = taxable ? row.sellAmount * 0.012 : 0;
-          row.profit = row.sellAmount - buy - repairTotal - row.invoiceTax - row.businessTax + Number(row.companyAdjust || 0);
-
-          updateInventoryRecord(row);
-          upsertSaleRecord(row);
-          renderInventory();
-          renderSoldHistory();
-          renderPerformance();
-          closeFlowModal();
-          toast('售出資料已儲存');
-        }
-      };
-    });
-  }
-
-  function setSavedView(mode){
-    const listBox = $('savedVehicleListView');
-    const cardBox = $('savedVehicleCardView');
-    const listBtn = $('listViewBtn');
-    const cardBtn = $('cardViewBtnBtn');
-    if(listBox) listBox.style.display = mode === 'list' ? 'grid' : 'none';
-    if(cardBox) cardBox.style.display = mode === 'card' ? 'grid' : 'none';
-    if(listBtn) listBtn.classList.toggle('active-view', mode === 'list');
-    if(cardBtn) cardBtn.classList.toggle('active-view', mode === 'card');
-    localStorage.setItem('hongyi_saved_view_mode', mode);
-  }
-
-  function renderPerformance(){
-    const rows = getJSON(SALES_KEY);
-    const countMap = {};
-    const profitMap = {};
-    rows.forEach(r=>{
-      if(r.sellerPerson){
-        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
-        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
-      }
-    });
-    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
-    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
-
-    if($('rankCountBox')){
-      $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
-    }
-    if($('rankKpiBox')){
-      $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${Math.round(v).toLocaleString('zh-TW')}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
-    }
-  }
-
-  function resetForm(){
-    $('brand').value = '';
-    $('model').value = '';
-    $('plate').value = '';
-    $('year').value = '';
-    $('transferName').value = '';
-    $('buyerPerson').value = '金恩（獨買）';
-    $('buyAmount').value = '';
-    $('companyAdjust').value = '';
-    $('repairItems').value = '';
-    $('repairCount').value = '';
-    $('carPhotoInput').value = '';
-    $('licensePhotoInput').value = '';
-    $('note').value = '';
-
-    $('hasDeposit').value = '未收訂';
-    $('depositAmount').value = '';
-    $('depositPhoto').value = '';
-    $('depositAccount').value = '';
-
-    $('paymentType').value = '';
-    $('loanCompany').value = '';
-    $('loanAgent').value = '';
-    $('loanAgentOther').value = '';
-    updateLoanOther();
-
-    $('soldStatus').value = '未售出';
-    $('sellerPerson').value = '';
-    $('newOwner').value = '';
-    $('newOwnerLicensePhoto').value = '';
-    $('companyFloorPrice').value = '';
-    $('sellAmount').value = '';
-
-    setEntryType('屏東鴻翊汽車');
-    $('previewPhotos').innerHTML = '';
-    $('formHint').textContent = '';
-    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
-    updateOverview();
-  }
-
-  async function saveVehicle(){
-    const entryType = $('entryType').value;
-    if(!$('brand').value.trim()) return toast('請填品牌');
-    if(!$('model').value.trim()) return toast('請填車輛型號');
-    if(!$('plate').value.trim()) return toast('請填車牌號碼');
-    if(!$('year').value.trim()) return toast('請填車年份');
-    if((entryType === '寄賣' || entryType === '調做') && !$('transferName').value.trim()) return toast('請填寫對應人頭資料');
-    if(!$('buyAmount').value.trim()) return toast('請填買入金額');
-
-    if($('hasDeposit').value === '已收訂'){
-      if(!$('depositAmount').value.trim()) return toast('已收訂時請填收訂金額');
-      if(!$('depositAccount').value.trim()) return toast('已收訂時請選款項位置');
-      if(!$('depositPhoto').files[0]) return toast('已收訂時請上傳收訂照片');
-    }
-
-    if($('soldStatus').value === '已售出'){
-      if(!$('paymentType').value) return toast('售出前請選付款方式（現金或貸款）');
-      if($('paymentType').value === '貸款'){
-        if(!$('loanCompany').value.trim()) return toast('貸款件請填貸款公司');
-        if(!$('loanAgent').value.trim()) return toast('貸款件請選貸款業務');
-        if($('loanAgent').value === '其他' && !$('loanAgentOther').value.trim()) return toast('請填寫其他貸款業務');
-      }
-      if(!$('sellerPerson').value.trim()) return toast('已售出請選售出業務');
-      if(!$('sellAmount').value.trim()) return toast('已售出請填售出金額');
-    }
-
-    const carPhoto = await readFile($('carPhotoInput').files[0]);
-    const licensePhoto = await readFile($('licensePhotoInput').files[0]);
-    const depositPhoto = await readFile($('depositPhoto').files[0]);
-    const newOwnerLicensePhoto = await readFile($('newOwnerLicensePhoto').files[0]);
-
-    const calc = calcTaxesAndProfit();
-    const record = {
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      entryType,
-      brand: $('brand').value.trim(),
-      model: $('model').value.trim(),
-      plate: $('plate').value.trim(),
-      year: $('year').value.trim(),
-      transferName: (entryType === '寄賣' || entryType === '調做') ? $('transferName').value.trim() : entryType,
-      buyerPerson: $('buyerPerson').value.trim(),
-      buyAmount: Number($('buyAmount').value) || 0,
-      companyAdjust: Number($('companyAdjust').value) || 0,
-      invoiceTaxRate: 5,
-      businessTaxRate: 1.2,
-      repairItems: $('repairItems').value,
-      repairTotal: calc.repairTotal,
-      note: $('note').value.trim(),
-      carPhoto,
-      licensePhoto,
-      hasDeposit: $('hasDeposit').value,
-      depositAmount: Number($('depositAmount').value) || 0,
-      depositPhoto,
-      depositAccount: $('depositAccount').value,
-      paymentType: $('paymentType').value,
-      loanCompany: $('loanCompany').value.trim(),
-      loanAgent: $('loanAgent').value === '其他' ? $('loanAgentOther').value.trim() : $('loanAgent').value,
-      soldStatus: $('soldStatus').value,
-      sellerPerson: $('sellerPerson').value,
-      newOwner: $('newOwner').value.trim(),
-      newOwnerLicensePhoto,
-      companyFloorPrice: Number($('companyFloorPrice').value) || 0,
-      sellAmount: Number($('sellAmount').value) || 0,
-      invoiceTax: calc.invoiceTax,
-      businessTax: calc.businessTax,
-      profit: calc.profit,
-      status: $('soldStatus').value === '已售出' ? '已售' : '在庫'
+  function showPanel(name, btn){
+    const panelMap = {
+      vehicle: 'panel-vehicle',
+      cost: 'panel-cost',
+      sold: 'panel-sold',
+      board: 'panel-board',
+      sales: 'panel-performance',
+      kpi: 'panel-performance',
+      people: 'panel-people'
     };
+    $$('.panel').forEach(p => p.classList.remove('active'));
+    const panel = $(panelMap[name] || ('panel-' + name));
+    if(panel) panel.classList.add('active');
 
-    const rows = getJSON(INVENTORY_KEY);
-    rows.unshift(record);
-    setJSON(INVENTORY_KEY, rows);
+    $$('.menu button, #bottomNav button').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
 
-    if(record.soldStatus === '已售出'){
-      const sales = getJSON(SALES_KEY);
-      sales.unshift(record);
-      setJSON(SALES_KEY, sales);
-
-      // 金流簡單累積
-      const money = getJSON(MONEY_KEY);
-      money.push({
-        time: record.createdAt,
-        type: record.depositAccount || '未指定',
-        amount: record.depositAmount || 0,
-        plate: record.plate
-      });
-      setJSON(MONEY_KEY, money);
-    }
-
-    localStorage.setItem(CREATED_FLAG_KEY, '1');
-    setWorkflowVisible(true);
-    renderInventory();
-    renderSoldHistory();
-    renderPerformance();
-    toast('車輛已儲存，已開啟收訂 / 付款 / 售出流程');
-    resetForm();
+    const meta = {
+      vehicle:['車輛管理','先把核心流程做穩，再往後加功能。'],
+      cost:['車輛成本總覽','查看總台數、在庫、已售與每台成本。'],
+      sold:['已售歷史總覽','依公司與年月查詢已售紀錄。'],
+      board:['公佈欄','先保留版位。'],
+      sales:['公司業績排行','查看台數排行與業績。'],
+      kpi:['公司業績排行','查看台數排行與業績。'],
+      people:['人員設定','先保留版位。']
+    }[name] || ['車輛管理',''];
+    if($('pageTitle')) $('pageTitle').textContent = meta[0];
+    if($('pageDesc')) $('pageDesc').textContent = '資料與照片都存放在這台裝置的瀏覽器本地資料庫（IndexedDB）';
   }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    qa('.entry-btn').forEach(btn=>{
-      btn.addEventListener('click', function(){ setEntryType(btn.dataset.value); });
-    });
-
-    $('repairItems').addEventListener('input', updateOverview);
-    $('buyAmount').addEventListener('input', updateOverview);
-    $('companyAdjust').addEventListener('input', updateOverview);
-    $('sellAmount').addEventListener('input', updateOverview);
-    $('carPhotoInput').addEventListener('change', updatePreviewPhotos);
-    $('licensePhotoInput').addEventListener('change', updatePreviewPhotos);
-    $('loanAgent').addEventListener('change', updateLoanOther);
-    $('saveVehicleBtn').addEventListener('click', saveVehicle);
-    $('resetVehicleBtn').addEventListener('click', resetForm);
-
-    setEntryType('屏東鴻翊汽車');
-    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
-    updateLoanOther();
-    updateOverview();
-    renderInventory();
-    renderSoldHistory();
-    renderPerformance();
-  });
-})();
-</script>
-
-
-<script>
-(function(){
-  const INVENTORY_KEY = 'hongyi_inventory_records_v3';
-  const SALES_KEY = 'hongyi_sales_records_v3';
-  const MONEY_KEY = 'hongyi_money_records_v3';
-  const CREATED_FLAG_KEY = 'hongyi_vehicle_created_flag_v3';
-
-  function $(id){ return document.getElementById(id); }
-  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
-
-  function toast(msg){
-    let t = $('saveToast');
-    if(!t){
-      t = document.createElement('div');
-      t.id = 'saveToast';
-      t.style.cssText = 'position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:100000;opacity:0;transition:.2s;';
-      document.body.appendChild(t);
-    }
-    t.textContent = msg;
-    t.style.opacity = '1';
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(()=>t.style.opacity='0', 1800);
-  }
-
-  function getJSON(key){
-    try{ return JSON.parse(localStorage.getItem(key) || '[]'); }
-    catch(e){ return []; }
-  }
-  function setJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-
-  function readFile(file){
-    return new Promise((resolve,reject)=>{
-      if(!file){ resolve(''); return; }
-      const r = new FileReader();
-      r.onload = ()=>resolve(r.result);
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-  }
-
-  function setWorkflowVisible(visible){ return; }
-
-  function updateTransferField(){
-    const entry = $('entryType') ? $('entryType').value : '屏東鴻翊汽車';
-    const wrap = $('transferField');
-    const label = $('transferLabel');
-    const input = $('transferName');
-    if(!wrap || !label || !input) return;
-
-    if(entry === '寄賣'){
-      wrap.classList.remove('hidden-field');
-      label.textContent = '目前車主 *';
-      input.placeholder = '請輸入目前車主';
-      input.readOnly = false;
-      input.value = '';
-    }else if(entry === '調做'){
-      wrap.classList.remove('hidden-field');
-      label.textContent = '車行名稱 *';
-      input.placeholder = '請輸入車行名稱';
-      input.readOnly = false;
-      input.value = '';
-    }else{
-      wrap.classList.add('hidden-field');
-      input.value = entry;
-      input.readOnly = true;
-    }
-  }
+  window.showPanel = showPanel;
 
   function setEntryType(value){
     if($('entryType')) $('entryType').value = value;
-    qa('.entry-btn').forEach(b=>b.classList.toggle('active', b.dataset.value === value));
-    updateTransferField();
+    $$('.entry-btn').forEach(b => b.classList.toggle('active', b.dataset.value === value));
+    const needTransfer = value === '寄賣' || value === '調做';
+    if($('transferField')) $('transferField').style.display = needTransfer ? 'block' : 'none';
+    if($('transferLabel')) $('transferLabel').textContent = value === '寄賣' ? '目前車主 *' : '車行名稱 *';
+    if($('transferName')) $('transferName').placeholder = value === '寄賣' ? '請輸入目前車主' : '請輸入車行名稱';
+    if(!needTransfer && $('transferName')) $('transferName').value = '';
   }
 
-  let repairData = [];
-
-  function syncRepairHidden(){
-    const hidden = $('repairItems');
-    if(hidden){
-      hidden.value = repairData.map(r => `${r.date || ''} ${r.name}:${r.amount}`).join("\n");
-    }
-    if($('repairCount')) $('repairCount').value = repairData.length;
-  }
-
-  function renderRepairList(){
-    const box = $('repairList');
-    if(!box) return;
-    if(repairData.length === 0){
-      box.innerHTML = '<div class="small-note">目前還沒有整備項目</div>';
-      syncRepairHidden();
-      return;
-    }
-    box.innerHTML = repairData.map((r, idx)=>`
-      <div class="repair-row">
-        <div class="meta">${r.date || '未填日期'}｜${r.name}</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="amt">${Number(r.amount).toLocaleString('zh-TW')}</div>
-          <button type="button" class="danger mini-btn" data-repair-del="${idx}">刪除</button>
-        </div>
-      </div>
-    `).join('');
-    syncRepairHidden();
-
-    qa('[data-repair-del]').forEach(btn=>{
-      btn.onclick = function(){
-        const idx = Number(btn.getAttribute('data-repair-del'));
-        repairData.splice(idx,1);
-        renderRepairList();
+  function previewCreatePhoto(){
+    const wrap = $('createPhotoPreview');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    [['carPhotoInput','車輛照片'],['licensePhotoInput','行照照片']].forEach(([id,label]) => {
+      const file = $(id)?.files?.[0];
+      if(!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        wrap.innerHTML += `<div class="photo-box"><img src="${r.result}" alt="${label}"><div class="cap">${label}</div></div>`;
       };
+      r.readAsDataURL(file);
     });
   }
 
-  function parseRepairTotal(){
-    return repairData.reduce((sum, r)=>sum + (Number(r.amount) || 0), 0);
+  function resetForm(){
+    ['brand','model','plate','year','transferName','buyAmount','companyAdjust','note','repairItems'].forEach(id => {
+      if($(id)) $(id).value = '';
+    });
+    if($('buyerPerson')) $('buyerPerson').value = '';
+    if($('carPhotoInput')) $('carPhotoInput').value = '';
+    if($('licensePhotoInput')) $('licensePhotoInput').value = '';
+    if($('createPhotoPreview')) $('createPhotoPreview').innerHTML = '';
+    if($('depositSection')) $('depositSection').style.display = 'none';
+    if($('paymentSection')) $('paymentSection').style.display = 'none';
+    if($('soldSection')) $('soldSection').style.display = 'none';
+    if($('hasDeposit')) $('hasDeposit').value = '未收訂';
+    if($('soldStatus')) $('soldStatus').value = '未售出';
+    setEntryType('屏東鴻翊汽車');
   }
 
-  function addRepairItem(){
-    const date = $('repairDate') ? $('repairDate').value : '';
-    const name = $('repairName') ? $('repairName').value.trim() : '';
-    const amount = $('repairAmount') ? $('repairAmount').value.trim() : '';
-    if(!name) return toast('請填整備項目');
-    if(!amount) return toast('請填整備金額');
-    repairData.push({date, name, amount:Number(amount) || 0});
-    if($('repairDate')) $('repairDate').value = '';
-    if($('repairName')) $('repairName').value = '';
-    if($('repairAmount')) $('repairAmount').value = '';
-    renderRepairList();
-  }
-
-  function calcTaxesAndProfit(){
-    const entry = $('entryType') ? $('entryType').value : '';
-    const buy = Number($('buyAmount') ? $('buyAmount').value : 0) || 0;
-    const adjust = Number($('companyAdjust') ? $('companyAdjust').value : 0) || 0;
-    const sell = Number($('sellAmount') ? $('sellAmount').value : 0) || 0;
-    const repairTotal = parseRepairTotal();
-    const invoiceRate = 5 / 100;
-    const businessRate = 1.2 / 100;
-    const taxable = entry === '屏東鴻翊汽車' || entry === '鴻豪汽車商行';
-
-    let invoiceTax = 0;
-    let businessTax = 0;
-    if(taxable && sell > 0){
-      const baseProfit = sell - (buy + repairTotal);
-      invoiceTax = Math.max(baseProfit, 0) * invoiceRate;
-      businessTax = sell * businessRate;
-    }
-    const profit = sell > 0 ? sell - buy - repairTotal - invoiceTax - businessTax + adjust : 0;
-    return {buy, adjust, sell, repairTotal, taxable, invoiceTax, businessTax, profit};
-  }
-
-  
-function renderInventory(){
-    const rows = getJSON(INVENTORY_KEY);
-    const listBox = $('savedVehicleListView') || $('savedVehicleInner');
-    const cardBox = $('savedVehicleCardView');
-    if(listBox){
-      listBox.innerHTML = rows.length ? rows.map(r=>`
-        <div class="record-row">
-          <div>
-            <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${Number(r.buyAmount).toLocaleString('zh-TW')}｜整備 ${Number(r.repairTotal).toLocaleString('zh-TW')}｜${r.status}
-            <div class="vehicle-actions">
-              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
-              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
-            </div>
-          </div>
-        </div>
-      `).join('') : '<div class="small-note">目前還沒有資料</div>';
-    }
-    if(cardBox){
-      cardBox.innerHTML = rows.length ? rows.map(r=>`
-        <div class="car-card">
-          <div class="car-photo">${r.carPhoto ? `<img class="saved-thumb" src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
-          <div class="car-body">
-            <div class="car-title">${r.brand} ${r.model}</div>
-            <div class="car-line">車牌：${r.plate}</div>
-            <div class="car-line">年份：${r.year}</div>
-            <div class="car-line">入庫：${r.entryType}</div>
-            <div class="car-line">買入：${Number(r.buyAmount).toLocaleString('zh-TW')}</div>
-            <div class="car-line">整備：${Number(r.repairTotal).toLocaleString('zh-TW')}</div>
-            <div class="car-line">狀態：${r.status}</div>
-            <div class="vehicle-actions">
-              <button type="button" class="secondary mini-btn" data-action="deposit" data-id="${r.id}">收訂</button>
-              <button type="button" class="secondary mini-btn" data-action="sell" data-id="${r.id}">售出</button>
-            </div>
-          </div>
-        </div>
-      `).join('') : '<div class="small-note">目前還沒有資料</div>';
-    }
-    bindInventoryActionButtons();
-  }
-
-  function renderPerformance(){
-    const rows = getJSON(SALES_KEY);
-    const countMap = {};
-    const profitMap = {};
-    rows.forEach(r=>{
-      if(r.sellerPerson){
-        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
-        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
+  function parseRepairItemsText(text){
+    const lines = (text || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const items = [];
+    lines.forEach(line => {
+      const parts = line.split(':');
+      if(parts.length >= 2){
+        const left = parts[0].trim();
+        const amount = Number(parts.slice(1).join(':').replace(/,/g,'').trim()) || 0;
+        let date = '';
+        let name = left;
+        const m = left.match(/^(\d{4}-\d{2}-\d{2})\s+(.*)$/);
+        if(m){ date = m[1]; name = m[2]; }
+        items.push({date, name, amount});
       }
     });
-    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
-    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
-
-    if($('rankCountBox')){
-      $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
-    }
-    if($('rankKpiBox')){
-      $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div style="font-size:20px;font-weight:900">#${i+1} ${n}</div><div><span class="pill">${Math.round(v).toLocaleString('zh-TW')}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
-    }
+    return items;
   }
 
-  function renderSoldHistory(){
-    const rows = getJSON(SALES_KEY);
-    if($('soldListBox')){
-      $('soldListBox').innerHTML = rows.length ? rows.map(r=>`
-        <div class="row-line">
-          <div>
-            <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-            <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出業務：${r.sellerPerson} ｜ 新車主：${r.newOwner || '—'}</div>
-          </div>
-          <div>
-            <span class="pill">售出 ${Number(r.sellAmount).toLocaleString('zh-TW')}</span>
-            <span class="pill">利潤 ${Math.round(r.profit).toLocaleString('zh-TW')}</span>
-          </div>
-        </div>
-      `).join('') : '<div class="empty">目前沒有已售資料</div>';
+  function recalcRecord(r){
+    const taxable = ['屏東鴻翊汽車','鴻豪汽車商行'].includes(r.entryType);
+    const buy = Number(r.buyAmount || 0);
+    const repair = Number(r.repairTotal || 0);
+    const sell = Number(r.sellAmount || 0);
+    const adjust = Number(r.companyAdjust || 0);
+    let invoiceTax = 0, businessTax = 0, profit = 0;
+
+    if(r.entryType === '調做'){
+      const baseProfit = adjust - buy - repair;
+      if(taxable){
+        invoiceTax = Math.max(baseProfit,0) * 0.05;
+        businessTax = sell * 0.012;
+      }
+      profit = adjust - buy - repair - invoiceTax - businessTax;
+    } else {
+      const baseProfit = sell - (buy + repair);
+      if(taxable){
+        invoiceTax = Math.max(baseProfit,0) * 0.05;
+        businessTax = sell * 0.012;
+      }
+      profit = sell - buy - repair - invoiceTax - businessTax;
     }
+    r.invoiceTax = invoiceTax;
+    r.businessTax = businessTax;
+    r.profit = profit;
+    return r;
   }
 
-  async function saveVehicleNew(){
-    const entryType = $('entryType') ? $('entryType').value : '';
-    if(!$('brand') || !$('brand').value.trim()) return toast('請填品牌');
-    if(!$('model') || !$('model').value.trim()) return toast('請填車輛型號');
-    if(!$('plate') || !$('plate').value.trim()) return toast('請填車牌號碼');
-    if(!$('year') || !$('year').value.trim()) return toast('請填車年份');
-    if((entryType === '寄賣' || entryType === '調做') && (!$('transferName') || !$('transferName').value.trim())) return toast('請填寫對應人頭資料');
-    if(!$('buyerPerson') || !$('buyerPerson').value.trim()) return toast('請選買入人');
-    if(!$('buyAmount') || !$('buyAmount').value.trim()) return toast('請填買入金額');
-    if(!$('carPhotoInput') || !$('carPhotoInput').files || !$('carPhotoInput').files[0]) return toast('請上傳車輛照片');
-    if(!$('licensePhotoInput') || !$('licensePhotoInput').files || !$('licensePhotoInput').files[0]) return toast('請上傳行照照片');
+  async function saveVehicle(){
+    const entryType = $('entryType')?.value || '';
+    const brand = $('brand')?.value.trim() || '';
+    const model = $('model')?.value.trim() || '';
+    const plate = $('plate')?.value.trim() || '';
+    const year = $('year')?.value.trim() || '';
+    const transferName = $('transferName')?.value.trim() || '';
+    const buyerPerson = $('buyerPerson')?.value.trim() || '';
+    const buyAmount = Number($('buyAmount')?.value || 0);
+    const companyAdjust = Number($('companyAdjust')?.value || 0);
+    const note = $('note')?.value.trim() || '';
+    const carFile = $('carPhotoInput')?.files?.[0];
+    const licenseFile = $('licensePhotoInput')?.files?.[0];
+    const repairItems = parseRepairItemsText($('repairItems')?.value || '');
+    const repairTotal = repairItems.reduce((s,x) => s + Number(x.amount || 0), 0);
 
-    const calc = calcTaxesAndProfit();
-    const record = {
-      id: Date.now(),
+    if(!entryType) return alert('請選入庫公司 / 類型');
+    if(!brand) return alert('請填品牌');
+    if(!model) return alert('請填車輛型號');
+    if(!plate) return alert('請填車牌號碼');
+    if(!year) return alert('請填車年份');
+    if((entryType === '寄賣' || entryType === '調做') && !transferName) return alert('請填寫對應人頭資料');
+    if(!buyerPerson) return alert('請選買入人');
+    if(!buyAmount) return alert('請填買入金額');
+    if(!carFile) return alert('請上傳車輛照片');
+    if(!licenseFile) return alert('請上傳行照照片');
+
+    const [carPhoto, licensePhoto] = await Promise.all([fileToDataURL(carFile), fileToDataURL(licenseFile)]);
+    let record = {
+      id: String(Date.now()),
       createdAt: new Date().toISOString(),
       entryType,
-      brand: $('brand').value.trim(),
-      model: $('model').value.trim(),
-      plate: $('plate').value.trim(),
-      year: $('year').value.trim(),
-      transferName: (entryType === '寄賣' || entryType === '調做') ? $('transferName').value.trim() : entryType,
-      buyerPerson: $('buyerPerson').value.trim(),
-      buyAmount: Number($('buyAmount').value) || 0,
-      companyAdjust: Number($('companyAdjust').value) || 0,
-      invoiceTaxRate: 5,
-      businessTaxRate: 1.2,
-      repairItems: repairData.slice(),
-      repairTotal: calc.repairTotal,
-      note: $('note').value.trim(),
-      carPhoto: await readFile($('carPhotoInput').files[0]),
-      licensePhoto: await readFile($('licensePhotoInput').files[0]),
+      brand, model, plate, year,
+      transferName: (entryType === '寄賣' || entryType === '調做') ? transferName : entryType,
+      buyerPerson, buyAmount, companyAdjust, note,
+      carPhoto, licensePhoto,
+      repairItems,
+      repairTotal,
       hasDeposit: '未收訂',
       depositAmount: 0,
       depositPhoto: '',
@@ -2980,138 +1189,718 @@ function renderInventory(){
       newOwnerLicensePhoto: '',
       companyFloorPrice: 0,
       sellAmount: 0,
+      saleDate: '',
       invoiceTax: 0,
       businessTax: 0,
       profit: 0,
       status: '在庫'
     };
+    record = recalcRecord(record);
+    await dbPut(record);
+    resetForm();
+    await renderAll();
+    alert('車輛已新增');
+  }
 
-    const inventory = getJSON(INVENTORY_KEY);
-    inventory.unshift(record);
-    setJSON(INVENTORY_KEY, inventory);
-    localStorage.setItem(CREATED_FLAG_KEY, '1');
-    renderInventory();
-    toast('車輛已建立，後續請到已儲存車輛點選收訂或售出');
+  async function renderInventory(){
+    const all = await dbGetAll();
+    const kw = $('vehicleSearch')?.value.trim().toLowerCase() || '';
+    const rows = all.filter(r => r.status !== '已售').filter(r => !kw || `${r.brand} ${r.model} ${r.plate}`.toLowerCase().includes(kw));
+    const listBox = $('savedVehicleListView');
+    const cardBox = $('savedVehicleCardView');
+    if(!rows.length){
+      if(listBox) listBox.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      if(cardBox) cardBox.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      return;
+    }
+    if(listBox) listBox.innerHTML = rows.map(r => `
+      <div class="record-row row-line">
+        <div>
+          <strong>${r.brand} ${r.model}</strong>｜${r.plate}｜買入 ${fmt(r.buyAmount)}｜整備 ${fmt(r.repairTotal)}｜${r.status}
+          <div class="small-note">${r.entryType} ｜ 買入人：${r.buyerPerson}</div>
+          <div class="vehicle-actions">
+            <button type="button" class="secondary mini-btn" data-open="detail" data-id="${r.id}">看詳情</button>
+            <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
+            <button type="button" class="secondary mini-btn" data-open="repair" data-id="${r.id}">整備</button>
+            <button type="button" class="secondary mini-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+            <button type="button" class="secondary mini-btn" data-open="sell" data-id="${r.id}">售出</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    if(cardBox) cardBox.innerHTML = rows.map(r => `
+      <div class="car-card">
+        <div class="car-photo">${r.carPhoto ? `<img src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
+        <div class="car-body">
+          <div class="car-title">${r.brand} ${r.model}</div>
+          <div class="car-line">車牌：${r.plate}</div>
+          <div class="car-line">年份：${r.year}</div>
+          <div class="car-line">入庫：${r.entryType}</div>
+          <div class="car-line">買入：${fmt(r.buyAmount)}</div>
+          <div class="car-line">整備：${fmt(r.repairTotal)}</div>
+          <div class="vehicle-actions">
+            <button type="button" class="secondary mini-btn" data-open="detail" data-id="${r.id}">看詳情</button>
+            <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
+            <button type="button" class="secondary mini-btn" data-open="repair" data-id="${r.id}">整備</button>
+            <button type="button" class="secondary mini-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+            <button type="button" class="secondary mini-btn" data-open="sell" data-id="${r.id}">售出</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function renderCostOverview(){
+    const all = await dbGetAll();
+    if($('statCount')) $('statCount').textContent = fmt(all.length);
+    if($('statStock')) $('statStock').textContent = fmt(all.filter(r => r.status !== '已售').length);
+    if($('statSold')) $('statSold').textContent = fmt(all.filter(r => r.status === '已售').length);
+    if($('statProfit')) $('statProfit').textContent = fmt(all.reduce((s, r) => s + Number(r.profit || 0), 0));
+    const box = $('costSummaryBox');
+    if(!box) return;
+    if(!all.length){
+      box.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      return;
+    }
+    box.innerHTML = all.map(r => `
+      <div class="row-line">
+        <div><strong>${r.brand} ${r.model}</strong><div class="small-note">${r.entryType} ｜ ${r.plate} ｜ ${r.status}</div></div>
+        <div>
+          <span class="pill">車成本 ${fmt(r.buyAmount)}</span>
+          <span class="pill">整備 ${fmt(r.repairTotal)}</span>
+          <span class="pill">利潤 ${fmt(Math.round(r.profit || 0))}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function renderSoldHistory(){
+    const all = await dbGetAll();
+    let sold = all.filter(r => r.status === '已售');
+    const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+    if($('soldYearFilter')) $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+    if($('soldMonthFilter')) $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+
+    const company = $('soldCompanyFilter')?.value || '全部';
+    const year = $('soldYearFilter')?.value || '全部';
+    const month = $('soldMonthFilter')?.value || '全部';
+    if(company !== '全部') sold = sold.filter(r => r.entryType === company);
+    if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
+    if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+
+    if($('soldFilterCount')) $('soldFilterCount').textContent = fmt(sold.length);
+    if($('soldFilterProfit')) $('soldFilterProfit').textContent = fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
+    if($('soldFilterCompany')) $('soldFilterCompany').textContent = company === '全部' ? '全部公司' : company;
+    if($('soldFilterMonth')) $('soldFilterMonth').textContent = [year,month].filter(v=>v && v!=='全部').join('-') || '全部';
+
+    const sellerMap = {};
+    sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
+    const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
+    if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+    if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => `
+      <div class="row-line">
+        <div>
+          <strong style="font-size:19px">${r.brand} ${r.model}</strong>
+          <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出日：${r.saleDate || '—'} ｜ 售出人：${r.sellerPerson || '—'} ｜ 新車主：${r.newOwner || '—'}</div>
+        </div>
+        <div>
+          <span class="pill">售出 ${fmt(r.sellAmount)}</span>
+          <span class="pill">整備 ${fmt(r.repairTotal)}</span>
+          <span class="pill">利潤 ${fmt(Math.round(r.profit || 0))}</span>
+          <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">查看照片</button>
+        </div>
+      </div>
+    `).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+  }
+
+  async function renderPerformance(){
+    const sold = (await dbGetAll()).filter(r => r.status === '已售');
+    const countMap = {}, profitMap = {};
+    sold.forEach(r => {
+      if(r.sellerPerson){
+        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
+        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
+      }
+    });
+    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
+    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
+    if($('rankCountBox')) $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    if($('rankKpiBox')) $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${fmt(Math.round(v))}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+  }
+
+  async function renderAll(){
+    await renderInventory();
+    await renderCostOverview();
+    await renderSoldHistory();
+    await renderPerformance();
+  }
+
+  async function openVehicleDetail(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    if($('vehicleDetailBody')) $('vehicleDetailBody').innerHTML = vehicleDetailHTML(r);
+    if($('vehicleDetailModal')) $('vehicleDetailModal').style.display = 'flex';
+  }
+  window.openVehicleDetail = openVehicleDetail;
+
+  async function showSavedPhotos(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    const grid = $('photosModalGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    if(r.carPhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" data-src="${r.carPhoto}"><div class="cap">車輛照片（點圖放大）</div></div>`;
+    if(r.licensePhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" data-src="${r.licensePhoto}"><div class="cap">行照照片（點圖放大）</div></div>`;
+    if(r.depositPhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.depositPhoto}" data-src="${r.depositPhoto}"><div class="cap">收訂照片（點圖放大）</div></div>`;
+    if(r.newOwnerLicensePhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.newOwnerLicensePhoto}" data-src="${r.newOwnerLicensePhoto}"><div class="cap">新車主行照（點圖放大）</div></div>`;
+    if(!grid.innerHTML) grid.innerHTML = '<div class="empty">這台車目前沒有照片</div>';
+    if($('photosModal')) $('photosModal').style.display = 'flex';
+  }
+  window.showSavedPhotos = showSavedPhotos;
+  window.closePhotosModal = () => { if($('photosModal')) $('photosModal').style.display = 'none'; };
+
+  window.closeImagePreview = () => { if($('imagePreviewModal')) $('imagePreviewModal').style.display = 'none'; };
+  window.openImageViewer = (src) => {
+    if($('imagePreviewTarget')) $('imagePreviewTarget').src = src;
+    if($('imagePreviewModal')) $('imagePreviewModal').style.display = 'flex';
+  };
+
+  async function openRepairModal(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    $('repairVehicleId').value = r.id;
+    $('repairModalDate').value = '';
+    $('repairModalName').value = '';
+    $('repairModalAmount').value = '';
+    renderRepairModalList(r);
+    if($('repairModal')) $('repairModal').style.display = 'flex';
+  }
+
+  function renderRepairModalList(r){
+    const box = $('repairModalList');
+    if(!box) return;
+    const items = Array.isArray(r.repairItems) ? r.repairItems : [];
+    if(!items.length){
+      box.innerHTML = `<div class="empty">目前沒有整備項目</div><div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${fmt(r.repairTotal)}</span></div></div>`;
+      return;
+    }
+    box.innerHTML = items.map((x, idx) => `
+      <div class="row-line">
+        <div><strong>${x.name || '未命名項目'}</strong><div class="small-note">${x.date || '未填日期'}</div></div>
+        <div><span class="pill">${fmt(x.amount)}</span><button type="button" class="danger mini-btn" data-remove-repair="${idx}">刪除</button></div>
+      </div>
+    `).join('') + `<div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${fmt(r.repairTotal)}</span></div></div>`;
+  }
+
+  async function addRepairToVehicle(){
+    const id = $('repairVehicleId')?.value;
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    const date = $('repairModalDate').value;
+    const name = $('repairModalName').value.trim();
+    const amount = Number($('repairModalAmount').value || 0);
+    if(!name) return alert('請填整備項目名稱');
+    if(!amount) return alert('請填整備金額');
+    r.repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    r.repairItems.push({date,name,amount});
+    r.repairTotal = r.repairItems.reduce((s,x)=>s+Number(x.amount||0),0);
+    recalcRecord(r);
+    await dbPut(r);
+    renderRepairModalList(r);
+    await renderAll();
+    $('repairModalDate').value = '';
+    $('repairModalName').value = '';
+    $('repairModalAmount').value = '';
+  }
+  window.addRepairToVehicle = addRepairToVehicle;
+
+  async function removeRepairFromVehicle(idx){
+    const id = $('repairVehicleId')?.value;
+    const r = await dbGet(id);
+    if(!r) return;
+    r.repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    r.repairItems.splice(idx,1);
+    r.repairTotal = r.repairItems.reduce((s,x)=>s+Number(x.amount||0),0);
+    recalcRecord(r);
+    await dbPut(r);
+    renderRepairModalList(r);
+    await renderAll();
+  }
+  window.removeRepairFromVehicle = removeRepairFromVehicle;
+  window.closeRepairModal = () => { if($('repairModal')) $('repairModal').style.display = 'none'; };
+
+  async function openDepositFlow(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    if(!$('flowModalBody')) return;
+    $('flowModalTitle').textContent = '收訂作業';
+    $('flowModalBody').innerHTML = `
+      <div class="form-grid">
+        <div><label>收訂時間</label><input id="depositTime_clone" type="datetime-local"></div>
+        <div><label>收訂金額</label><input id="depositAmount_clone" type="number" value="${r.depositAmount || ''}" placeholder="例如 30000"></div>
+        <div><label>款項位置</label>
+          <select id="depositAccount_clone">
+            <option value="">請選擇</option>
+            <option value="屏東鴻翊汽車公司戶" ${r.depositAccount==='屏東鴻翊汽車公司戶'?'selected':''}>屏東鴻翊汽車公司戶</option>
+            <option value="鴻豪汽車商行公司戶" ${r.depositAccount==='鴻豪汽車商行公司戶'?'selected':''}>鴻豪汽車商行公司戶</option>
+            <option value="銷售業務身上" ${r.depositAccount==='銷售業務身上'?'selected':''}>銷售業務身上</option>
+          </select>
+        </div>
+        <div><label>收訂照片</label><input id="depositPhoto_clone" type="file" accept="image/*"></div>
+        <div><label>付款方式</label>
+          <select id="paymentType_clone">
+            <option value="">請選擇</option>
+            <option value="現金" ${r.paymentType==='現金'?'selected':''}>現金</option>
+            <option value="貸款" ${r.paymentType==='貸款'?'selected':''}>貸款</option>
+          </select>
+        </div>
+        <div style="display:none"><label>貸款公司</label><input id="loanCompany_clone" value="" placeholder="已取消"></div>
+        <div id="loanAgentWrap_clone" style="display:none">
+          <label>貸款業務</label>
+          <select id="loanAgent_clone">
+            <option value="">請選擇</option>
+            <option value="中租怡婷" ${r.loanAgent==='中租怡婷'?'selected':''}>中租怡婷</option>
+            <option value="裕融若榛" ${r.loanAgent==='裕融若榛'?'selected':''}>裕融若榛</option>
+            <option value="匯豐仕謙" ${r.loanAgent==='匯豐仕謙'?'selected':''}>匯豐仕謙</option>
+            <option value="和潤子豪" ${r.loanAgent==='和潤子豪'?'selected':''}>和潤子豪</option>
+            <option value="和潤萱宇" ${r.loanAgent==='和潤萱宇'?'selected':''}>和潤萱宇</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions"><button class="primary" type="button" id="saveDepositCloneBtn">儲存收訂</button></div>`;
+
+    const paymentTypeClone = $('paymentType_clone');
+    const loanAgentWrapClone = $('loanAgentWrap_clone');
+    const loanAgentClone = $('loanAgent_clone');
+    const toggleLoanAgentClone = () => {
+      if(!paymentTypeClone || !loanAgentWrapClone) return;
+      if(paymentTypeClone.value === '貸款'){
+        loanAgentWrapClone.style.display = 'block';
+      }else{
+        loanAgentWrapClone.style.display = 'none';
+        if(loanAgentClone) loanAgentClone.value = '';
+      }
+    };
+    if(paymentTypeClone){
+      paymentTypeClone.onchange = toggleLoanAgentClone;
+      toggleLoanAgentClone();
+    }
+
+    $('saveDepositCloneBtn').onclick = async () => {
+      const depositAmount = Number($('depositAmount_clone').value || 0);
+      const depositAccount = $('depositAccount_clone').value;
+      const paymentType = $('paymentType_clone').value;
+      const loanCompany = '';
+      const loanAgent = $('loanAgent_clone').value.trim();
+      const depositPhotoFile = $('depositPhoto_clone').files[0];
+      if(!depositAmount) return alert('請填收訂金額');
+      if(!depositAccount) return alert('請選款項位置');
+      if(!paymentType) return alert('請選付款方式');
+      if(paymentType === '貸款' && !loanAgent) return alert('貸款請選貸款業務');
+      r.hasDeposit = '已收訂';
+      r.depositTime = depositTime;
+      r.depositAmount = depositAmount;
+      r.depositAccount = depositAccount;
+      r.paymentType = paymentType;
+      r.loanCompany = loanCompany;
+      r.loanAgent = loanAgent;
+      if(depositPhotoFile) r.depositPhoto = await fileToDataURL(depositPhotoFile);
+      await dbPut(r);
+      if($('flowModal')) $('flowModal').style.display = 'none';
+      await renderAll();
+      alert('收訂資料已儲存');
+    };
+    if($('flowModal')) $('flowModal').style.display = 'flex';
+  }
+
+  async function openSaleModalFlow(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    $('saleEditId').value = r.id;
+    $('saleNewOwner').value = r.newOwner || '';
+    $('saleSellerPerson').value = r.sellerPerson || '';
+    $('saleSellAmount').value = r.sellAmount || '';
+    $('saleDate').value = r.saleDate || '';
+    if($('saleModal')) $('saleModal').style.display = 'flex';
+  }
+
+  async function saveSaleInfo(){
+    const id = $('saleEditId').value;
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    if(r.hasDeposit !== '已收訂') return alert('請先完成收訂');
+    const newOwner = $('saleNewOwner').value.trim();
+    const sellerPerson = $('saleSellerPerson').value.trim();
+    const sellAmount = Number($('saleSellAmount').value || 0);
+    const saleDate = $('saleDate').value;
+    if(!sellerPerson) return alert('請填售出人');
+    if(!sellAmount) return alert('請填售出金額');
+    if(!saleDate) return alert('請填售出日期');
+    r.newOwner = newOwner;
+    r.sellerPerson = sellerPerson;
+    r.sellAmount = sellAmount;
+    r.saleDate = saleDate;
+    r.soldStatus = '已售出';
+    r.status = '已售';
+    recalcRecord(r);
+    await dbPut(r);
+    if($('saleModal')) $('saleModal').style.display = 'none';
+    await renderAll();
+    alert('售出資料已儲存');
+  }
+  window.saveSaleInfo = saveSaleInfo;
+  window.closeSaleModal = () => { if($('saleModal')) $('saleModal').style.display = 'none'; };
+
+  function bindStaticEvents(){
+    $('saveVehicleBtn')?.addEventListener('click', saveVehicle);
+    $('resetVehicleBtn')?.addEventListener('click', resetForm);
+    $('vehicleSearch')?.addEventListener('input', renderAll);
+    $('carPhotoInput')?.addEventListener('change', previewCreatePhoto);
+    $('licensePhotoInput')?.addEventListener('change', previewCreatePhoto);
+    $('listViewBtn')?.addEventListener('click', ()=> {
+      const list = $('savedVehicleListView'), card = $('savedVehicleCardView');
+      if(list) list.style.display = 'grid';
+      if(card) card.style.display = 'none';
+      $('listViewBtn').classList.add('active-view');
+      $('cardViewBtnBtn').classList.remove('active-view');
+    });
+    $('cardViewBtnBtn')?.addEventListener('click', ()=> {
+      const list = $('savedVehicleListView'), card = $('savedVehicleCardView');
+      if(list) list.style.display = 'none';
+      if(card) card.style.display = 'grid';
+      $('cardViewBtnBtn').classList.add('active-view');
+      $('listViewBtn').classList.remove('active-view');
+    });
+    $('flowModalClose')?.addEventListener('click', ()=> { if($('flowModal')) $('flowModal').style.display = 'none'; });
+    $('soldCompanyFilter')?.addEventListener('change', renderAll);
+    $('soldYearFilter')?.addEventListener('change', renderAll);
+    $('soldMonthFilter')?.addEventListener('change', renderAll);
+    $$('.entry-btn').forEach(btn => btn.addEventListener('click', ()=> setEntryType(btn.dataset.value)));
+
+    document.addEventListener('click', (e) => {
+      const img = e.target.closest('#photosModalGrid img');
+      if(img){
+        e.preventDefault();
+        openImageViewer(img.dataset.src || img.src);
+        return;
+      }
+      const openBtn = e.target.closest('[data-open]');
+      if(openBtn){
+        const id = openBtn.getAttribute('data-id');
+        const action = openBtn.getAttribute('data-open');
+        if(action === 'detail') openVehicleDetail(id);
+        if(action === 'photos') showSavedPhotos(id);
+        if(action === 'repair') openRepairModal(id);
+        if(action === 'deposit') openDepositFlow(id);
+        if(action === 'sell') openSaleModalFlow(id);
+      }
+      const removeBtn = e.target.closest('[data-remove-repair]');
+      if(removeBtn){
+        removeRepairFromVehicle(Number(removeBtn.getAttribute('data-remove-repair')));
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await openDB();
+    bindStaticEvents();
+    setEntryType('屏東鴻翊汽車');
+    await renderAll();
+  });
+})();
+</script><script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function applyVehicleFilter(){
+    const kw = ($('vehicleSearch')?.value || '').trim().toLowerCase();
+    const list = $('savedVehicleListView');
+    const cards = $('savedVehicleCardView');
+    if(list){
+      Array.from(list.children).forEach(el=>{
+        const txt = (el.textContent || '').toLowerCase();
+        el.style.display = !kw || txt.includes(kw) ? '' : 'none';
+      });
+    }
+    if(cards){
+      Array.from(cards.children).forEach(el=>{
+        const txt = (el.textContent || '').toLowerCase();
+        el.style.display = !kw || txt.includes(kw) ? '' : 'none';
+      });
+    }
+  }
+
+  function refreshMergedStats(){
+    try{
+      const rows = JSON.parse(localStorage.getItem('hongyi_inventory_records_v3') || '[]');
+      if($('statStock')) $('statStock').textContent = (rows.filter(r => r.status !== '已售').length || 0).toLocaleString('zh-TW');
+      if($('statSold')) $('statSold').textContent = (rows.filter(r => r.status === '已售').length || 0).toLocaleString('zh-TW');
+      if($('statRepairTotal')) $('statRepairTotal').textContent = (rows.reduce((s,r)=>s + Number(r.repairTotal || 0),0) || 0).toLocaleString('zh-TW');
+      if($('statProfit')) $('statProfit').textContent = (rows.reduce((s,r)=>s + Number(r.profit || 0),0) || 0).toLocaleString('zh-TW');
+    }catch(e){}
+  }
+
+  function bindMergedPage(){
+    $('openCreateVehicleBtn')?.addEventListener('click', ()=> {
+      const modal = $('createVehicleModal');
+      if(modal) modal.style.display = 'flex';
+    });
+    $('vehicleSearch')?.addEventListener('input', applyVehicleFilter);
+  }
+
+  const oldRenderAll = window.renderAll;
+  if(typeof oldRenderAll === 'function' && !window.__mergeVehicleCostPatched__){
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      refreshMergedStats();
+      applyVehicleFilter();
+      return res;
+    };
+    window.__mergeVehicleCostPatched__ = true;
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    // hard-set tax values
-    if($('invoiceTaxRate')) { $('invoiceTaxRate').value = '5'; $('invoiceTaxRate').readOnly = true; }
-    if($('businessTaxRate')) { $('businessTaxRate').value = '1.2'; $('businessTaxRate').readOnly = true; }
-
-    // rebind save button
-    const oldBtn = $('saveVehicleBtn');
-    if(oldBtn){
-      oldBtn.type = 'button';
-      oldBtn.onclick = function(e){ e.preventDefault(); saveVehicleNew(); };
-    }
-
-    const resetBtn = $('resetVehicleBtn');
-    if(resetBtn){
-      resetBtn.type = 'button';
-      resetBtn.onclick = function(e){
-        e.preventDefault();
-        location.reload();
-      };
-    }
-
-    qa('.entry-btn').forEach(btn=>{
-      btn.addEventListener('click', function(){ setEntryType(btn.dataset.value); });
-    });
-    if($('addRepairBtn')) $('addRepairBtn').addEventListener('click', addRepairItem);
-    if($('loanAgent')) $('loanAgent').addEventListener('change', function(){
-      $('loanOtherWrap').classList.toggle('hidden-field', $('loanAgent').value !== '其他');
-    });
-
-    bindModalGlobalEvents();
-    setEntryType($('entryType') ? $('entryType').value : '屏東鴻翊汽車');
-    setWorkflowVisible(localStorage.getItem(CREATED_FLAG_KEY) === '1');
-    renderRepairList();
-    renderInventory();
-    renderSoldHistory();
-    renderPerformance();
-
-    if($('listViewBtn')) $('listViewBtn').onclick = function(){ setSavedView('list'); };
-    if($('cardViewBtnBtn')) $('cardViewBtnBtn').onclick = function(){ setSavedView('card'); };
-    setSavedView(localStorage.getItem('hongyi_saved_view_mode') || 'list');
+    bindMergedPage();
+    refreshMergedStats();
+    setTimeout(applyVehicleFilter, 100);
+  });
+  window.addEventListener('load', function(){
+    bindMergedPage();
+    refreshMergedStats();
+    setTimeout(applyVehicleFilter, 100);
   });
 })();
 </script>
-
-
-<div class="flow-modal" id="flowModal">
-  <div class="flow-modal-card">
-    <div class="flow-modal-head">
-      <h3 id="flowModalTitle">流程作業</h3>
-      <button type="button" class="flow-modal-close secondary" id="flowModalClose">關閉</button>
-    </div>
-    <div id="flowModalBody"></div>
-  </div>
+<div class="modal" id="createVehicleModal">
+<div class="modal-content">
+<h3>新增 / 編輯車輛</h3>
+<div class="small-note" style="margin-bottom:12px">先建立車輛，整備改成建立後再輸入。</div>
+<div class="full" style="margin-bottom:12px">
+<label>入庫公司 / 類型 *</label>
+<div class="entry-type-wrap" id="entryTypeWrap">
+<button class="entry-btn active" data-value="屏東鴻翊汽車" type="button">屏東鴻翊汽車</button>
+<button class="entry-btn" data-value="鴻豪汽車商行" type="button">鴻豪汽車商行</button>
+<button class="entry-btn" data-value="寄賣" type="button">寄賣</button>
+<button class="entry-btn" data-value="調做" type="button">調做</button>
 </div>
-
-
+<input id="entryType" type="hidden" value="屏東鴻翊汽車"/>
+</div>
+<div class="form-grid">
+<div>
+<label>品牌 *</label>
+<input id="brand" placeholder="例如 BMW"/>
+</div>
+<div>
+<label>車輛型號 *</label>
+<input id="model" placeholder="例如 318TIA"/>
+</div>
+<div>
+<label>車牌號碼 *</label>
+<input id="plate" placeholder="例如 YM-1025"/>
+</div>
+<div>
+<label>車年份 *</label>
+<input id="year" placeholder="例如 1995" type="number"/>
+</div>
+<div class="full" id="transferField" style="display:none">
+<label id="transferLabel">對應人頭資料 *</label>
+<input id="transferName" placeholder="寄賣請填車主，調做請填車行名稱"/>
+</div>
+<div>
+<label>買入人 *</label>
+<select id="buyerPerson">
+<option value="">請選擇</option>
+<option>金恩（獨買）</option>
+<option>葉咨廷</option>
+<option>陳柏誠</option>
+<option>許晟豪</option>
+<option>吳俊廷</option>
+<option>劉家瑋</option>
+<option>林家旻</option>
+<option>吳宥勳</option>
+<option>吳七一</option>
+<option>林宥甫</option>
+<option>劉穎</option>
+<option>蔡冠宇</option>
+<option>鄭宜隆</option>
+<option>蕭宇廷</option>
+</select>
+</div>
+<div>
+<label>買入金額 *</label>
+<input id="buyAmount" placeholder="例如 100000" type="number"/>
+</div>
+<div>
+<label>公司調做金額</label>
+<input id="companyAdjust" placeholder="沒有可留空，預設 0" type="number"/>
+</div>
+<div>
+<label>車輛照片 *</label>
+<input accept="image/*" id="carPhotoInput" type="file"/>
+</div>
+<div>
+<label>行照照片 *</label>
+<input accept="image/*" id="licensePhotoInput" type="file"/>
+</div>
+<div class="full">
+<label>備註</label>
+<input id="note" placeholder="例如 檢驗日期、保險、收藏"/>
+</div>
+<div class="full"><div class="photo-grid" id="createPhotoPreview"></div></div>
+</div>
+<div class="actions">
+<button class="primary" id="saveVehicleBtn" type="button">儲存入庫</button>
+<button class="secondary" id="resetVehicleBtn" type="button">清空表單</button>
+<button class="secondary" data-close="createVehicleModal" type="button">關閉</button>
+</div>
+</div>
+</div>
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
 
-  function fmtMoney(n){
-    return (Number(n) || 0).toLocaleString('zh-TW');
+  function showMergedPanel(){
+    const pageTitle = $('pageTitle');
+    const pageDesc = $('pageDesc');
+    if(pageTitle) pageTitle.textContent = '車輛總覽';
+    if(pageDesc) pageDesc.textContent = '整合車輛管理與車輛成本總覽，新增 / 編輯車輛改為彈窗輸入。';
   }
 
-  function getRepairRows(){
-    if (Array.isArray(window.repairData)) return window.repairData;
-    return [];
-  }
-
-  function refreshRepairTotalOnly(){
-    const rows = getRepairRows();
-    const total = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
-    if ($('repairCount')) $('repairCount').value = rows.length;
-    if ($('repairPreviewTotal')) $('repairPreviewTotal').value = fmtMoney(total);
-    if ($('repairItems')) {
-      $('repairItems').value = rows.map(r => `${r.date || ''} ${r.name}:${r.amount}`).join("\n");
+  function setEntryTypeLocal(value){
+    const input = $('entryType');
+    if(input) input.value = value;
+    document.querySelectorAll('#createVehicleModal .entry-btn').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.value === value);
+    });
+    const needTransfer = value === '寄賣' || value === '調做';
+    const tf = $('transferField');
+    const tl = $('transferLabel');
+    const tn = $('transferName');
+    if(tf) tf.style.display = needTransfer ? 'block' : 'none';
+    if(tl) tl.textContent = value === '寄賣' ? '目前車主 *' : '車行名稱 *';
+    if(tn){
+      tn.placeholder = value === '寄賣' ? '請輸入目前車主' : '請輸入車行名稱';
+      if(!needTransfer) tn.value = '';
     }
-    return total;
   }
 
-  // Wrap the existing renderRepairList so every add/delete immediately同步整備總額
-  function patchRenderRepairList(){
-    if (typeof window.renderRepairList !== 'function') return false;
-    if (window.__repairListPatched__) return true;
+  function bindCreateModalControls(){
+    const openBtn = $('openCreateVehicleBtn');
+    if(openBtn && !openBtn.dataset.bound){
+      openBtn.dataset.bound = '1';
+      openBtn.addEventListener('click', function(){
+        const modal = $('createVehicleModal');
+        if(modal) modal.style.display = 'flex';
+      });
+    }
+    document.querySelectorAll('#createVehicleModal .entry-btn').forEach(btn=>{
+      if(btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', ()=> setEntryTypeLocal(btn.dataset.value));
+    });
+  }
 
-    const original = window.renderRepairList;
-    window.renderRepairList = function(){
-      const result = original.apply(this, arguments);
-      refreshRepairTotalOnly();
+  function applyVehicleFilterLocal(){
+    const kw = ($('vehicleSearch')?.value || '').trim().toLowerCase();
+    ['savedVehicleListView','savedVehicleCardView'].forEach(id=>{
+      const box = $(id);
+      if(!box) return;
+      Array.from(box.children).forEach(el=>{
+        const txt = (el.textContent || '').toLowerCase();
+        el.style.display = !kw || txt.includes(kw) ? '' : 'none';
+      });
+    });
+  }
+
+  function refreshMergedStatsLocal(){
+    try{
+      const rows = JSON.parse(localStorage.getItem('hongyi_inventory_records_v3') || '[]');
+      if($('statStock')) $('statStock').textContent = (rows.filter(r => r.status !== '已售').length || 0).toLocaleString('zh-TW');
+      if($('statSold')) $('statSold').textContent = (rows.filter(r => r.status === '已售').length || 0).toLocaleString('zh-TW');
+      if($('statRepairTotal')) $('statRepairTotal').textContent = (rows.reduce((s,r)=>s + Number(r.repairTotal || 0),0) || 0).toLocaleString('zh-TW');
+      if($('statProfit')) $('statProfit').textContent = (rows.reduce((s,r)=>s + Number(r.profit || 0),0) || 0).toLocaleString('zh-TW');
+    }catch(e){}
+  }
+
+  // patch renderAll if exists
+  if(typeof window.renderAll === 'function' && !window.__mergedPagePatch__){
+    const oldRenderAll = window.renderAll;
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      refreshMergedStatsLocal();
+      applyVehicleFilterLocal();
+      bindCreateModalControls();
+      showMergedPanel();
+      return res;
+    };
+    window.__mergedPagePatch__ = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindCreateModalControls();
+    setEntryTypeLocal('屏東鴻翊汽車');
+    showMergedPanel();
+    $('vehicleSearch')?.addEventListener('input', applyVehicleFilterLocal);
+    refreshMergedStatsLocal();
+    setTimeout(applyVehicleFilterLocal, 100);
+  });
+
+  window.addEventListener('load', function(){
+    bindCreateModalControls();
+    showMergedPanel();
+    refreshMergedStatsLocal();
+    setTimeout(applyVehicleFilterLocal, 100);
+  });
+})();
+</script><script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function closeCreateModal(){
+    const modal = $('createVehicleModal');
+    if(modal) modal.style.display = 'none';
+  }
+
+  // make [data-close] buttons work for createVehicleModal too and background click closes
+  function bindCreateModalClose(){
+    const modal = $('createVehicleModal');
+    if(!modal) return;
+
+    modal.querySelectorAll('[data-close="createVehicleModal"]').forEach(btn=>{
+      if(btn.dataset.boundClose) return;
+      btn.dataset.boundClose = '1';
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        closeCreateModal();
+      });
+    });
+
+    if(!modal.dataset.boundBackdrop){
+      modal.dataset.boundBackdrop = '1';
+      modal.addEventListener('click', function(e){
+        if(e.target === modal) closeCreateModal();
+      });
+    }
+  }
+
+  // wrap saveVehicle to auto close after successful save
+  if(typeof window.saveVehicle === 'function' && !window.__createModalSavePatched__){
+    const oldSaveVehicle = window.saveVehicle;
+    window.saveVehicle = async function(){
+      const result = await oldSaveVehicle.apply(this, arguments);
+      setTimeout(closeCreateModal, 100);
       return result;
     };
-    window.__repairListPatched__ = true;
-    return true;
+    window.__createModalSavePatched__ = true;
   }
 
-  function patchSaveVehicleNew(){
-    if (typeof window.saveVehicleNew !== 'function') return false;
-    if (window.__saveVehicleNewPatched__) return true;
-
-    const original = window.saveVehicleNew;
-    window.saveVehicleNew = async function(){
-      refreshRepairTotalOnly();
-      return await original.apply(this, arguments);
-    };
-    window.__saveVehicleNewPatched__ = true;
-    return true;
-  }
-
-  function bootRepairPatch(){
-    patchRenderRepairList();
-    patchSaveVehicleNew();
-    refreshRepairTotalOnly();
-  }
-
-  document.addEventListener('DOMContentLoaded', bootRepairPatch);
-  window.addEventListener('load', bootRepairPatch);
+  document.addEventListener('DOMContentLoaded', function(){
+    bindCreateModalClose();
+  });
+  window.addEventListener('load', function(){
+    bindCreateModalClose();
+  });
 })();
-</script>
-
-</body>
+</script></body>
 </html>
