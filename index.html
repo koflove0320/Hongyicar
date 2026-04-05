@@ -508,6 +508,20 @@
   </style>
 
 
+
+<style>
+.inline-note{
+  margin:10px 15px 0;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fff7ef;
+  color:#9a4f00;
+  font-size:14px;
+  line-height:1.6;
+  border:1px solid #ffd8af;
+}
+.hidden-note{display:none;}
+</style>
 </head>
 <body>
   <div class="app">
@@ -1606,48 +1620,12 @@ document.addEventListener("input", calcProfit);
 
 
 <script>
-document.addEventListener("change", function(e){
-  if(e.target.innerText.includes("寄賣")){
-    alert("請填目前車主");
-  }
-  if(e.target.innerText.includes("調做")){
-    alert("請填車行名稱");
-  }
-});
-</script>
-
-
-<script>
 function updateRanking(){
   let box = document.getElementById("rankCountBox");
   if(!box) return;
   box.innerHTML = "<div>金恩 - 5台</div><div>陳柏誠 - 3台</div>";
 }
 setInterval(updateRanking,2000);
-</script>
-
-
-<script>
-function validateFlow(){
-  const hasDeposit = document.querySelector('select')?.value !== "未收訂";
-  const paymentType = document.querySelector('select:nth-of-type(2)')?.value; // 粗抓貸款/現金
-  const soldSelect = document.querySelector('select:nth-of-type(3)');
-
-  if(soldSelect){
-    if(!hasDeposit){
-      soldSelect.value = "未售出";
-      alert("請先完成收訂");
-      return;
-    }
-    if(paymentType !== "現金" && paymentType !== "貸款"){
-      soldSelect.value = "未售出";
-      alert("請選擇付款方式（現金或貸款）");
-      return;
-    }
-  }
-}
-
-document.addEventListener("change", validateFlow);
 </script>
 
 
@@ -1698,6 +1676,38 @@ function addMoney(type, amount){
 function notify(msg){
   console.log("LINE通知:", msg);
 }
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  var root = document.querySelector(".container") || document.body;
+  var note = document.createElement("div");
+  note.id = "paymentHint";
+  note.className = "inline-note hidden-note";
+  note.textContent = "提醒：售出前請先選付款方式（現金或貸款）。";
+  if (root.firstChild) {
+    root.insertBefore(note, root.firstChild);
+  } else {
+    root.appendChild(note);
+  }
+
+  var selects = Array.from(document.querySelectorAll("select"));
+  var paymentSelect = selects.find(function(s){
+    return Array.from(s.options).some(function(o){
+      return o.text.indexOf("現金") >= 0 || o.text.indexOf("貸款") >= 0;
+    });
+  });
+
+  if(paymentSelect){
+    paymentSelect.addEventListener("change", function(){
+      if(paymentSelect.value){
+        note.classList.add("hidden-note");
+      } else {
+        note.classList.remove("hidden-note");
+      }
+    });
+  }
+});
 </script>
 </body>
 </html>
