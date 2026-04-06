@@ -1666,7 +1666,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           </div>
         </div>
         <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
-          <button type="button" class="secondary mini-btn small-btn" data-open="edit" data-id="${r.id}">編輯</button>
+          <button type="button" class="secondary mini-btn small-btn" onclick="editVehicle('${r.id}')">編輯</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
@@ -1688,7 +1688,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="car-line">整備：${fmt(r.repairTotal)}</div>
           ${r.hasDeposit==='已收訂' ? `<div class="car-line"><span class="deposit-badge">已收訂</span></div>` : ``}
           <div class="vehicle-actions">
-            <button type="button" class="secondary mini-btn small-btn" data-open="edit" data-id="${r.id}">編輯</button>
+            <button type="button" class="secondary mini-btn small-btn" onclick="editVehicle('${r.id}')">編輯</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
