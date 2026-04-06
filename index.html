@@ -816,8 +816,6 @@
 <style>
 /* Card/list toggle hard fix */
 #savedVehicleCardView{display:none;}
-#savedVehicleCardView.force-show{display:grid !important;}
-#savedVehicleListView.force-hide{display:none !important;}
 
 /* Card size smaller */
 .cards-wrap{
@@ -873,6 +871,28 @@
 }
 .sold-metrics .pill{
   margin:0;
+}
+</style>
+
+
+<style>
+#savedVehicleCardView{display:none;}
+.sold-metrics{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.sold-metrics .pill{
+  padding:4px 8px !important;
+  font-size:12px !important;
+}
+#soldListBox .row-line{
+  padding:12px 14px !important;
+}
+#soldListBox .small-note{
+  font-size:13px !important;
+  line-height:1.55 !important;
 }
 </style>
 
@@ -950,15 +970,15 @@
 <div class="toolbar">
 <div class="toolbar-left">
 <h3 style="margin:0">已售歷史總覽</h3>
-<select id="soldCompanyFilter" onchange="renderSoldOverview()">
+<select id="soldCompanyFilter" onchange="renderSoldHistory()">
 <option value="全部">全部公司</option>
 <option value="屏東鴻翊汽車">屏東鴻翊汽車</option>
 <option value="鴻豪汽車商行">鴻豪汽車商行</option>
 <option value="寄賣">寄賣</option>
 <option value="調作">調作</option>
 </select>
-<select id="soldYearFilter" onchange="renderSoldOverview()"></select>
-<select id="soldMonthFilter" onchange="renderSoldOverview()"></select>
+<select id="soldYearFilter" onchange="renderSoldHistory()"></select>
+<select id="soldMonthFilter" onchange="renderSoldHistory()"></select>
 </div>
 </div>
 <div class="stats" style="margin-top:8px">
@@ -2486,16 +2506,22 @@
     const card = $('savedVehicleCardView');
     if(listBtn && !listBtn.dataset.hardbound){
       listBtn.dataset.hardbound = '1';
-      listBtn.addEventListener('click', function(){
-        if(list) list.classList.remove('force-hide');
-        if(card) card.classList.remove('force-show');
+      listBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        if(list) list.style.display = 'grid';
+        if(card) card.style.display = 'none';
+        listBtn.classList.add('active-view');
+        if(cardBtn) cardBtn.classList.remove('active-view');
       }, true);
     }
     if(cardBtn && !cardBtn.dataset.hardbound){
       cardBtn.dataset.hardbound = '1';
-      cardBtn.addEventListener('click', function(){
-        if(list) list.classList.add('force-hide');
-        if(card) card.classList.add('force-show');
+      cardBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        if(list) list.style.display = 'none';
+        if(card) card.style.display = 'grid';
+        cardBtn.classList.add('active-view');
+        if(listBtn) listBtn.classList.remove('active-view');
       }, true);
     }
   }
@@ -2576,7 +2602,7 @@
       <div class="row-line" style="align-items:flex-start">
         <div style="flex:1;min-width:0">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.6">
+          <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">
             ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
           </div>
           <div class="sold-metrics">
@@ -2599,6 +2625,13 @@
       ensureSoldSearch();
       ensureSaleFields();
       bindViewToggleHard();
+      const list = $('savedVehicleListView');
+      const card = $('savedVehicleCardView');
+      const isCard = $('cardViewBtnBtn')?.classList.contains('active-view');
+      if(list && card){
+        list.style.display = isCard ? 'none' : 'grid';
+        card.style.display = isCard ? 'grid' : 'none';
+      }
       if(typeof renderAnnouncements === 'function') renderAnnouncements();
       return res;
     };
@@ -2617,6 +2650,23 @@
     bindViewToggleHard();
     if(typeof renderAnnouncements === 'function') renderAnnouncements();
   });
+})();
+</script>
+
+
+<script>
+(function(){
+  function enforceSingleView(){
+    const list = document.getElementById('savedVehicleListView');
+    const card = document.getElementById('savedVehicleCardView');
+    const isCard = document.getElementById('cardViewBtnBtn')?.classList.contains('active-view');
+    if(list && card){
+      list.style.display = isCard ? 'none' : 'grid';
+      card.style.display = isCard ? 'grid' : 'none';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', () => setTimeout(enforceSingleView, 50));
+  window.addEventListener('load', () => setTimeout(enforceSingleView, 50));
 })();
 </script>
 
