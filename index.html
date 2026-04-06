@@ -1056,6 +1056,20 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 }
 </style>
 
+
+<style>
+.small-btn{
+  font-size:12px !important;
+  padding:4px 6px !important;
+  min-height:30px !important;
+}
+@media (max-width:900px){
+  .small-btn{
+    font-size:11px !important;
+    padding:4px 4px !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1473,6 +1487,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     if($('carPhotoInput')) $('carPhotoInput').value = '';
     if($('licensePhotoInput')) $('licensePhotoInput').value = '';
     if($('createPhotoPreview')) $('createPhotoPreview').innerHTML = '';
+    if($('vehicleEditId')) $('vehicleEditId').value = '';
     if($('depositSection')) $('depositSection').style.display = 'none';
     if($('paymentSection')) $('paymentSection').style.display = 'none';
     if($('soldSection')) $('soldSection').style.display = 'none';
@@ -1480,6 +1495,35 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     if($('soldStatus')) $('soldStatus').value = '未售出';
     setEntryType('屏東鴻翊汽車');
   }
+
+
+  async function editVehicle(id){
+    const r = await dbGet(Number(id));
+    if(!r) return alert('找不到車輛資料');
+
+    if($('vehicleEditId')) $('vehicleEditId').value = r.id || '';
+    if($('entryType')) $('entryType').value = r.entryType || '屏東鴻翊汽車';
+    if(typeof setEntryType === 'function') setEntryType(r.entryType || '屏東鴻翊汽車');
+    if($('brand')) $('brand').value = r.brand || '';
+    if($('model')) $('model').value = r.model || '';
+    if($('plate')) $('plate').value = r.plate || '';
+    if($('year')) $('year').value = r.year || '';
+    if($('transferName')) $('transferName').value = r.transferName || '';
+    if($('buyerPerson')) $('buyerPerson').value = r.buyerPerson || '';
+    if($('buyAmount')) $('buyAmount').value = r.buyAmount || '';
+    if($('companyAdjust')) $('companyAdjust').value = r.companyAdjust || '';
+    if($('note')) $('note').value = r.note || '';
+
+    const preview = $('createPhotoPreview');
+    if(preview){
+      preview.innerHTML = '';
+      if(r.carPhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" alt="車輛照片"><div class="cap">車輛照片</div></div>`;
+      if(r.licensePhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" alt="行照照片"><div class="cap">行照照片</div></div>`;
+    }
+
+    if($('createVehicleModal')) $('createVehicleModal').style.display = 'flex';
+  }
+  window.editVehicle = editVehicle;
 
   function parseRepairItemsText(text){
     const lines = (text || '').split('\n').map(x => x.trim()).filter(Boolean);
@@ -1622,10 +1666,11 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           </div>
         </div>
         <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
-          <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
-          <button type="button" class="secondary mini-btn" data-open="repair" data-id="${r.id}">整備</button>
-          <button type="button" class="secondary mini-btn" data-open="deposit" data-id="${r.id}">收訂</button>
-          <button type="button" class="secondary mini-btn" data-open="sell" data-id="${r.id}">售出</button>
+          <button type="button" class="secondary mini-btn small-btn" data-open="edit" data-id="${r.id}">編輯</button>
+          <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
+          <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
+          <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+          <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>
         </div>
       </div>
     `).join('');
@@ -1643,10 +1688,11 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="car-line">整備：${fmt(r.repairTotal)}</div>
           ${r.hasDeposit==='已收訂' ? `<div class="car-line"><span class="deposit-badge">已收訂</span></div>` : ``}
           <div class="vehicle-actions">
-            <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
-            <button type="button" class="secondary mini-btn" data-open="repair" data-id="${r.id}">整備</button>
-            <button type="button" class="secondary mini-btn" data-open="deposit" data-id="${r.id}">收訂</button>
-            <button type="button" class="secondary mini-btn" data-open="sell" data-id="${r.id}">售出</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="edit" data-id="${r.id}">編輯</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>
           </div>
         </div>
       </div>
@@ -2055,6 +2101,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
         const id = openBtn.getAttribute('data-id');
         const action = openBtn.getAttribute('data-open');
         if(action === 'detail') openVehicleDetail(id);
+        if(action === 'edit') editVehicle(id);
         if(action === 'photos') showSavedPhotos(id);
         if(action === 'repair') openRepairModal(id);
         if(action === 'deposit') openDepositFlow(id);
@@ -2108,6 +2155,8 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 
   function bindMergedPage(){
     $('openCreateVehicleBtn')?.addEventListener('click', ()=> {
+      if($('vehicleEditId')) $('vehicleEditId').value = '';
+      
       const modal = $('createVehicleModal');
       if(modal) modal.style.display = 'flex';
     });
@@ -2140,6 +2189,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 <div class="modal" id="createVehicleModal">
 <div class="modal-content"><button class="modal-x-close" data-close="createVehicleModal" type="button">×</button>
 <h3>新增 / 編輯車輛</h3>
+<input id="vehicleEditId" type="hidden"/>
 <div class="small-note" style="margin-bottom:12px">先建立車輛，整備改成建立後再輸入。</div>
 <div class="full" style="margin-bottom:12px">
 <label>入庫公司 / 類型 *</label>
