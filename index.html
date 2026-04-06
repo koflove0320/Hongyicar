@@ -680,6 +680,16 @@
 @media (max-width:900px){
   #panel-vehicle .stats{grid-template-columns:1fr 1fr !important;}
 }
+</style><style>
+.modal-content{position:relative}
+.modal-x-close{
+  position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:#111827;font-size:24px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);z-index:5;
+}
+@media (max-width:900px){
+  .modal-x-close{top:10px;right:10px;width:42px;height:42px;font-size:26px}
+}
 </style></head>
 <body>
 <div class="app">
@@ -690,11 +700,9 @@
 </div>
 <div class="menu">
 <button class="active" onclick="showPanel('vehicle', this)">車輛管理</button>
-
 <button onclick="showPanel('sold', this)">已售歷史總覽</button>
 <button onclick="showPanel('board', this)">公佈欄</button>
 <button onclick="showPanel('sales', this)">公司業績排行</button>
-
 <button onclick="showPanel('people', this)">人員設定</button>
 </div>
 <div class="sidebar-note">
@@ -1671,7 +1679,7 @@
 })();
 </script>
 <div class="modal" id="createVehicleModal">
-<div class="modal-content">
+<div class="modal-content"><button class="modal-x-close" data-close="createVehicleModal" type="button">×</button>
 <h3>新增 / 編輯車輛</h3>
 <div class="small-note" style="margin-bottom:12px">先建立車輛，整備改成建立後再輸入。</div>
 <div class="full" style="margin-bottom:12px">
@@ -1750,7 +1758,7 @@
 <div class="actions">
 <button class="primary" id="saveVehicleBtn" type="button">儲存入庫</button>
 <button class="secondary" id="resetVehicleBtn" type="button">清空表單</button>
-<button class="secondary" data-close="createVehicleModal" type="button">關閉</button>
+
 </div>
 </div>
 </div>
@@ -1988,6 +1996,68 @@
       moveActionButtonsRightAndAddThumbs();
       patchCardButtons();
     }, 100);
+  });
+})();
+</script><script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function bindVehicleNavEverywhere(){
+    document.querySelectorAll('.menu button[data-panel="vehicle"], .bottom-nav button[data-panel="vehicle"], #bottomNav button[data-panel="vehicle"]').forEach(btn=>{
+      if(btn.dataset.vehicleBound === '1') return;
+      btn.dataset.vehicleBound = '1';
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.showPanel === 'function'){
+          window.showPanel('vehicle', this);
+        }else{
+          const panel = $('panel-vehicle');
+          if(panel){
+            document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+            panel.classList.add('active');
+          }
+        }
+      });
+    });
+  }
+
+  function bindCreateModalCloseX(){
+    const modal = $('createVehicleModal');
+    if(!modal || modal.dataset.closeBound === '1') return;
+    modal.dataset.closeBound = '1';
+
+    modal.querySelectorAll('[data-close="createVehicleModal"]').forEach(btn=>{
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        modal.style.display = 'none';
+      });
+    });
+
+    modal.addEventListener('click', function(e){
+      if(e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  if(typeof window.saveVehicle === 'function' && !window.__saveVehicleClosePatched__){
+    const oldSaveVehicle = window.saveVehicle;
+    window.saveVehicle = async function(){
+      const res = await oldSaveVehicle.apply(this, arguments);
+      const modal = $('createVehicleModal');
+      if(modal) modal.style.display = 'none';
+      return res;
+    };
+    window.__saveVehicleClosePatched__ = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindVehicleNavEverywhere();
+    bindCreateModalCloseX();
+  });
+  window.addEventListener('load', function(){
+    bindVehicleNavEverywhere();
+    bindCreateModalCloseX();
   });
 })();
 </script></body>
