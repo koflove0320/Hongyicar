@@ -4134,5 +4134,92 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 })();
 </script>
 
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  if(!window.__finalSoldColorOverride__){
+    window.__finalSoldColorOverride__ = true;
+
+    window.renderSoldHistory = async function(){
+      const all = await window.dbGetAll();
+      let sold = all.filter(r => r.status === '已售');
+
+      const currentCompany = $('soldCompanyFilter')?.value || '全部';
+      const currentYear = $('soldYearFilter')?.value || '全部';
+      const currentMonth = $('soldMonthFilter')?.value || '全部';
+      const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
+
+      const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+      if($('soldYearFilter')){
+        $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+        $('soldYearFilter').value = years.includes(currentYear) ? currentYear : '全部';
+      }
+      if($('soldMonthFilter')){
+        $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const mm=String(i+1).padStart(2,'0'); return `<option value="${mm}">${mm}月</option>`;}).join('');
+        $('soldMonthFilter').value = currentMonth || '全部';
+      }
+      if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany || '全部';
+
+      const company = $('soldCompanyFilter')?.value || '全部';
+      const year = $('soldYearFilter')?.value || '全部';
+      const month = $('soldMonthFilter')?.value || '全部';
+
+      if(company !== '全部') sold = sold.filter(r => r.entryType === company);
+      if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
+      if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+      if(kw) sold = sold.filter(r => `${r.brand} ${r.model} ${r.plate} ${r.sellerPerson || ''} ${r.newOwner || ''}`.toLowerCase().includes(kw));
+
+      if($('soldFilterCount')) $('soldFilterCount').textContent = window.fmt(sold.length);
+      if($('soldFilterProfit')) $('soldFilterProfit').textContent = window.fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
+      if($('soldFilterCompany')) $('soldFilterCompany').textContent = company === '全部' ? '全部公司' : company;
+      if($('soldFilterMonth')) $('soldFilterMonth').textContent = [year,month].filter(v=>v && v!=='全部').join('-') || '全部';
+
+      const sellerMap = {};
+      sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
+      const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
+      if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+
+      if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
+        const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
+        const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+        const profitVal = Math.round(r.profit || 0);
+        const profitColor = profitVal >= 0 ? '#dc2626' : '#16a34a';
+        return `
+        <div class="row-line sold-compact-row">
+          <div class="sold-compact-main">
+            <div class="sold-title">${r.brand} ${r.model}</div>
+            <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+            <div class="sold-meta">買：${window.fmt(r.buyAmount)} | 售：${window.fmt(r.sellAmount)} | 利：${window.fmt(gross)}</div>
+            <div class="sold-meta">雜：整備 ${window.fmt(r.repairTotal)}、稅 ${window.fmt(taxTotal)}</div>
+            <div style="margin-top:6px;font-size:16px;font-weight:900;color:${profitColor} !important;">實際利：${window.fmt(profitVal)}</div>
+          </div>
+          <div class="sold-compact-actions">
+            <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
+            <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">照片</button>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+    };
+
+    const oldRenderAll = window.renderAll;
+    if(typeof oldRenderAll === 'function' && !window.__finalRenderAllSoldHook__){
+      window.__finalRenderAllSoldHook__ = true;
+      window.renderAll = async function(){
+        const res = await oldRenderAll.apply(this, arguments);
+        await window.renderSoldHistory();
+        return res;
+      };
+    }
+
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+      }, 120);
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
