@@ -920,6 +920,7 @@
 <div class="form-grid" style="margin-top:12px">
 <div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"/></div>
 <div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"/></div>
+<div><label>公司底價</label><input id="companyFloorPrice" placeholder="例如 250000" type="number"/></div>
 <div><label>售出金額 *</label><input id="saleSellAmount" placeholder="例如 280000" type="number"/></div>
 <div><label>售出日期 *</label><input id="saleDate" type="date"/></div>
 </div>
@@ -1252,7 +1253,7 @@
     const kw = $('vehicleSearch')?.value.trim().toLowerCase() || '';
     const rows = all
       .filter(r => r.status !== '已售')
-      .filter(r => !kw || `${r.brand} ${r.model} ${r.plate}`.toLowerCase().includes(kw));
+      .filter(r => !kw || `${r.brand} ${r.model} ${r.plate} ${r.year} ${r.entryType} ${r.buyerPerson}`.toLowerCase().includes(kw));
 
     const listBox = $('savedVehicleListView');
     const cardBox = $('savedVehicleCardView');
@@ -1270,9 +1271,17 @@
             ? `<img src="${r.carPhoto}" style="width:72px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`
             : `<div style="width:72px;height:54px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)">無照片</div>`}
         </div>
-        <div style="min-width:0;flex:1">
-          <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.brand} ${r.model}｜${r.plate}${r.hasDeposit==='已收訂'?'<span class="deposit-badge">已收訂</span>':''}｜買入 ${fmt(r.buyAmount)}｜整備 ${fmt(r.repairTotal)}｜${r.status}</div>
-          <div class="small-note">${r.entryType} ｜ 買入人：${r.buyerPerson}</div>
+        <div style="min-width:0;flex:1;line-height:1.55">
+          <div style="font-weight:800;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
+            ${r.brand} ${r.model} ｜ ${r.plate} ｜ ${r.year}
+            ${r.hasDeposit==='已收訂' ? '<span class="deposit-badge">已收訂</span>' : ''}
+          </div>
+          <div class="small-note" style="white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
+            ${r.entryType} ｜ 買入人：${r.buyerPerson}
+          </div>
+          <div class="small-note" style="white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
+            買入 ${fmt(r.buyAmount)} ｜ 整備 ${fmt(r.repairTotal)} ｜ ${r.status}
+          </div>
         </div>
         <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
           <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
@@ -1291,8 +1300,10 @@
           <div class="car-line">車牌：${r.plate}</div>
           <div class="car-line">年份：${r.year}</div>
           <div class="car-line">入庫：${r.entryType}</div>
+          <div class="car-line">買入人：${r.buyerPerson}</div>
           <div class="car-line">買入：${fmt(r.buyAmount)}</div>
           <div class="car-line">整備：${fmt(r.repairTotal)}</div>
+          ${r.hasDeposit==='已收訂' ? `<div class="car-line"><span class="deposit-badge">已收訂</span></div>` : ``}
           <div class="vehicle-actions">
             <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">看照片</button>
             <button type="button" class="secondary mini-btn" data-open="repair" data-id="${r.id}">整備</button>
@@ -1490,7 +1501,7 @@
     $('flowModalTitle').textContent = '收訂作業';
     $('flowModalBody').innerHTML = `
       <div class="form-grid">
-        <div><label>收訂時間</label><input id="depositTime_clone" type="datetime-local"></div>
+        <div><label>收訂時間</label><input id="depositTime_clone" type="datetime-local" value="${r.depositTime || ''}"></div>
         <div><label>收訂金額</label><input id="depositAmount_clone" type="number" value="${r.depositAmount || ''}" placeholder="例如 30000"></div>
         <div><label>款項位置</label>
           <select id="depositAccount_clone">
@@ -1572,6 +1583,7 @@
     $('saleEditId').value = r.id;
     $('saleNewOwner').value = r.newOwner || '';
     $('saleSellerPerson').value = r.sellerPerson || '';
+    if($('companyFloorPrice')) $('companyFloorPrice').value = r.companyFloorPrice || '';
     $('saleSellAmount').value = r.sellAmount || '';
     $('saleDate').value = r.saleDate || '';
     if($('saleModal')) $('saleModal').style.display = 'flex';
@@ -1581,9 +1593,9 @@
     const id = $('saleEditId').value;
     const r = await dbGet(id);
     if(!r) return alert('找不到車輛資料');
-    if(r.false) return alert('請先完成收訂');
     const newOwner = $('saleNewOwner').value.trim();
     const sellerPerson = $('saleSellerPerson').value.trim();
+    const companyFloorPrice = Number($('companyFloorPrice')?.value || 0);
     const sellAmount = Number($('saleSellAmount').value || 0);
     const saleDate = $('saleDate').value;
     if(!sellerPerson) return alert('請填售出人');
@@ -1591,8 +1603,8 @@
     if(!saleDate) return alert('請填售出日期');
     r.newOwner = newOwner;
     r.sellerPerson = sellerPerson;
-    r.companyFloorPrice = Number(document.getElementById('companyFloorPrice')?.value||0);
-      r.sellAmount = sellAmount;
+    r.companyFloorPrice = companyFloorPrice;
+    r.sellAmount = sellAmount;
     r.saleDate = saleDate;
     r.soldStatus = '已售出';
     r.status = '已售';
