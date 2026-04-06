@@ -1299,11 +1299,11 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 <div class="modal" id="saleModal">
 <div class="modal-content">
 <h3>後續售出資料</h3>
-<div class="hint">補填：新車主、售出人、售出金額、售出日期。填完會自動移到已售歷史總覽。</div>
+<div class="hint">補填：新車主、售出人、售出金額、售出日期。填完會自動移到已售歷史總覽，並自動計算發票稅、營業稅與利潤。</div>
 <input id="saleEditId" type="hidden"/>
 <div class="form-grid" style="margin-top:12px">
 <div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"/></div>
-<div><label>售出人 *</label><select id="saleSellerPerson"><option value="">請選擇</option></select></div>
+<div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"/></div>
 <div><label>公司底價</label><input id="companyFloorPrice" placeholder="例如 250000" type="number"/></div>
 <div><label>售出金額 *</label><input id="saleSellAmount" placeholder="例如 280000" type="number"/></div>
 <div><label>售出日期 *</label><input id="saleDate" type="date"/></div>
@@ -1603,32 +1603,49 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     return items;
   }
 
-  function recalcRecord(r){
+  function roundMoney(n){
+    return Math.round(Number(n || 0));
+  }
+
+  function calculateProfitFields(r){
     const taxable = ['屏東鴻翊汽車','鴻豪汽車商行'].includes(r.entryType);
     const buy = Number(r.buyAmount || 0);
     const repair = Number(r.repairTotal || 0);
     const sell = Number(r.sellAmount || 0);
     const adjust = Number(r.companyAdjust || 0);
-    let invoiceTax = 0, businessTax = 0, profit = 0;
+
+    let invoiceTax = 0;
+    let businessTax = 0;
+    let profit = 0;
 
     if(r.entryType === '調做'){
-      const baseProfit = adjust - buy - repair;
+      const grossProfit = adjust - buy - repair;
       if(taxable){
-        invoiceTax = Math.max(baseProfit,0) * 0.05;
+        invoiceTax = Math.max(grossProfit, 0) * 0.05;
         businessTax = sell * 0.012;
       }
-      profit = adjust - buy - repair - invoiceTax - businessTax;
-    } else {
-      const baseProfit = sell - (buy + repair);
+      profit = grossProfit - invoiceTax - businessTax;
+    }else{
+      const grossProfit = sell - buy - repair;
       if(taxable){
-        invoiceTax = Math.max(baseProfit,0) * 0.05;
+        invoiceTax = Math.max(grossProfit, 0) * 0.05;
         businessTax = sell * 0.012;
       }
-      profit = sell - buy - repair - invoiceTax - businessTax;
+      profit = grossProfit - invoiceTax - businessTax;
     }
-    r.invoiceTax = invoiceTax;
-    r.businessTax = businessTax;
-    r.profit = profit;
+
+    return {
+      invoiceTax: roundMoney(invoiceTax),
+      businessTax: roundMoney(businessTax),
+      profit: roundMoney(profit)
+    };
+  }
+
+  function recalcRecord(r){
+    const calc = calculateProfitFields(r);
+    r.invoiceTax = calc.invoiceTax;
+    r.businessTax = calc.businessTax;
+    r.profit = calc.profit;
     return r;
   }
 
@@ -2134,7 +2151,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     r.saleDate = saleDate;
     r.soldStatus = '已售出';
     r.status = '已售';
-    recalcRecord(r);
+    recalcRecord(r); // 自動重算發票稅、營業稅、利潤
     await dbPut(r);
     if($('saleModal')) $('saleModal').style.display = 'none';
     await renderAll();
@@ -4350,144 +4367,25 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 </script>
 
 
-<script>
-(function(){
-  const EMP_KEY = 'hongyi_employees_v1';
-  const DEFAULT_EMPLOYEES = [{"id": "1", "name": "葉咨廷", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "2", "name": "陳柏誠", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "3", "name": "許晟豪", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "4", "name": "吳俊廷", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "5", "name": "劉家瑋", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "6", "name": "林家旻", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "7", "name": "吳宥勳", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "8", "name": "吳七一", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "9", "name": "林宥甫", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "10", "name": "劉穎", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "11", "name": "蔡冠宇", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "12", "name": "鄭宜隆", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}, {"id": "13", "name": "蕭宇廷", "role": "業務", "applyStatus": "已核准", "loginType": "LINE", "phone": "", "lineName": "", "note": ""}];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  function $(id){ return document.getElementById(id); }
+const firebaseConfig = {
+  apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
+  authDomain: "hongyi-car-app.firebaseapp.com",
+  projectId: "hongyi-car-app",
+  storageBucket: "hongyi-car-app.appspot.com",
+  messagingSenderId: "506346503503",
+  appId: "1:506346503503:web:cfaa3f9ac323945591193a"
+};
 
-  function getEmployees(){
-    try{
-      const raw = JSON.parse(localStorage.getItem(EMP_KEY) || '[]');
-      if(Array.isArray(raw) && raw.length) return raw;
-    }catch(e){}
-    localStorage.setItem(EMP_KEY, JSON.stringify(DEFAULT_EMPLOYEES));
-    return DEFAULT_EMPLOYEES;
-  }
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  function saveEmployees(arr){
-    localStorage.setItem(EMP_KEY, JSON.stringify(arr));
-  }
+window.db = db;
 
-  function getApprovedSalesNames(){
-    return getEmployees()
-      .filter(x => (x.applyStatus || '已核准') !== '停用')
-      .map(x => (x.name || '').trim())
-      .filter(Boolean);
-  }
-
-  function syncPersonOptions(){
-    const names = getApprovedSalesNames();
-
-    const buyer = $('buyerPerson');
-    if(buyer){
-      const current = buyer.value || '';
-      buyer.innerHTML = '<option value="">請選擇</option><option value="金恩（獨買）">金恩（獨買）</option>' +
-        names.map(n => `<option value="${n}">${n}</option>`).join('');
-      if([...buyer.options].some(o => o.value === current)) buyer.value = current;
-    }
-
-    const seller = $('saleSellerPerson');
-    if(seller){
-      const current = seller.value || '';
-      seller.innerHTML = '<option value="">請選擇</option>' +
-        names.map(n => `<option value="${n}">${n}</option>`).join('');
-      if([...seller.options].some(o => o.value === current)) seller.value = current;
-    }
-  }
-
-  function renderEmployeeList(){
-    const box = $('employeeList');
-    if(!box) return;
-    const employees = getEmployees();
-    box.innerHTML = employees.length ? employees.map((emp, i) => `
-      <div class="row-line">
-        <div>
-          <strong>#${i+1} ${emp.name || '未命名員工'}</strong>
-          <div class="small-note">${emp.role || '業務'} ｜ ${emp.applyStatus || '未申請'} ｜ ${emp.loginType || 'LINE'}</div>
-          <div class="small-note">${emp.note || ''}</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button type="button" class="secondary mini-btn" onclick="editEmployee('${emp.id}')">編輯</button>
-        </div>
-      </div>
-    `).join('') : '<div class="empty">目前沒有員工資料</div>';
-    syncPersonOptions();
-  }
-
-  function resetEmployeeForm(){
-    if($('employeeEditId')) $('employeeEditId').value = '';
-    if($('employeeName')) $('employeeName').value = '';
-    if($('employeeRole')) $('employeeRole').value = '';
-    if($('employeePhone')) $('employeePhone').value = '';
-    if($('employeeLineName')) $('employeeLineName').value = '';
-    if($('employeeApplyStatus')) $('employeeApplyStatus').value = '已核准';
-    if($('employeeLoginType')) $('employeeLoginType').value = 'LINE';
-    if($('employeeNote')) $('employeeNote').value = '';
-  }
-
-  function editEmployee(id){
-    const emp = getEmployees().find(x => String(x.id) === String(id));
-    if(!emp) return alert('找不到員工資料');
-    if($('employeeEditId')) $('employeeEditId').value = emp.id || '';
-    if($('employeeName')) $('employeeName').value = emp.name || '';
-    if($('employeeRole')) $('employeeRole').value = emp.role || '';
-    if($('employeePhone')) $('employeePhone').value = emp.phone || '';
-    if($('employeeLineName')) $('employeeLineName').value = emp.lineName || '';
-    if($('employeeApplyStatus')) $('employeeApplyStatus').value = emp.applyStatus || '已核准';
-    if($('employeeLoginType')) $('employeeLoginType').value = emp.loginType || 'LINE';
-    if($('employeeNote')) $('employeeNote').value = emp.note || '';
-  }
-
-  function saveEmployee(){
-    const id = $('employeeEditId')?.value || String(Date.now());
-    const name = $('employeeName')?.value.trim() || '';
-    const role = $('employeeRole')?.value.trim() || '業務';
-    const phone = $('employeePhone')?.value.trim() || '';
-    const lineName = $('employeeLineName')?.value.trim() || '';
-    const applyStatus = $('employeeApplyStatus')?.value || '已核准';
-    const loginType = $('employeeLoginType')?.value || 'LINE';
-    const note = $('employeeNote')?.value.trim() || '';
-    if(!name) return alert('請填員工姓名');
-
-    const employees = getEmployees();
-    const idx = employees.findIndex(x => String(x.id) === String(id));
-    const record = { id, name, role, phone, lineName, applyStatus, loginType, note };
-    if(idx >= 0) employees[idx] = record;
-    else employees.push(record);
-    saveEmployees(employees);
-    renderEmployeeList();
-    resetEmployeeForm();
-    alert('員工已儲存');
-  }
-
-  window.saveEmployee = saveEmployee;
-  window.resetEmployeeForm = resetEmployeeForm;
-  window.editEmployee = editEmployee;
-  window.renderEmployeeList = renderEmployeeList;
-  window.syncPersonOptions = syncPersonOptions;
-
-  document.addEventListener('DOMContentLoaded', function(){
-    renderEmployeeList();
-    syncPersonOptions();
-  });
-  window.addEventListener('load', function(){
-    renderEmployeeList();
-    syncPersonOptions();
-  });
-
-  // also refresh options after app rerenders
-  const oldRenderAll = window.renderAll;
-  if(typeof oldRenderAll === 'function' && !window.__employeeLinkedPatched__){
-    window.__employeeLinkedPatched__ = true;
-    window.renderAll = async function(){
-      const res = await oldRenderAll.apply(this, arguments);
-      syncPersonOptions();
-      return res;
-    };
-  }
-})();
+console.log("🔥 Firebase 已連線成功");
 </script>
 
 </body>
