@@ -3448,8 +3448,6 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   });
 })();
 </script>
-
-
 <style>
 #soldListBox .sold-action-col{
   display:flex !important;
@@ -3640,6 +3638,139 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   });
 })();
 </script>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
 
-</body>
+  // 刪掉多餘的明細按鈕，只保留一個明細＋一個查看照片
+  function cleanupSoldButtons(){
+    const box = $('soldListBox');
+    if(!box) return;
+    Array.from(box.children).forEach(row=>{
+      const detailBtns = row.querySelectorAll('[data-open="detail"]');
+      const photoBtns = row.querySelectorAll('[data-open="photos"]');
+
+      detailBtns.forEach((btn, i) => {
+        if(i > 0) btn.remove();
+      });
+      photoBtns.forEach((btn, i) => {
+        if(i > 0) btn.remove();
+      });
+
+      let col = row.querySelector('.sold-action-col');
+      if(!col){
+        col = document.createElement('div');
+        col.className = 'sold-action-col';
+        row.appendChild(col);
+      }
+
+      const detail = row.querySelector('[data-open="detail"]');
+      const photo = row.querySelector('[data-open="photos"]');
+
+      if(photo && photo.parentElement !== col) col.appendChild(photo);
+      if(detail && detail.parentElement !== col) col.appendChild(detail);
+    });
+  }
+
+  // 明細資料直接從 IndexedDB 抓
+  window.openSoldDetail = async function(id){
+    if(typeof window.dbGet !== 'function'){
+      alert('明細資料庫尚未就緒');
+      return;
+    }
+    const r = await window.dbGet(id);
+    if(!r){
+      alert('找不到明細資料');
+      return;
+    }
+
+    let modal = $('soldDetailModal');
+    if(!modal){
+      modal = document.createElement('div');
+      modal.id = 'soldDetailModal';
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>售出完整明細</h3>
+          <div id="soldDetailBody" class="small-note" style="line-height:1.8;white-space:normal"></div>
+          <div class="actions">
+            <button class="secondary" type="button" id="closeSoldDetailBtn">關閉</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', function(e){
+        if(e.target === modal) modal.style.display = 'none';
+      });
+      modal.querySelector('#closeSoldDetailBtn').addEventListener('click', function(){
+        modal.style.display = 'none';
+      });
+    }
+
+    const fmt = (v) => Number(v || 0).toLocaleString('zh-TW');
+    const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+    const repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    const repairHtml = repairItems.length
+      ? repairItems.map(item => `<div>・${item.name || '整備項目'}：${fmt(item.amount)}</div>`).join('')
+      : '<div>—</div>';
+
+    $('soldDetailBody').innerHTML = `
+      <div><strong>${r.brand || ''} ${r.model || ''}</strong></div>
+      <div>車牌：${r.plate || '—'}</div>
+      <div>買入人：${r.buyerPerson || '—'}</div>
+      <div>買進價格：${fmt(r.buyAmount)}</div>
+      <div>公司底價：${fmt(r.companyFloorPrice)}</div>
+      <div>售出金額（開發票）：${fmt(r.sellAmount)}</div>
+      <div>新車主姓名：${r.newOwner || '—'}</div>
+      <div>身分證：${r.newOwnerIdNo || '—'}</div>
+      <div>有無換牌：${r.plateChanged || '否'}</div>
+      <div>換牌車號：${r.newPlate || '—'}</div>
+      <div style="margin-top:8px"><strong>整備明細</strong></div>
+      ${repairHtml}
+      <div style="margin-top:8px"><strong>稅金明細</strong></div>
+      <div>發票稅：${fmt(r.invoiceTax)}</div>
+      <div>營業稅：${fmt(r.businessTax)}</div>
+      <div>稅金合計：${fmt(taxTotal)}</div>
+      <div style="margin-top:8px"><strong>最後利潤：${fmt(r.profit)}</strong></div>
+    `;
+    modal.style.display = 'flex';
+  };
+
+  function bindSoldDetailButtons(){
+    document.querySelectorAll('#soldListBox [data-open="detail"]').forEach(btn=>{
+      if(btn.dataset.boundDetail === '1') return;
+      btn.dataset.boundDetail = '1';
+      btn.onclick = async function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        await window.openSoldDetail(btn.getAttribute('data-id'));
+      };
+      btn.addEventListener('click', async function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        await window.openSoldDetail(btn.getAttribute('data-id'));
+      }, true);
+    });
+  }
+
+  function refreshSoldEnhancements(){
+    cleanupSoldButtons();
+    bindSoldDetailButtons();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(refreshSoldEnhancements, 100);
+  });
+  window.addEventListener('load', function(){
+    setTimeout(refreshSoldEnhancements, 150);
+  });
+
+  const box = document.getElementById('soldListBox');
+  if(box){
+    const mo = new MutationObserver(function(){
+      refreshSoldEnhancements();
+    });
+    mo.observe(box, {childList:true, subtree:true});
+  }
+})();
+</script></body>
 </html>
