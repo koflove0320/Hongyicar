@@ -728,6 +728,54 @@
 }
 </style>
 
+
+<style>
+.cards-wrap{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr)) !important;
+  gap:12px !important;
+}
+.car-card{
+  grid-template-columns:1fr !important;
+}
+.car-photo{
+  min-height:150px !important;
+  max-height:150px !important;
+  border-right:none !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.car-body{
+  padding:10px !important;
+}
+.car-title{
+  font-size:18px !important;
+  margin:2px 0 6px !important;
+}
+.car-line{
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+@media (max-width:900px){
+  .cards-wrap{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  .car-photo{
+    min-height:110px !important;
+    max-height:110px !important;
+  }
+  .car-body{
+    padding:8px !important;
+  }
+  .car-title{
+    font-size:16px !important;
+  }
+  .car-line{
+    font-size:12px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -825,6 +873,7 @@
 </div>
 <div style="margin-top:14px">
 <h3 style="font-size:22px">已售車輛明細</h3>
+<input id="soldSearch" class="search" placeholder="搜尋車型 / 車牌 / 售出人 / 新車主" style="margin:8px 0 12px 0;max-width:420px" />
 <div class="list-box" id="soldListBox"></div>
 </div>
 </div>
@@ -1273,7 +1322,7 @@
         </div>
         <div style="min-width:0;flex:1;line-height:1.55">
           <div style="font-weight:800;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
-            ${r.brand} ${r.model} | ${r.plate} | ${fmt(r.buyAmount)} | ${fmt(r.repairTotal)} | ${r.buyerPerson} | ${r.transferName || r.entryType}
+            ${r.brand} ${r.model} | ${r.plate} | 買 ${fmt(r.buyAmount)} | 雜 ${fmt(r.repairTotal)} | ${r.buyerPerson} | ${r.transferName || r.entryType}
             ${r.hasDeposit==='已收訂' ? '<span class="deposit-badge">已收訂</span>' : ''}
           </div>
         </div>
@@ -2181,6 +2230,19 @@
       return res;
     }
     window.__depositSavePatched__ = true;
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  const soldSearch = document.getElementById('soldSearch');
+  if(soldSearch && !soldSearch.dataset.boundSearch){
+    soldSearch.dataset.boundSearch = '1';
+    soldSearch.addEventListener('input', function(){
+      if(typeof renderSoldHistory === 'function') renderSoldHistory();
+    });
   }
 })();
 </script>
