@@ -714,16 +714,6 @@
   white-space:nowrap;
   min-height:32px;
 }
-.car-card .vehicle-actions{
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  width:100%;
-  flex:unset;
-  margin-top:8px;
-}
-.car-card .vehicle-actions button{
-  min-width:0;
-}
 </style>
 <style>
 .deposit-badge{
@@ -789,6 +779,7 @@
 
 <style>
 .cards-wrap{
+  display:grid !important;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr)) !important;
   gap:10px !important;
 }
@@ -818,6 +809,70 @@
   .car-title{font-size:15px !important}
   .car-line{font-size:11px !important;line-height:1.35 !important}
   .vehicle-actions .mini-btn{font-size:11px !important;min-height:30px !important}
+}
+</style>
+
+
+<style>
+/* Card/list toggle hard fix */
+#savedVehicleCardView{display:none;}
+#savedVehicleCardView.force-show{display:grid !important;}
+#savedVehicleListView.force-hide{display:none !important;}
+
+/* Card size smaller */
+.cards-wrap{
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr)) !important;
+  gap:10px !important;
+}
+.car-card{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+}
+.car-photo{
+  min-height:120px !important;
+  max-height:120px !important;
+  border-right:none !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.car-body{padding:8px !important}
+.car-title{font-size:16px !important;margin:0 0 6px !important}
+.car-line{font-size:12px !important;line-height:1.4 !important}
+.car-card .vehicle-actions{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:4px !important;
+  width:100% !important;
+  flex:unset !important;
+  margin-top:8px !important;
+}
+.car-card .vehicle-actions .mini-btn{
+  min-width:0 !important;
+  min-height:30px !important;
+  font-size:11px !important;
+  padding:4px 2px !important;
+}
+@media (max-width:900px){
+  .cards-wrap{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+  .car-photo{
+    min-height:95px !important;
+    max-height:95px !important;
+  }
+  .car-title{font-size:15px !important}
+  .car-line{font-size:11px !important}
+}
+
+/* Sold details cleaner */
+.sold-metrics{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.sold-metrics .pill{
+  margin:0;
 }
 </style>
 
@@ -1013,16 +1068,8 @@
 <input id="saleEditId" type="hidden"/>
 <div class="form-grid" style="margin-top:12px">
 <div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"/></div>
-<div><label>新車主身分證字號</label><input id="saleNewOwnerIdNo" placeholder="例如 A123456789"/></div>
 <div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"/></div>
 <div><label>公司底價</label><input id="companyFloorPrice" placeholder="例如 250000" type="number"/></div>
-<div><label>有無更換牌照</label>
-<select id="salePlateChanged">
-<option value="否">否</option>
-<option value="是">是</option>
-</select>
-</div>
-<div id="newPlateWrap" style="display:none"><label>新牌照</label><input id="saleNewPlate" placeholder="例如 ABC-1234"/></div>
 <div><label>售出金額 *</label><input id="saleSellAmount" placeholder="例如 280000" type="number"/></div>
 <div><label>售出日期 *</label><input id="saleDate" type="date"/></div>
 </div>
@@ -1469,15 +1516,17 @@
       <div class="row-line" style="align-items:flex-start">
         <div style="flex:1;min-width:0">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.7">
+          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.8">
             ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
-            <span class="pill">買：${fmt(r.buyAmount)}</span>
-            <span class="pill">售：${fmt(r.sellAmount)}</span>
-            <span class="pill">利：${fmt(gross)}</span>
-            <span class="pill">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</span>
-            <span class="pill">實際利：${fmt(Math.round(r.profit || 0))}</span>
+          <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.8">
+            買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}
+          </div>
+          <div class="small-note" style="white-space:normal;line-height:1.8">
+            雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}
+          </div>
+          <div class="small-note" style="white-space:normal;line-height:1.8">
+            實際利：${fmt(Math.round(r.profit || 0))}
           </div>
         </div>
         <div>
@@ -1507,7 +1556,6 @@
     await renderCostOverview();
     await renderSoldHistory();
     await renderPerformance();
-    if(typeof renderAnnouncements === 'function') renderAnnouncements();
   }
 
   async function openVehicleDetail(id){
@@ -1692,12 +1740,8 @@
     if(!r) return;
     $('saleEditId').value = r.id;
     $('saleNewOwner').value = r.newOwner || '';
-    if($('saleNewOwnerIdNo')) $('saleNewOwnerIdNo').value = r.newOwnerIdNo || '';
     $('saleSellerPerson').value = r.sellerPerson || '';
     if($('companyFloorPrice')) $('companyFloorPrice').value = r.companyFloorPrice || '';
-    if($('salePlateChanged')) $('salePlateChanged').value = r.plateChanged || '否';
-    if($('saleNewPlate')) $('saleNewPlate').value = r.newPlate || '';
-    if($('newPlateWrap')) $('newPlateWrap').style.display = (r.plateChanged === '是') ? 'block' : 'none';
     $('saleSellAmount').value = r.sellAmount || '';
     $('saleDate').value = r.saleDate || '';
     if($('saleModal')) $('saleModal').style.display = 'flex';
@@ -1708,15 +1752,11 @@
     const r = await dbGet(id);
     if(!r) return alert('找不到車輛資料');
     const newOwner = $('saleNewOwner').value.trim();
-    const newOwnerIdNo = $('saleNewOwnerIdNo')?.value.trim() || '';
     const sellerPerson = $('saleSellerPerson').value.trim();
     const companyFloorPrice = Number($('companyFloorPrice')?.value || 0);
-    const plateChanged = $('salePlateChanged')?.value || '否';
-    const newPlate = $('saleNewPlate')?.value.trim() || '';
     const sellAmount = Number($('saleSellAmount').value || 0);
     const saleDate = $('saleDate').value;
     if(!sellerPerson) return alert('請填售出人');
-    if(plateChanged === '是' && !newPlate) return alert('請填新牌照');
     if(!sellAmount) return alert('請填售出金額');
     if(!saleDate) return alert('請填售出日期');
     r.newOwner = newOwner;
@@ -2338,92 +2378,245 @@
 
 <script>
 (function(){
+  function $(id){ return document.getElementById(id); }
+
   const ANN_KEY = 'hongyi_announcements_v1';
-  function getAnns(){
-    try{return JSON.parse(localStorage.getItem(ANN_KEY) || '[]')}catch(e){return []}
+
+  function getAnnouncements(){
+    try { return JSON.parse(localStorage.getItem(ANN_KEY) || '[]'); } catch(e){ return []; }
   }
-  function saveAnns(arr){
-    localStorage.setItem(ANN_KEY, JSON.stringify(arr));
+  function saveAnnouncements(items){
+    localStorage.setItem(ANN_KEY, JSON.stringify(items));
   }
+
   window.renderAnnouncements = function(){
-    const box = document.getElementById('announcementList');
+    const box = $('announcementList');
     if(!box) return;
-    const anns = getAnns();
+    const anns = getAnnouncements();
     box.innerHTML = anns.length ? anns.map(a => `
       <div class="row-line">
         <div>
           <strong>${a.title}</strong>
           <div class="small-note">${a.content}</div>
         </div>
-        <div class="small-note">${a.createdAt || ''}</div>
+        <div class="small-note">${a.createdAt}</div>
       </div>
     `).join('') : '<div class="empty">目前沒有公告</div>';
   };
+
   window.saveAnnouncement = function(){
-    const title = document.getElementById('announcementTitle')?.value.trim() || '';
-    const content = document.getElementById('announcementContent')?.value.trim() || '';
+    const title = $('announcementTitle')?.value.trim() || '';
+    const content = $('announcementContent')?.value.trim() || '';
     if(!title) return alert('請填公告標題');
     if(!content) return alert('請填公告內容');
-    const anns = getAnns();
+    const anns = getAnnouncements();
     anns.unshift({
       id: String(Date.now()),
       title,
       content,
       createdAt: new Date().toLocaleString('zh-TW')
     });
-    saveAnns(anns);
-    document.getElementById('announcementTitle').value = '';
-    document.getElementById('announcementContent').value = '';
+    saveAnnouncements(anns);
+    $('announcementTitle').value = '';
+    $('announcementContent').value = '';
     renderAnnouncements();
     alert('公告已發佈');
   };
-  document.addEventListener('DOMContentLoaded', renderAnnouncements);
-  window.addEventListener('load', renderAnnouncements);
-})();
-</script>
 
+  function ensureSoldSearch(){
+    const soldList = $('soldListBox');
+    if(!soldList) return;
+    if($('soldSearch')) return;
+    const h3 = soldList.previousElementSibling;
+    const input = document.createElement('input');
+    input.id = 'soldSearch';
+    input.className = 'search';
+    input.placeholder = '搜尋車型 / 車牌 / 售出人 / 新車主';
+    input.style.margin = '8px 0 12px 0';
+    input.style.maxWidth = '420px';
+    if(h3 && h3.parentNode) h3.parentNode.insertBefore(input, soldList);
+    input.addEventListener('input', function(){
+      if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+    });
+  }
 
-<script>
-(function(){
-  function $(id){ return document.getElementById(id); }
-  function bindExtraUI(){
-    const cardBtn = $('cardViewBtnBtn');
-    const listBtn = $('listViewBtn');
-    const list = $('savedVehicleListView');
-    const card = $('savedVehicleCardView');
-    if(cardBtn && !cardBtn.dataset.extraBound){
-      cardBtn.dataset.extraBound = '1';
-      cardBtn.addEventListener('click', function(){
-        if(list) list.style.display = 'none';
-        if(card) card.style.display = 'grid';
-      });
+  function ensureSaleFields(){
+    const grid = $('saleModal')?.querySelector('.form-grid');
+    if(!grid) return;
+
+    if(!$('saleNewOwnerIdNo')){
+      const wrap = document.createElement('div');
+      wrap.innerHTML = '<label>新車主身分證字號</label><input id="saleNewOwnerIdNo" placeholder="例如 A123456789">';
+      const sellerWrap = $('saleSellerPerson')?.closest('div');
+      if(sellerWrap) grid.insertBefore(wrap, sellerWrap);
+      else grid.appendChild(wrap);
     }
-    if(listBtn && !listBtn.dataset.extraBound){
-      listBtn.dataset.extraBound = '1';
-      listBtn.addEventListener('click', function(){
-        if(list) list.style.display = 'grid';
-        if(card) card.style.display = 'none';
-      });
+
+    if(!$('salePlateChanged')){
+      const wrap = document.createElement('div');
+      wrap.innerHTML = '<label>有無更換牌照</label><select id="salePlateChanged"><option value="否">否</option><option value="是">是</option></select>';
+      grid.appendChild(wrap);
     }
-    const soldSearch = $('soldSearch');
-    if(soldSearch && !soldSearch.dataset.boundSearch2){
-      soldSearch.dataset.boundSearch2 = '1';
-      soldSearch.addEventListener('input', function(){
-        if(typeof renderSoldHistory === 'function') renderSoldHistory();
-      });
+
+    if(!$('newPlateWrap')){
+      const wrap = document.createElement('div');
+      wrap.id = 'newPlateWrap';
+      wrap.style.display = 'none';
+      wrap.innerHTML = '<label>新牌照</label><input id="saleNewPlate" placeholder="例如 ABC-1234">';
+      grid.appendChild(wrap);
     }
+
     const plateChanged = $('salePlateChanged');
     const newPlateWrap = $('newPlateWrap');
-    if(plateChanged && newPlateWrap && !plateChanged.dataset.boundToggle){
-      const toggle = function(){ newPlateWrap.style.display = plateChanged.value === '是' ? 'block' : 'none'; };
-      plateChanged.dataset.boundToggle = '1';
+    if(plateChanged && !plateChanged.dataset.bound){
+      const toggle = () => {
+        newPlateWrap.style.display = plateChanged.value === '是' ? 'block' : 'none';
+        if(plateChanged.value !== '是' && $('saleNewPlate')) $('saleNewPlate').value = '';
+      };
+      plateChanged.dataset.bound = '1';
       plateChanged.addEventListener('change', toggle);
       toggle();
     }
   }
-  document.addEventListener('DOMContentLoaded', bindExtraUI);
-  window.addEventListener('load', bindExtraUI);
-  setTimeout(bindExtraUI, 500);
+
+  function bindViewToggleHard(){
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    const list = $('savedVehicleListView');
+    const card = $('savedVehicleCardView');
+    if(listBtn && !listBtn.dataset.hardbound){
+      listBtn.dataset.hardbound = '1';
+      listBtn.addEventListener('click', function(){
+        if(list) list.classList.remove('force-hide');
+        if(card) card.classList.remove('force-show');
+      }, true);
+    }
+    if(cardBtn && !cardBtn.dataset.hardbound){
+      cardBtn.dataset.hardbound = '1';
+      cardBtn.addEventListener('click', function(){
+        if(list) list.classList.add('force-hide');
+        if(card) card.classList.add('force-show');
+      }, true);
+    }
+  }
+
+  const oldOpenSaleModalFlow = window.openSaleModalFlow;
+  if(typeof oldOpenSaleModalFlow === 'function' && !window.__saleOpenPatched__){
+    window.openSaleModalFlow = async function(id){
+      const res = await oldOpenSaleModalFlow.apply(this, arguments);
+      ensureSaleFields();
+      try{
+        const r = await window.dbGet(id);
+        if(r){
+          if($('saleNewOwnerIdNo')) $('saleNewOwnerIdNo').value = r.newOwnerIdNo || '';
+          if($('salePlateChanged')) $('salePlateChanged').value = r.plateChanged || '否';
+          if($('saleNewPlate')) $('saleNewPlate').value = r.newPlate || '';
+          if($('newPlateWrap')) $('newPlateWrap').style.display = (r.plateChanged === '是') ? 'block' : 'none';
+        }
+      }catch(e){}
+      return res;
+    };
+    window.__saleOpenPatched__ = true;
+  }
+
+  const oldSaveSaleInfo = window.saveSaleInfo;
+  if(typeof oldSaveSaleInfo === 'function' && !window.__saleSavePatched__){
+    window.saveSaleInfo = async function(){
+      ensureSaleFields();
+      const plateChanged = $('salePlateChanged')?.value || '否';
+      const newPlate = $('saleNewPlate')?.value.trim() || '';
+      if(plateChanged === '是' && !newPlate) return alert('請填新牌照');
+      const id = $('saleEditId')?.value;
+      if(window.dbGet && window.dbPut && id){
+        const r = await window.dbGet(id);
+        if(r){
+          r.newOwnerIdNo = $('saleNewOwnerIdNo')?.value.trim() || '';
+          r.plateChanged = plateChanged;
+          r.newPlate = plateChanged === '是' ? newPlate : '';
+          await window.dbPut(r);
+        }
+      }
+      return oldSaveSaleInfo.apply(this, arguments);
+    };
+    window.__saleSavePatched__ = true;
+  }
+
+  // Override sold history rendering with compact layout + search
+  window.renderSoldHistory = async function(){
+    const all = await window.dbGetAll();
+    let sold = all.filter(r => r.status === '已售');
+    const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+    if($('soldYearFilter')) $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+    if($('soldMonthFilter')) $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+
+    const company = $('soldCompanyFilter')?.value || '全部';
+    const year = $('soldYearFilter')?.value || '全部';
+    const month = $('soldMonthFilter')?.value || '全部';
+    const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
+
+    if(company !== '全部') sold = sold.filter(r => r.entryType === company);
+    if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
+    if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+    if(kw) sold = sold.filter(r => `${r.brand} ${r.model} ${r.plate} ${r.sellerPerson || ''} ${r.newOwner || ''}`.toLowerCase().includes(kw));
+
+    if($('soldFilterCount')) $('soldFilterCount').textContent = window.fmt(sold.length);
+    if($('soldFilterProfit')) $('soldFilterProfit').textContent = window.fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
+    if($('soldFilterCompany')) $('soldFilterCompany').textContent = company === '全部' ? '全部公司' : company;
+    if($('soldFilterMonth')) $('soldFilterMonth').textContent = [year,month].filter(v=>v && v!=='全部').join('-') || '全部';
+
+    const sellerMap = {};
+    sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
+    const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
+    if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+
+    if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
+      const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
+      const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      return `
+      <div class="row-line" style="align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <strong style="font-size:19px">${r.brand} ${r.model}</strong>
+          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.6">
+            ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
+          </div>
+          <div class="sold-metrics">
+            <span class="pill">買：${window.fmt(r.buyAmount)}</span>
+            <span class="pill">售：${window.fmt(r.sellAmount)}</span>
+            <span class="pill">利：${window.fmt(gross)}</span>
+            <span class="pill">雜：整備 ${window.fmt(r.repairTotal)}、稅 ${window.fmt(taxTotal)}</span>
+            <span class="pill">實際利：${window.fmt(Math.round(r.profit || 0))}</span>
+          </div>
+        </div>
+        <div><button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">查看照片</button></div>
+      </div>`;
+    }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+  };
+
+  const oldRenderAll = window.renderAll;
+  if(typeof oldRenderAll === 'function' && !window.__renderAllPatchedFinal__){
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      ensureSoldSearch();
+      ensureSaleFields();
+      bindViewToggleHard();
+      if(typeof renderAnnouncements === 'function') renderAnnouncements();
+      return res;
+    };
+    window.__renderAllPatchedFinal__ = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    ensureSoldSearch();
+    ensureSaleFields();
+    bindViewToggleHard();
+    if(typeof renderAnnouncements === 'function') renderAnnouncements();
+  });
+  window.addEventListener('load', function(){
+    ensureSoldSearch();
+    ensureSaleFields();
+    bindViewToggleHard();
+    if(typeof renderAnnouncements === 'function') renderAnnouncements();
+  });
 })();
 </script>
 
