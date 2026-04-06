@@ -1072,47 +1072,72 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 </style>
 
 <style>
-#soldListBox .sold-row{
+#soldListBox .sold-compact-row{
   display:flex;
+  align-items:flex-start;
+  gap:8px;
   width:100%;
-  justify-content:space-between;
-  gap:10px;
+  padding:10px 12px !important;
 }
-#soldListBox .sold-main{
+#soldListBox .sold-compact-main{
   flex:1 1 auto;
-  width:100%;
+  min-width:0;
 }
-#soldListBox .sold-action-col{
-  flex:0 0 90px;
-  width:90px;
-  min-width:90px;
-  margin-left:auto;
+#soldListBox .sold-title{
+  font-size:17px;
+  font-weight:800;
+  line-height:1.2;
+  margin-bottom:6px;
+}
+#soldListBox .sold-meta{
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+  margin-top:2px;
+  word-break:break-word;
+}
+#soldListBox .sold-profit{
+  margin-top:6px;
+  font-size:16px;
+  font-weight:900;
+  line-height:1.2;
+}
+#soldListBox .sold-compact-actions{
+  flex:0 0 78px;
+  width:78px;
   display:flex;
   flex-direction:column;
   gap:6px;
 }
-#soldListBox .sold-action-col .mini-btn{
+#soldListBox .sold-compact-actions .mini-btn{
   width:100%;
+  min-height:34px;
+  font-size:12px;
+  padding:4px 4px;
 }
-</style>
-
-
-<style>
-/* 強制實際利潤樣式 */
-.profit-text{
-  font-size:22px !important;
-  font-weight:900 !important;
-}
-.profit-positive{ color:#dc2626 !important; }
-.profit-negative{ color:#16a34a !important; }
-
-/* 左邊撐滿 */
-.row-line{
-  display:flex !important;
-  justify-content:space-between !important;
-}
-.row-line > div:first-child{
-  flex:1 1 auto !important;
+@media (max-width:900px){
+  #soldListBox .sold-compact-row{
+    gap:8px;
+    padding:10px 10px !important;
+  }
+  #soldListBox .sold-title{
+    font-size:16px;
+  }
+  #soldListBox .sold-meta{
+    font-size:11px;
+    line-height:1.4;
+  }
+  #soldListBox .sold-profit{
+    font-size:15px;
+  }
+  #soldListBox .sold-compact-actions{
+    flex:0 0 74px;
+    width:74px;
+  }
+  #soldListBox .sold-compact-actions .mini-btn{
+    min-height:32px;
+    font-size:11px;
+  }
 }
 </style>
 
@@ -1806,7 +1831,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       $('soldYearFilter').value = years.includes(currentYear) ? currentYear : '全部';
     }
     if($('soldMonthFilter')){
-      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const mm=String(i+1).padStart(2,'0'); return `<option value="${mm}">${mm}月</option>`;}).join('');
       $('soldMonthFilter').value = currentMonth || '全部';
     }
     if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany || '全部';
@@ -1836,20 +1861,20 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       const profitVal = Math.round(r.profit || 0);
       const profitColor = profitVal >= 0 ? '#dc2626' : '#16a34a';
       return `
-      <div class="row-line sold-row" style="display:flex;align-items:flex-start;gap:10px;width:100%;">
-        <div class="sold-main" style="flex:1 1 auto;width:100%;">
-          <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
-          <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.45">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
-          <div class="small-note" style="white-space:normal;line-height:1.45">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
-          <div style="margin-top:10px;font-size:20px;font-weight:900;color:${profitColor};letter-spacing:1px;"><span class="profit-text ${profitVal>=0?'profit-positive':'profit-negative'}">實際利：${fmt(profitVal)}</span></div>
+      <div class="row-line sold-compact-row">
+        <div class="sold-compact-main">
+          <div class="sold-title">${r.brand} ${r.model}</div>
+          <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+          <div class="sold-meta">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
+          <div class="sold-meta">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
+          <div class="sold-profit" style="color:${profitColor};">實際利：${fmt(profitVal)}</div>
         </div>
-        <div class="sold-action-col" style="flex:0 0 90px;margin-left:auto;">
+        <div class="sold-compact-actions">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
-          <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">查看照片</button>
+          <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">照片</button>
         </div>
-      </div>
-    `}).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+      </div>`;
+    }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
   }
 
   async function renderPerformance(){
