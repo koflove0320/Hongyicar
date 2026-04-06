@@ -714,6 +714,16 @@
   white-space:nowrap;
   min-height:32px;
 }
+.car-card .vehicle-actions{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  width:100%;
+  flex:unset;
+  margin-top:8px;
+}
+.car-card .vehicle-actions button{
+  min-width:0;
+}
 </style>
 <style>
 .deposit-badge{
@@ -779,7 +789,6 @@
 
 <style>
 .cards-wrap{
-  display:grid !important;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr)) !important;
   gap:10px !important;
 }
@@ -1004,8 +1013,16 @@
 <input id="saleEditId" type="hidden"/>
 <div class="form-grid" style="margin-top:12px">
 <div><label>新車主 *</label><input id="saleNewOwner" placeholder="例如 王小明"/></div>
+<div><label>新車主身分證字號</label><input id="saleNewOwnerIdNo" placeholder="例如 A123456789"/></div>
 <div><label>售出人 *</label><input id="saleSellerPerson" placeholder="例如 陳柏誠"/></div>
 <div><label>公司底價</label><input id="companyFloorPrice" placeholder="例如 250000" type="number"/></div>
+<div><label>有無更換牌照</label>
+<select id="salePlateChanged">
+<option value="否">否</option>
+<option value="是">是</option>
+</select>
+</div>
+<div id="newPlateWrap" style="display:none"><label>新牌照</label><input id="saleNewPlate" placeholder="例如 ABC-1234"/></div>
 <div><label>售出金額 *</label><input id="saleSellAmount" placeholder="例如 280000" type="number"/></div>
 <div><label>售出日期 *</label><input id="saleDate" type="date"/></div>
 </div>
@@ -1452,17 +1469,15 @@
       <div class="row-line" style="align-items:flex-start">
         <div style="flex:1;min-width:0">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.8">
+          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.7">
             ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
           </div>
-          <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.8">
-            買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}
-          </div>
-          <div class="small-note" style="white-space:normal;line-height:1.8">
-            雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}
-          </div>
-          <div class="small-note" style="white-space:normal;line-height:1.8">
-            實際利：${fmt(Math.round(r.profit || 0))}
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+            <span class="pill">買：${fmt(r.buyAmount)}</span>
+            <span class="pill">售：${fmt(r.sellAmount)}</span>
+            <span class="pill">利：${fmt(gross)}</span>
+            <span class="pill">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</span>
+            <span class="pill">實際利：${fmt(Math.round(r.profit || 0))}</span>
           </div>
         </div>
         <div>
@@ -1492,6 +1507,7 @@
     await renderCostOverview();
     await renderSoldHistory();
     await renderPerformance();
+    if(typeof renderAnnouncements === 'function') renderAnnouncements();
   }
 
   async function openVehicleDetail(id){
@@ -1676,8 +1692,12 @@
     if(!r) return;
     $('saleEditId').value = r.id;
     $('saleNewOwner').value = r.newOwner || '';
+    if($('saleNewOwnerIdNo')) $('saleNewOwnerIdNo').value = r.newOwnerIdNo || '';
     $('saleSellerPerson').value = r.sellerPerson || '';
     if($('companyFloorPrice')) $('companyFloorPrice').value = r.companyFloorPrice || '';
+    if($('salePlateChanged')) $('salePlateChanged').value = r.plateChanged || '否';
+    if($('saleNewPlate')) $('saleNewPlate').value = r.newPlate || '';
+    if($('newPlateWrap')) $('newPlateWrap').style.display = (r.plateChanged === '是') ? 'block' : 'none';
     $('saleSellAmount').value = r.sellAmount || '';
     $('saleDate').value = r.saleDate || '';
     if($('saleModal')) $('saleModal').style.display = 'flex';
@@ -1688,11 +1708,15 @@
     const r = await dbGet(id);
     if(!r) return alert('找不到車輛資料');
     const newOwner = $('saleNewOwner').value.trim();
+    const newOwnerIdNo = $('saleNewOwnerIdNo')?.value.trim() || '';
     const sellerPerson = $('saleSellerPerson').value.trim();
     const companyFloorPrice = Number($('companyFloorPrice')?.value || 0);
+    const plateChanged = $('salePlateChanged')?.value || '否';
+    const newPlate = $('saleNewPlate')?.value.trim() || '';
     const sellAmount = Number($('saleSellAmount').value || 0);
     const saleDate = $('saleDate').value;
     if(!sellerPerson) return alert('請填售出人');
+    if(plateChanged === '是' && !newPlate) return alert('請填新牌照');
     if(!sellAmount) return alert('請填售出金額');
     if(!saleDate) return alert('請填售出日期');
     r.newOwner = newOwner;
@@ -2308,6 +2332,98 @@
       if(typeof renderSoldHistory === 'function') renderSoldHistory();
     });
   }
+})();
+</script>
+
+
+<script>
+(function(){
+  const ANN_KEY = 'hongyi_announcements_v1';
+  function getAnns(){
+    try{return JSON.parse(localStorage.getItem(ANN_KEY) || '[]')}catch(e){return []}
+  }
+  function saveAnns(arr){
+    localStorage.setItem(ANN_KEY, JSON.stringify(arr));
+  }
+  window.renderAnnouncements = function(){
+    const box = document.getElementById('announcementList');
+    if(!box) return;
+    const anns = getAnns();
+    box.innerHTML = anns.length ? anns.map(a => `
+      <div class="row-line">
+        <div>
+          <strong>${a.title}</strong>
+          <div class="small-note">${a.content}</div>
+        </div>
+        <div class="small-note">${a.createdAt || ''}</div>
+      </div>
+    `).join('') : '<div class="empty">目前沒有公告</div>';
+  };
+  window.saveAnnouncement = function(){
+    const title = document.getElementById('announcementTitle')?.value.trim() || '';
+    const content = document.getElementById('announcementContent')?.value.trim() || '';
+    if(!title) return alert('請填公告標題');
+    if(!content) return alert('請填公告內容');
+    const anns = getAnns();
+    anns.unshift({
+      id: String(Date.now()),
+      title,
+      content,
+      createdAt: new Date().toLocaleString('zh-TW')
+    });
+    saveAnns(anns);
+    document.getElementById('announcementTitle').value = '';
+    document.getElementById('announcementContent').value = '';
+    renderAnnouncements();
+    alert('公告已發佈');
+  };
+  document.addEventListener('DOMContentLoaded', renderAnnouncements);
+  window.addEventListener('load', renderAnnouncements);
+})();
+</script>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function bindExtraUI(){
+    const cardBtn = $('cardViewBtnBtn');
+    const listBtn = $('listViewBtn');
+    const list = $('savedVehicleListView');
+    const card = $('savedVehicleCardView');
+    if(cardBtn && !cardBtn.dataset.extraBound){
+      cardBtn.dataset.extraBound = '1';
+      cardBtn.addEventListener('click', function(){
+        if(list) list.style.display = 'none';
+        if(card) card.style.display = 'grid';
+      });
+    }
+    if(listBtn && !listBtn.dataset.extraBound){
+      listBtn.dataset.extraBound = '1';
+      listBtn.addEventListener('click', function(){
+        if(list) list.style.display = 'grid';
+        if(card) card.style.display = 'none';
+      });
+    }
+    const soldSearch = $('soldSearch');
+    if(soldSearch && !soldSearch.dataset.boundSearch2){
+      soldSearch.dataset.boundSearch2 = '1';
+      soldSearch.addEventListener('input', function(){
+        if(typeof renderSoldHistory === 'function') renderSoldHistory();
+      });
+    }
+    const plateChanged = $('salePlateChanged');
+    const newPlateWrap = $('newPlateWrap');
+    if(plateChanged && newPlateWrap && !plateChanged.dataset.boundToggle){
+      const toggle = function(){ newPlateWrap.style.display = plateChanged.value === '是' ? 'block' : 'none'; };
+      plateChanged.dataset.boundToggle = '1';
+      plateChanged.addEventListener('change', toggle);
+      toggle();
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bindExtraUI);
+  window.addEventListener('load', bindExtraUI);
+  setTimeout(bindExtraUI, 500);
 })();
 </script>
 
