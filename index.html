@@ -1273,14 +1273,8 @@
         </div>
         <div style="min-width:0;flex:1;line-height:1.55">
           <div style="font-weight:800;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
-            ${r.brand} ${r.model} ｜ ${r.plate} ｜ ${r.year}
+            ${r.brand} ${r.model} | ${r.plate} | ${fmt(r.buyAmount)} | ${fmt(r.repairTotal)} | ${r.buyerPerson} | ${r.transferName || r.entryType}
             ${r.hasDeposit==='已收訂' ? '<span class="deposit-badge">已收訂</span>' : ''}
-          </div>
-          <div class="small-note" style="white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
-            ${r.entryType} ｜ 買入人：${r.buyerPerson}
-          </div>
-          <div class="small-note" style="white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
-            買入 ${fmt(r.buyAmount)} ｜ 整備 ${fmt(r.repairTotal)} ｜ ${r.status}
           </div>
         </div>
         <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
@@ -1603,6 +1597,7 @@
     if(!saleDate) return alert('請填售出日期');
     r.newOwner = newOwner;
     r.sellerPerson = sellerPerson;
+    r.companyFloorPrice = companyFloorPrice;
     r.companyFloorPrice = companyFloorPrice;
     r.sellAmount = sellAmount;
     r.saleDate = saleDate;
