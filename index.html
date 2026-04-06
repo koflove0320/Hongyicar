@@ -2896,14 +2896,26 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   window.renderSoldHistory = async function(){
     const all = await window.dbGetAll();
     let sold = all.filter(r => r.status === '已售');
+
+    const currentCompany = $('soldCompanyFilter')?.value || '全部';
+    const currentYear = $('soldYearFilter')?.value || '全部';
+    const currentMonth = $('soldMonthFilter')?.value || '全部';
+    const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
+
     const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
-    if($('soldYearFilter')) $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
-    if($('soldMonthFilter')) $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+    if($('soldYearFilter')){
+      $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+      $('soldYearFilter').value = years.includes(currentYear) ? currentYear : '全部';
+    }
+    if($('soldMonthFilter')){
+      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+      $('soldMonthFilter').value = currentMonth || '全部';
+    }
+    if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany || '全部';
 
     const company = $('soldCompanyFilter')?.value || '全部';
     const year = $('soldYearFilter')?.value || '全部';
     const month = $('soldMonthFilter')?.value || '全部';
-    const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
 
     if(company !== '全部') sold = sold.filter(r => r.entryType === company);
     if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
@@ -2923,22 +2935,23 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
       const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
       const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      const profitVal = Math.round(r.profit || 0);
+      const profitStyle = profitVal >= 0
+        ? 'color:#dc2626 !important;font-size:16px;font-weight:900;'
+        : 'color:#16a34a !important;font-size:16px;font-weight:900;';
       return `
-      <div class="row-line" style="align-items:flex-start">
-        <div style="flex:1;min-width:0">
-          <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">
-            ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
-          </div>
-          <div class="sold-metrics">
-            <span class="pill">買：${window.fmt(r.buyAmount)}</span>
-            <span class="pill">售：${window.fmt(r.sellAmount)}</span>
-            <span class="pill">利：${window.fmt(gross)}</span>
-            <span class="pill">雜：整備 ${window.fmt(r.repairTotal)}、稅 ${window.fmt(taxTotal)}</span>
-            <span class="pill">實際利：${window.fmt(Math.round(r.profit || 0))}</span>
-          </div>
+      <div class="row-line sold-compact-row">
+        <div class="sold-compact-main">
+          <div class="sold-title">${r.brand} ${r.model}</div>
+          <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+          <div class="sold-meta">買：${window.fmt(r.buyAmount)} | 售：${window.fmt(r.sellAmount)} | 利：${window.fmt(gross)}</div>
+          <div class="sold-meta">雜：整備 ${window.fmt(r.repairTotal)}、稅 ${window.fmt(taxTotal)}</div>
+          <div style="${profitStyle}margin-top:6px;">實際利：${window.fmt(profitVal)}</div>
         </div>
-        <div><button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">查看照片</button></div>
+        <div class="sold-compact-actions">
+          <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
+          <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">照片</button>
+        </div>
       </div>`;
     }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
   };
