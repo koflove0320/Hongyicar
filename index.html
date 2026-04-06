@@ -776,6 +776,42 @@
 }
 </style>
 
+
+<style>
+.cards-wrap{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr)) !important;
+  gap:10px !important;
+}
+.car-card{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+}
+.car-photo{
+  min-height:140px !important;
+  max-height:140px !important;
+  border-right:none !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.car-body{padding:10px !important}
+.car-title{font-size:17px !important;margin:2px 0 6px !important}
+.car-line{font-size:12px !important;line-height:1.45 !important}
+@media (max-width:900px){
+  .cards-wrap{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+  .car-photo{
+    min-height:100px !important;
+    max-height:100px !important;
+  }
+  .car-body{padding:8px !important}
+  .car-title{font-size:15px !important}
+  .car-line{font-size:11px !important;line-height:1.35 !important}
+  .vehicle-actions .mini-btn{font-size:11px !important;min-height:30px !important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1392,9 +1428,12 @@
     const company = $('soldCompanyFilter')?.value || '全部';
     const year = $('soldYearFilter')?.value || '全部';
     const month = $('soldMonthFilter')?.value || '全部';
+    const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
+
     if(company !== '全部') sold = sold.filter(r => r.entryType === company);
     if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
     if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+    if(kw) sold = sold.filter(r => `${r.brand} ${r.model} ${r.plate} ${r.sellerPerson || ''} ${r.newOwner || ''}`.toLowerCase().includes(kw));
 
     if($('soldFilterCount')) $('soldFilterCount').textContent = fmt(sold.length);
     if($('soldFilterProfit')) $('soldFilterProfit').textContent = fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
@@ -1405,20 +1444,32 @@
     sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
     const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
     if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
-    if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => `
-      <div class="row-line">
-        <div>
+
+    if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
+      const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
+      const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      return `
+      <div class="row-line" style="align-items:flex-start">
+        <div style="flex:1;min-width:0">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note">${r.entryType} ｜ ${r.plate} ｜ 售出日：${r.saleDate || '—'} ｜ 售出人：${r.sellerPerson || '—'} ｜ 新車主：${r.newOwner || '—'}</div>
+          <div class="small-note" style="margin-top:6px;white-space:normal;line-height:1.8">
+            ${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}
+          </div>
+          <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.8">
+            買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}
+          </div>
+          <div class="small-note" style="white-space:normal;line-height:1.8">
+            雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}
+          </div>
+          <div class="small-note" style="white-space:normal;line-height:1.8">
+            實際利：${fmt(Math.round(r.profit || 0))}
+          </div>
         </div>
         <div>
-          <span class="pill">售出 ${fmt(r.sellAmount)}</span>
-          <span class="pill">整備 ${fmt(r.repairTotal)}</span>
-          <span class="pill">利潤 ${fmt(Math.round(r.profit || 0))}</span>
           <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">查看照片</button>
         </div>
       </div>
-    `).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+    `}).join('') : '<div class="empty">此條件下沒有已售資料</div>';
   }
 
   async function renderPerformance(){
@@ -2230,6 +2281,19 @@
       return res;
     }
     window.__depositSavePatched__ = true;
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  const soldSearch = document.getElementById('soldSearch');
+  if(soldSearch && !soldSearch.dataset.boundSearch){
+    soldSearch.dataset.boundSearch = '1';
+    soldSearch.addEventListener('input', function(){
+      if(typeof renderSoldHistory === 'function') renderSoldHistory();
+    });
   }
 })();
 </script>
