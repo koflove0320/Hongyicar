@@ -727,8 +727,6 @@
   border-radius:6px;
 }
 </style>
-
-
 <style>
 .cards-wrap{
   display:grid !important;
@@ -775,8 +773,6 @@
   }
 }
 </style>
-
-
 <style>
 .cards-wrap{
   display:grid !important;
@@ -811,8 +807,6 @@
   .vehicle-actions .mini-btn{font-size:11px !important;min-height:30px !important}
 }
 </style>
-
-
 <style>
 /* Card/list toggle hard fix */
 #savedVehicleCardView{display:none;}
@@ -873,8 +867,6 @@
   margin:0;
 }
 </style>
-
-
 <style>
 #savedVehicleCardView{display:none;}
 .sold-metrics{
@@ -895,8 +887,6 @@
   line-height:1.55 !important;
 }
 </style>
-
-
 <style>
 /* hard switch: inventory only one view visible */
 body.inventory-mode-list #savedVehicleCardView{display:none !important;}
@@ -929,8 +919,29 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   min-width:84px;
 }
 </style>
+<style>
+body.force-list-view #savedVehicleCardView{display:none !important;}
+body.force-list-view #savedVehicleListView{display:grid !important;}
+body.force-card-view #savedVehicleListView{display:none !important;}
+body.force-card-view #savedVehicleCardView{display:grid !important;}
 
-</head>
+#panel-sold .toolbar,
+#panel-sold .toolbar-left,
+#panel-sold .card{overflow:visible !important;}
+#panel-sold select{
+  position:relative !important;
+  z-index:999 !important;
+  pointer-events:auto !important;
+  touch-action:manipulation !important;
+  -webkit-appearance:menulist !important;
+  background:#fff !important;
+}
+#soldListBox .row-line{padding:10px 12px !important;}
+#soldListBox strong{font-size:18px !important;}
+#soldListBox .small-note{font-size:12px !important;line-height:1.45 !important;}
+#soldListBox .pill{padding:4px 7px !important;font-size:11px !important;margin:0 !important;}
+.sold-action-col{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
+</style></head>
 <body>
 <div class="app">
 <aside class="sidebar">
@@ -1027,7 +1038,7 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
 </div>
 <div style="margin-top:14px">
 <h3 style="font-size:22px">已售車輛明細</h3>
-<input id="soldSearch" class="search" placeholder="搜尋車型 / 車牌 / 售出人 / 新車主" style="margin:8px 0 12px 0;max-width:420px" />
+<input class="search" id="soldSearch" placeholder="搜尋車型 / 車牌 / 售出人 / 新車主" style="margin:8px 0 12px 0;max-width:420px"/>
 <div class="list-box" id="soldListBox"></div>
 </div>
 </div>
@@ -2349,7 +2360,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   }
 })();
 </script>
-
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
@@ -2402,8 +2412,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   }
 })();
 </script>
-
-
 <script>
 (function(){
   const soldSearch = document.getElementById('soldSearch');
@@ -2415,8 +2423,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   }
 })();
 </script>
-
-
 <script>
 (function(){
   const soldSearch = document.getElementById('soldSearch');
@@ -2428,8 +2434,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   }
 })();
 </script>
-
-
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
@@ -2686,8 +2690,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   });
 })();
 </script>
-
-
 <script>
 (function(){
   function enforceSingleView(){
@@ -2703,8 +2705,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   window.addEventListener('load', () => setTimeout(enforceSingleView, 50));
 })();
 </script>
-
-
 <style>
 /* inventory view hard toggle */
 #savedVehicleListView.inventory-hidden{display:none !important;}
@@ -2745,7 +2745,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   flex:0 0 auto;
 }
 </style>
-
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
@@ -2893,8 +2892,6 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   });
 })();
 </script>
-
-
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
@@ -3058,6 +3055,217 @@ body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
   });
 })();
 </script>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
 
-</body>
+  function setInventoryView(mode){
+    document.body.classList.remove('force-list-view','force-card-view');
+    document.body.classList.add(mode === 'card' ? 'force-card-view' : 'force-list-view');
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBtn) listBtn.classList.toggle('active-view', mode !== 'card');
+    if(cardBtn) cardBtn.classList.toggle('active-view', mode === 'card');
+  }
+
+  function bindInventoryButtons(){
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBtn && !listBtn.dataset.vbound){
+      listBtn.dataset.vbound = '1';
+      listBtn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); setInventoryView('list'); };
+    }
+    if(cardBtn && !cardBtn.dataset.vbound){
+      cardBtn.dataset.vbound = '1';
+      cardBtn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); setInventoryView('card'); };
+    }
+  }
+
+  function bindSoldFilters(){
+    ['soldCompanyFilter','soldYearFilter','soldMonthFilter'].forEach(id=>{
+      const el = $(id);
+      if(!el) return;
+      el.setAttribute('onchange','renderSoldHistory()');
+      if(el.dataset.vbound) return;
+      el.dataset.vbound = '1';
+      el.onclick = function(e){ e.stopPropagation(); };
+      el.ontouchstart = function(e){ e.stopPropagation(); };
+      el.onchange = function(e){ e.stopPropagation(); if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory(); };
+    });
+    const soldSearch = $('soldSearch');
+    if(soldSearch && !soldSearch.dataset.vbound){
+      soldSearch.dataset.vbound = '1';
+      soldSearch.oninput = function(){ if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory(); };
+    }
+  }
+
+  function injectSoldDetailButtons(){
+    const box = $('soldListBox');
+    if(!box) return;
+    Array.from(box.children).forEach(row=>{
+      const photoBtn = row.querySelector('[data-open="photos"]');
+      if(!photoBtn) return;
+      const id = photoBtn.getAttribute('data-id');
+      let col = row.querySelector('.sold-action-col');
+      if(!col){
+        col = document.createElement('div');
+        col.className = 'sold-action-col';
+        row.appendChild(col);
+      }
+      if(!col.querySelector('[data-open="detail"]')){
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'secondary mini-btn';
+        btn.setAttribute('data-open','detail');
+        btn.setAttribute('data-id', id);
+        btn.textContent = '明細';
+        col.appendChild(btn);
+      }
+      if(!col.contains(photoBtn)) col.appendChild(photoBtn);
+    });
+  }
+
+  function compactSoldLayout(){
+    const box = $('soldListBox');
+    if(!box) return;
+    Array.from(box.children).forEach(row=>{
+      row.style.alignItems = 'flex-start';
+      const main = row.firstElementChild;
+      if(main) {
+        main.style.flex = '1';
+        main.style.minWidth = '0';
+      }
+    });
+  }
+
+  const oldRenderAll = window.renderAll;
+  if(typeof oldRenderAll === 'function' && !window.__finalInventoryPatch__){
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      bindInventoryButtons();
+      bindSoldFilters();
+      injectSoldDetailButtons();
+      compactSoldLayout();
+      if(!document.body.classList.contains('force-card-view')) setInventoryView('list');
+      return res;
+    };
+    window.__finalInventoryPatch__ = true;
+  }
+
+  const oldRenderSoldHistory = window.renderSoldHistory;
+  if(typeof oldRenderSoldHistory === 'function' && !window.__finalSoldPatch__){
+    window.renderSoldHistory = async function(){
+      const res = await oldRenderSoldHistory.apply(this, arguments);
+      bindSoldFilters();
+      injectSoldDetailButtons();
+      compactSoldLayout();
+      return res;
+    };
+    window.__finalSoldPatch__ = true;
+  }
+
+  function startObservers(){
+    const sold = $('soldListBox');
+    if(sold && !sold.dataset.obs){
+      sold.dataset.obs = '1';
+      const mo = new MutationObserver(function(){
+        injectSoldDetailButtons();
+        compactSoldLayout();
+      });
+      mo.observe(sold, {childList:true, subtree:true});
+    }
+    const inv = $('savedVehicleCardView');
+    if(inv && !inv.dataset.obs){
+      inv.dataset.obs = '1';
+      const mo = new MutationObserver(function(){
+        if(document.body.classList.contains('force-list-view')) inv.style.display = 'none';
+      });
+      mo.observe(inv, {attributes:true, childList:true, subtree:true});
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindInventoryButtons();
+    bindSoldFilters();
+    setInventoryView('list');
+    injectSoldDetailButtons();
+    compactSoldLayout();
+    startObservers();
+  });
+  window.addEventListener('load', function(){
+    bindInventoryButtons();
+    bindSoldFilters();
+    setInventoryView('list');
+    injectSoldDetailButtons();
+    compactSoldLayout();
+    startObservers();
+  });
+})();
+</script><script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  // FIX 1: 篩選真的生效
+  const oldRenderSoldHistory = window.renderSoldHistory;
+  if(typeof oldRenderSoldHistory === 'function' && !window.__filterFix__){
+    window.renderSoldHistory = async function(){
+      const year = $('soldYearFilter')?.value || '';
+      const month = $('soldMonthFilter')?.value || '';
+      const company = $('soldCompanyFilter')?.value || '';
+      const keyword = $('soldSearch')?.value || '';
+
+      const res = await oldRenderSoldHistory.apply(this, arguments);
+
+      // 強制再過濾 DOM（保險做法）
+      const box = $('soldListBox');
+      if(!box) return res;
+
+      Array.from(box.children).forEach(row=>{
+        const text = row.innerText || '';
+        let show = true;
+
+        if(year && !text.includes(year)) show = false;
+        if(month && !text.includes(month.padStart(2,'0'))) show = false;
+        if(keyword && !text.includes(keyword)) show = false;
+
+        row.style.display = show ? '' : 'none';
+      });
+
+      return res;
+    };
+    window.__filterFix__ = true;
+  }
+
+  // FIX 2: 明細按鈕可點
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-open="detail"]');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const id = btn.getAttribute('data-id');
+    if(typeof window.openSoldDetail === 'function'){
+      window.openSoldDetail(id);
+    }else{
+      alert('明細功能尚未綁定 ID:' + id);
+    }
+  }, true);
+
+  // FIX 3: 按鈕改直列 2*1
+  const style = document.createElement('style');
+  style.innerHTML = `
+  .sold-action-col{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:80px;
+  }
+  .sold-action-col button{
+    width:100%;
+  }
+  `;
+  document.head.appendChild(style);
+
+})();
+</script></body>
 </html>
