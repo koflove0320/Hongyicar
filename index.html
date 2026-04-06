@@ -1096,6 +1096,26 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 }
 </style>
 
+
+<style>
+/* 強制實際利潤樣式 */
+.profit-text{
+  font-size:22px !important;
+  font-weight:900 !important;
+}
+.profit-positive{ color:#dc2626 !important; }
+.profit-negative{ color:#16a34a !important; }
+
+/* 左邊撐滿 */
+.row-line{
+  display:flex !important;
+  justify-content:space-between !important;
+}
+.row-line > div:first-child{
+  flex:1 1 auto !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1822,7 +1842,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
           <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.45">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
           <div class="small-note" style="white-space:normal;line-height:1.45">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
-          <div style="margin-top:10px;font-size:20px;font-weight:900;color:${profitColor};letter-spacing:1px;">實際利：${fmt(profitVal)}</div>
+          <div style="margin-top:10px;font-size:20px;font-weight:900;color:${profitColor};letter-spacing:1px;"><span class="profit-text ${profitVal>=0?'profit-positive':'profit-negative'}">實際利：${fmt(profitVal)}</span></div>
         </div>
         <div class="sold-action-col" style="flex:0 0 90px;margin-left:auto;">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
