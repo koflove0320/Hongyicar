@@ -1325,6 +1325,19 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 </div>
 </div>
 
+
+<div class="modal" id="cancelDepositModal">
+  <div class="modal-content">
+    <h3>確認退訂</h3>
+    <div class="small-note" style="line-height:1.8">確定要退訂金嗎？退訂後會清空收訂資料，並恢復成可收訂狀態。</div>
+    <input id="cancelDepositId" type="hidden"/>
+    <div class="actions">
+      <button class="primary" type="button" onclick="confirmCancelDeposit()">確認</button>
+      <button class="secondary" type="button" onclick="closeCancelDepositModal()">取消</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="photosModal">
 <div class="modal-content">
 <h3>照片查看</h3>
@@ -1730,7 +1743,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
           ${r.hasDeposit==='已收訂'
             ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
-               <button type="button" class="secondary mini-btn small-btn" data-open="cancelDeposit" data-id="${r.id}">退訂</button>`
+               <button type="button" class="secondary mini-btn small-btn" onclick="openCancelDepositModal('${r.id}')">退訂</button>`
             : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
                <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
         </div>
@@ -1755,7 +1768,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
             <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
             ${r.hasDeposit==='已收訂'
               ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
-                 <button type="button" class="secondary mini-btn small-btn" data-open="cancelDeposit" data-id="${r.id}">退訂</button>`
+                 <button type="button" class="secondary mini-btn small-btn" onclick="openCancelDepositModal('${r.id}')">退訂</button>`
               : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
                  <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
           </div>
