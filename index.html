@@ -1593,6 +1593,8 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     const licenseFile = $('licensePhotoInput')?.files?.[0];
     const repairItems = parseRepairItemsText($('repairItems')?.value || '');
     const repairTotal = repairItems.reduce((s,x) => s + Number(x.amount || 0), 0);
+    const editId = $('vehicleEditId')?.value || '';
+    const existing = editId ? await dbGetAll().then(all => all.find(x => String(x.id) === String(editId))) : null;
 
     if(!entryType) return alert('請選入庫公司 / 類型');
     if(!brand) return alert('請填品牌');
@@ -1602,44 +1604,54 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     if((entryType === '寄賣' || entryType === '調做') && !transferName) return alert('請填寫對應人頭資料');
     if(!buyerPerson) return alert('請選買入人');
     if(!buyAmount) return alert('請填買入金額');
-    if(!carFile) return alert('請上傳車輛照片');
-    if(!licenseFile) return alert('請上傳行照照片');
 
-    const [carPhoto, licensePhoto] = await Promise.all([fileToDataURL(carFile), fileToDataURL(licenseFile)]);
+    const hasCarPhoto = !!(carFile || existing?.carPhoto);
+    const hasLicensePhoto = !!(licenseFile || existing?.licensePhoto);
+    if(!hasCarPhoto) return alert('請上傳車輛照片');
+    if(!hasLicensePhoto) return alert('請上傳行照照片');
+
+    const [carPhoto, licensePhoto] = await Promise.all([
+      carFile ? fileToDataURL(carFile) : Promise.resolve(existing?.carPhoto || ''),
+      licenseFile ? fileToDataURL(licenseFile) : Promise.resolve(existing?.licensePhoto || '')
+    ]);
+
     let record = {
-      id: String(Date.now()),
-      createdAt: new Date().toISOString(),
+      id: editId ? existing.id : String(Date.now()),
+      createdAt: existing?.createdAt || new Date().toISOString(),
       entryType,
       brand, model, plate, year,
       transferName: (entryType === '寄賣' || entryType === '調做') ? transferName : entryType,
       buyerPerson, buyAmount, companyAdjust, note,
       carPhoto, licensePhoto,
-      repairItems,
-      repairTotal,
-      hasDeposit: '未收訂',
-      depositAmount: 0,
-      depositPhoto: '',
-      depositAccount: '',
-      paymentType: '',
-      loanCompany: '',
-      loanAgent: '',
-      soldStatus: '未售出',
-      sellerPerson: '',
-      newOwner: '',
-      newOwnerLicensePhoto: '',
-      companyFloorPrice: 0,
-      sellAmount: 0,
-      saleDate: '',
-      invoiceTax: 0,
-      businessTax: 0,
-      profit: 0,
-      status: '在庫'
+      repairItems: existing?.repairItems || repairItems,
+      repairTotal: existing?.repairTotal != null ? existing.repairTotal : repairTotal,
+      hasDeposit: existing?.hasDeposit || '未收訂',
+      depositAmount: existing?.depositAmount || 0,
+      depositPhoto: existing?.depositPhoto || '',
+      depositAccount: existing?.depositAccount || '',
+      paymentType: existing?.paymentType || '',
+      loanCompany: existing?.loanCompany || '',
+      loanAgent: existing?.loanAgent || '',
+      soldStatus: existing?.soldStatus || '未售出',
+      sellerPerson: existing?.sellerPerson || '',
+      newOwner: existing?.newOwner || '',
+      newOwnerIdNo: existing?.newOwnerIdNo || '',
+      newOwnerLicensePhoto: existing?.newOwnerLicensePhoto || '',
+      companyFloorPrice: existing?.companyFloorPrice || 0,
+      sellAmount: existing?.sellAmount || 0,
+      saleDate: existing?.saleDate || '',
+      invoiceTax: existing?.invoiceTax || 0,
+      businessTax: existing?.businessTax || 0,
+      profit: existing?.profit || 0,
+      status: existing?.status || '在庫',
+      plateChanged: existing?.plateChanged || '否',
+      newPlate: existing?.newPlate || ''
     };
     record = recalcRecord(record);
     await dbPut(record);
     resetForm();
     await renderAll();
-    alert('車輛已新增');
+    alert(editId ? '車輛已更新' : '車輛已新增');
   }
 
   async function renderInventory(){
