@@ -1096,48 +1096,18 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   margin-top:2px;
   word-break:break-word;
 }
-#soldListBox .sold-profit{
-  margin-top:6px;
-  font-size:16px;
-  font-weight:900;
-  line-height:1.2;
-}
 #soldListBox .sold-compact-actions{
-  flex:0 0 78px;
-  width:78px;
+  flex:0 0 74px;
+  width:74px;
   display:flex;
   flex-direction:column;
   gap:6px;
 }
 #soldListBox .sold-compact-actions .mini-btn{
   width:100%;
-  min-height:34px;
-  font-size:12px;
+  min-height:32px;
+  font-size:11px;
   padding:4px 4px;
-}
-@media (max-width:900px){
-  #soldListBox .sold-compact-row{
-    gap:8px;
-    padding:10px 10px !important;
-  }
-  #soldListBox .sold-title{
-    font-size:16px;
-  }
-  #soldListBox .sold-meta{
-    font-size:11px;
-    line-height:1.4;
-  }
-  #soldListBox .sold-profit{
-    font-size:15px;
-  }
-  #soldListBox .sold-compact-actions{
-    flex:0 0 74px;
-    width:74px;
-  }
-  #soldListBox .sold-compact-actions .mini-btn{
-    min-height:32px;
-    font-size:11px;
-  }
 }
 </style>
 
@@ -1859,7 +1829,9 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
       const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
       const profitVal = Math.round(r.profit || 0);
-      const profitColor = profitVal >= 0 ? '#dc2626' : '#16a34a';
+      const profitStyle = profitVal >= 0
+        ? 'color:#dc2626 !important;font-size:16px;font-weight:900;'
+        : 'color:#16a34a !important;font-size:16px;font-weight:900;';
       return `
       <div class="row-line sold-compact-row">
         <div class="sold-compact-main">
@@ -1867,7 +1839,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
           <div class="sold-meta">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
           <div class="sold-meta">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
-          <div style="font-size:15px;font-weight:900;color:${profitVal>=0?'#dc2626':'#16a34a'};">實際利：${fmt(profitVal)}</div>
+          <div style="${profitStyle}margin-top:6px;">實際利：${fmt(profitVal)}</div>
         </div>
         <div class="sold-compact-actions">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
@@ -1934,7 +1906,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       <div>發票稅：${fmt(r.invoiceTax)}</div>
       <div>營業稅：${fmt(r.businessTax)}</div>
       <div>稅金合計：${fmt(taxTotal)}</div>
-      <div style="margin-top:8px"><strong>最後利潤：${fmt(r.profit)}</strong></div>
+      <div style="margin-top:8px;font-size:18px;font-weight:900;color:${Number(r.profit || 0) >= 0 ? '#dc2626' : '#16a34a'} !important;">最後利潤：${fmt(r.profit)}</div>
     `;
     if($('soldDetailModal')) $('soldDetailModal').style.display = 'flex';
   }
@@ -4003,7 +3975,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div>發票稅：${fmt(r.invoiceTax)}</div>
           <div>營業稅：${fmt(r.businessTax)}</div>
           <div>稅金合計：${fmt(taxTotal)}</div>
-          <div style="margin-top:8px"><strong>最後利潤：${fmt(r.profit)}</strong></div>
+          <div style="margin-top:8px;font-size:18px;font-weight:900;color:${Number(r.profit || 0) >= 0 ? '#dc2626' : '#16a34a'} !important;">最後利潤：${fmt(r.profit)}</div>
         `;
       }
       const m = $('soldDetailModal');
