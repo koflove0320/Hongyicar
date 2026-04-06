@@ -1070,6 +1070,32 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   }
 }
 </style>
+
+<style>
+#soldListBox .sold-row{
+  display:flex;
+  width:100%;
+  justify-content:space-between;
+  gap:10px;
+}
+#soldListBox .sold-main{
+  flex:1 1 auto;
+  width:100%;
+}
+#soldListBox .sold-action-col{
+  flex:0 0 90px;
+  width:90px;
+  min-width:90px;
+  margin-left:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#soldListBox .sold-action-col .mini-btn{
+  width:100%;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1798,7 +1824,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="small-note" style="white-space:normal;line-height:1.45">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
           <div style="margin-top:10px;font-size:20px;font-weight:900;color:${profitColor};letter-spacing:1px;">實際利：${fmt(profitVal)}</div>
         </div>
-        <div class="sold-action-col">
+        <div class="sold-action-col" style="flex:0 0 90px;margin-left:auto;">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
           <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">查看照片</button>
         </div>
