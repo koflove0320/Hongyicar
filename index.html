@@ -2670,5 +2670,195 @@
 })();
 </script>
 
+
+<style>
+/* inventory view hard toggle */
+#savedVehicleListView.inventory-hidden{display:none !important;}
+#savedVehicleCardView.inventory-hidden{display:none !important;}
+
+/* sold detail compact layout */
+#soldListBox .sold-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+#soldListBox .sold-main{
+  flex:1;
+  min-width:0;
+}
+#soldListBox .sold-meta{
+  margin-top:6px;
+  color:#667085;
+  line-height:1.45;
+  word-break:break-word;
+}
+#soldListBox .sold-metrics{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+#soldListBox .sold-metrics .pill{
+  margin:0;
+  padding:5px 8px !important;
+  font-size:12px !important;
+}
+#soldListBox .sold-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:0 0 auto;
+}
+</style>
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function enforceInventoryView(mode){
+    const list = $('savedVehicleListView');
+    const card = $('savedVehicleCardView');
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(!list || !card) return;
+    const useCard = mode === 'card';
+    list.classList.toggle('inventory-hidden', useCard);
+    card.classList.toggle('inventory-hidden', !useCard);
+    list.style.display = useCard ? 'none' : 'grid';
+    card.style.display = useCard ? 'grid' : 'none';
+    if(listBtn) listBtn.classList.toggle('active-view', !useCard);
+    if(cardBtn) cardBtn.classList.toggle('active-view', useCard);
+  }
+
+  function bindInventoryToggle(){
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBtn && !listBtn.dataset.fixedToggle){
+      listBtn.dataset.fixedToggle = '1';
+      listBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        enforceInventoryView('list');
+      }, true);
+    }
+    if(cardBtn && !cardBtn.dataset.fixedToggle){
+      cardBtn.dataset.fixedToggle = '1';
+      cardBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        enforceInventoryView('card');
+      }, true);
+    }
+  }
+
+  function bindSoldFilters(){
+    ['soldCompanyFilter','soldYearFilter','soldMonthFilter'].forEach(id=>{
+      const el = $(id);
+      if(el && !el.dataset.fixedFilter){
+        el.dataset.fixedFilter = '1';
+        el.onchange = function(e){
+          e.stopPropagation();
+          if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+        };
+      }
+    });
+    const soldSearch = $('soldSearch');
+    if(soldSearch && !soldSearch.dataset.fixedSearch){
+      soldSearch.dataset.fixedSearch = '1';
+      soldSearch.addEventListener('input', function(){
+        if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+      });
+    }
+  }
+
+  window.renderSoldOverview = function(){
+    if(typeof window.renderSoldHistory === 'function') return window.renderSoldHistory();
+  };
+
+  const oldRenderSoldHistory = window.renderSoldHistory;
+  if(typeof oldRenderSoldHistory === 'function' && !window.__soldHistoryFixed__){
+    window.renderSoldHistory = async function(){
+      const all = await window.dbGetAll();
+      let sold = all.filter(r => r.status === '已售');
+
+      const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+      if($('soldYearFilter')) $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+      if($('soldMonthFilter')) $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
+
+      const company = $('soldCompanyFilter')?.value || '全部';
+      const year = $('soldYearFilter')?.value || '全部';
+      const month = $('soldMonthFilter')?.value || '全部';
+      const kw = $('soldSearch')?.value.trim().toLowerCase() || '';
+
+      if(company !== '全部') sold = sold.filter(r => r.entryType === company);
+      if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
+      if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+      if(kw) sold = sold.filter(r => `${r.brand} ${r.model} ${r.plate} ${r.sellerPerson || ''} ${r.newOwner || ''}`.toLowerCase().includes(kw));
+
+      if($('soldFilterCount')) $('soldFilterCount').textContent = window.fmt(sold.length);
+      if($('soldFilterProfit')) $('soldFilterProfit').textContent = window.fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
+      if($('soldFilterCompany')) $('soldFilterCompany').textContent = company === '全部' ? '全部公司' : company;
+      if($('soldFilterMonth')) $('soldFilterMonth').textContent = [year,month].filter(v=>v && v!=='全部').join('-') || '全部';
+
+      const sellerMap = {};
+      sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
+      const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
+      if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+
+      if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
+        const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
+        const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+        return `
+        <div class="row-line sold-row">
+          <div class="sold-main">
+            <strong style="font-size:19px">${r.brand} ${r.model}</strong>
+            <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+            <div class="sold-metrics">
+              <span class="pill">買：${window.fmt(r.buyAmount)}</span>
+              <span class="pill">售：${window.fmt(r.sellAmount)}</span>
+              <span class="pill">利：${window.fmt(gross)}</span>
+              <span class="pill">雜：整備 ${window.fmt(r.repairTotal)}、稅 ${window.fmt(taxTotal)}</span>
+              <span class="pill">實際利：${window.fmt(Math.round(r.profit || 0))}</span>
+            </div>
+          </div>
+          <div class="sold-actions">
+            <button type="button" class="secondary mini-btn" data-open="detail" data-id="${r.id}">明細</button>
+            <button type="button" class="secondary mini-btn" data-open="photos" data-id="${r.id}">查看照片</button>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+
+      bindSoldFilters();
+    };
+    window.__soldHistoryFixed__ = true;
+  }
+
+  const oldRenderAll = window.renderAll;
+  if(typeof oldRenderAll === 'function' && !window.__renderAllInventoryFix__){
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      bindInventoryToggle();
+      bindSoldFilters();
+      const isCard = $('cardViewBtnBtn')?.classList.contains('active-view');
+      enforceInventoryView(isCard ? 'card' : 'list');
+      return res;
+    };
+    window.__renderAllInventoryFix__ = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindInventoryToggle();
+    bindSoldFilters();
+    setTimeout(()=>enforceInventoryView('list'), 50);
+  });
+  window.addEventListener('load', function(){
+    bindInventoryToggle();
+    bindSoldFilters();
+    setTimeout(()=>enforceInventoryView('list'), 100);
+  });
+})();
+</script>
+
 </body>
 </html>
