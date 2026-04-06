@@ -1728,8 +1728,11 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
-          <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
-          <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>
+          ${r.hasDeposit==='已收訂'
+            ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
+               <button type="button" class="secondary mini-btn small-btn" data-open="cancelDeposit" data-id="${r.id}">退訂</button>`
+            : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+               <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
         </div>
       </div>
     `).join('');
@@ -1750,8 +1753,11 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
             <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
-            <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
-            <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>
+            ${r.hasDeposit==='已收訂'
+              ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
+                 <button type="button" class="secondary mini-btn small-btn" data-open="cancelDeposit" data-id="${r.id}">退訂</button>`
+              : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+                 <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
           </div>
         </div>
       </div>
