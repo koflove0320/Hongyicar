@@ -3267,5 +3267,187 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   document.head.appendChild(style);
 
 })();
-</script></body>
+</script>
+<style>
+/* sold action vertical 2x1 */
+#soldListBox .sold-action-col{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:6px !important;
+  min-width:88px !important;
+  width:88px !important;
+}
+#soldListBox .sold-action-col .mini-btn{
+  width:100% !important;
+  display:block !important;
+}
+</style>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function parseMonthText(text){
+    const m = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return {year:m[1], month:m[2]};
+    return {year:'', month:''};
+  }
+
+  function applySoldFilterDOM(){
+    const box = $('soldListBox');
+    if(!box) return;
+    const company = $('soldCompanyFilter')?.value || '全部';
+    const year = $('soldYearFilter')?.value || '全部';
+    const month = $('soldMonthFilter')?.value || '全部';
+    const kw = ($('soldSearch')?.value || '').trim().toLowerCase();
+
+    Array.from(box.children).forEach(row=>{
+      const text = (row.innerText || row.textContent || '').trim();
+      if(!text) return;
+      let show = true;
+
+      if(company !== '全部' && !text.includes(company)) show = false;
+
+      const pm = parseMonthText(text);
+      if(year !== '全部' && pm.year !== year) show = false;
+      if(month !== '全部' && pm.month !== month) show = false;
+
+      if(kw && !text.toLowerCase().includes(kw)) show = false;
+
+      row.style.display = show ? '' : 'none';
+    });
+  }
+
+  function bindSoldFiltersHard(){
+    ['soldCompanyFilter','soldYearFilter','soldMonthFilter'].forEach(id=>{
+      const el = $(id);
+      if(!el || el.dataset.hardFilterBound === '1') return;
+      el.dataset.hardFilterBound = '1';
+      el.addEventListener('change', function(e){
+        e.stopPropagation();
+        applySoldFilterDOM();
+      }, true);
+    });
+    const search = $('soldSearch');
+    if(search && search.dataset.hardFilterBound !== '1'){
+      search.dataset.hardFilterBound = '1';
+      search.addEventListener('input', applySoldFilterDOM, true);
+    }
+  }
+
+  function renderSoldDetailModal(id){
+    const keyCandidates = ['hongyi_inventory_records_v3','hongyi_inventory_records_v2','hongyi_inventory_records','cars'];
+    let records = [];
+    for(const k of keyCandidates){
+      try{
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
+        if(Array.isArray(arr) && arr.length){ records = arr; break; }
+      }catch(e){}
+    }
+    const r = records.find(x => String(x.id) === String(id));
+    if(!r){ alert('找不到明細資料'); return; }
+
+    let modal = $('soldDetailModal');
+    if(!modal){
+      modal = document.createElement('div');
+      modal.id = 'soldDetailModal';
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>售出明細</h3>
+          <div id="soldDetailBody" class="small-note" style="line-height:1.8;white-space:normal"></div>
+          <div class="actions">
+            <button class="secondary" type="button" id="closeSoldDetailBtn">關閉</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', function(e){
+        if(e.target === modal) modal.style.display = 'none';
+      });
+      modal.querySelector('#closeSoldDetailBtn').addEventListener('click', function(){
+        modal.style.display = 'none';
+      });
+    }
+
+    const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+    const body = $('soldDetailBody');
+    body.innerHTML = `
+      <div><strong>${r.brand || ''} ${r.model || ''}</strong></div>
+      <div>車牌：${r.plate || '—'}</div>
+      <div>年份：${r.year || '—'}</div>
+      <div>入庫類型：${r.entryType || '—'}</div>
+      <div>入庫人頭：${r.transferName || '—'}</div>
+      <div>買入人：${r.buyerPerson || '—'}</div>
+      <div>新車主：${r.newOwner || '—'}</div>
+      <div>新車主身分證：${r.newOwnerIdNo || '—'}</div>
+      <div>售出人：${r.sellerPerson || '—'}</div>
+      <div>售出日期：${r.saleDate || '—'}</div>
+      <div>公司底價：${Number(r.companyFloorPrice || 0).toLocaleString('zh-TW')}</div>
+      <div>是否換牌：${r.plateChanged || '否'}</div>
+      <div>新牌照：${r.newPlate || '—'}</div>
+      <div>買：${Number(r.buyAmount || 0).toLocaleString('zh-TW')}</div>
+      <div>售：${Number(r.sellAmount || 0).toLocaleString('zh-TW')}</div>
+      <div>雜：整備 ${Number(r.repairTotal || 0).toLocaleString('zh-TW')}、稅 ${taxTotal.toLocaleString('zh-TW')}</div>
+      <div>實際利：${Number(r.profit || 0).toLocaleString('zh-TW')}</div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function bindDetailButtonHard(){
+    document.querySelectorAll('#soldListBox [data-open="detail"]').forEach(btn=>{
+      if(btn.dataset.detailBound === '1') return;
+      btn.dataset.detailBound = '1';
+      btn.onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        renderSoldDetailModal(btn.getAttribute('data-id'));
+      };
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        renderSoldDetailModal(btn.getAttribute('data-id'));
+      }, true);
+    });
+  }
+
+  function ensureVerticalActions(){
+    document.querySelectorAll('#soldListBox .row-line').forEach(row=>{
+      const detail = row.querySelector('[data-open="detail"]');
+      const photos = row.querySelector('[data-open="photos"]');
+      if(!detail && !photos) return;
+      let col = row.querySelector('.sold-action-col');
+      if(!col){
+        col = document.createElement('div');
+        col.className = 'sold-action-col';
+        row.appendChild(col);
+      }
+      if(detail && detail.parentElement !== col) col.appendChild(detail);
+      if(photos && photos.parentElement !== col) col.appendChild(photos);
+    });
+  }
+
+  function refreshSoldEnhancements(){
+    bindSoldFiltersHard();
+    ensureVerticalActions();
+    bindDetailButtonHard();
+    applySoldFilterDOM();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(refreshSoldEnhancements, 100);
+  });
+  window.addEventListener('load', function(){
+    setTimeout(refreshSoldEnhancements, 150);
+  });
+
+  const mo = new MutationObserver(function(){
+    refreshSoldEnhancements();
+  });
+  window.addEventListener('load', function(){
+    const box = $('soldListBox');
+    if(box) mo.observe(box, {childList:true, subtree:true});
+  });
+})();
+</script>
+
+</body>
 </html>
