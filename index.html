@@ -1743,7 +1743,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
           ${r.hasDeposit==='已收訂'
             ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
-               <button type="button" class="secondary mini-btn small-btn" onclick="openCancelDepositModal('${r.id}')">退訂</button>`
+               <button type="button" class="secondary mini-btn small-btn cancel-deposit-btn" data-cancel-id="${r.id}">退訂</button>`
             : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
                <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
         </div>
@@ -1768,7 +1768,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
             <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
             ${r.hasDeposit==='已收訂'
               ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
-                 <button type="button" class="secondary mini-btn small-btn" onclick="openCancelDepositModal('${r.id}')">退訂</button>`
+                 <button type="button" class="secondary mini-btn small-btn cancel-deposit-btn" data-cancel-id="${r.id}">退訂</button>`
               : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
                  <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
           </div>
@@ -4237,6 +4237,84 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       }, 120);
     });
   }
+})();
+</script>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  async function doCancelDeposit(id){
+    if(typeof window.dbGet !== 'function' || typeof window.dbPut !== 'function'){
+      alert('退訂功能尚未就緒');
+      return;
+    }
+    const r = await window.dbGet(id);
+    if(!r){
+      alert('找不到車輛資料');
+      return;
+    }
+    r.hasDeposit = '未收訂';
+    r.depositAmount = 0;
+    r.depositPhoto = '';
+    r.depositAccount = '';
+    r.depositTime = '';
+    r.paymentType = '';
+    r.loanCompany = '';
+    r.loanAgent = '';
+    await window.dbPut(r);
+    if(typeof window.renderAll === 'function') await window.renderAll();
+    alert('已退訂');
+  }
+
+  window.openCancelDepositModal = function(id){
+    if($('cancelDepositId')) $('cancelDepositId').value = id || '';
+    if($('cancelDepositModal')) $('cancelDepositModal').style.display = 'flex';
+  };
+
+  window.closeCancelDepositModal = function(){
+    if($('cancelDepositModal')) $('cancelDepositModal').style.display = 'none';
+    if($('cancelDepositId')) $('cancelDepositId').value = '';
+  };
+
+  window.confirmCancelDeposit = async function(){
+    const id = $('cancelDepositId')?.value || '';
+    if(!id) return;
+    await doCancelDeposit(id);
+    window.closeCancelDepositModal();
+  };
+
+  function bindCancelDepositButtons(){
+    ['savedVehicleListView','savedVehicleCardView'].forEach(boxId=>{
+      const box = $(boxId);
+      if(!box || box.dataset.cancelBound === '1') return;
+      box.dataset.cancelBound = '1';
+      box.addEventListener('click', function(e){
+        const btn = e.target.closest('.cancel-deposit-btn');
+        if(!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        window.openCancelDepositModal(btn.getAttribute('data-cancel-id'));
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(bindCancelDepositButtons, 100);
+  });
+  window.addEventListener('load', function(){
+    setTimeout(bindCancelDepositButtons, 150);
+  });
+
+  const starter = setInterval(function(){
+    const a = $('savedVehicleListView');
+    const b = $('savedVehicleCardView');
+    if(a || b){
+      bindCancelDepositButtons();
+      clearInterval(starter);
+    }
+  }, 300);
 })();
 </script>
 
