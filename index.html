@@ -896,6 +896,40 @@
 }
 </style>
 
+
+<style>
+/* hard switch: inventory only one view visible */
+body.inventory-mode-list #savedVehicleCardView{display:none !important;}
+body.inventory-mode-list #savedVehicleListView{display:grid !important;}
+body.inventory-mode-card #savedVehicleListView{display:none !important;}
+body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
+
+/* sold filter select clickable on mobile */
+#panel-sold select,
+#panel-sold input,
+#panel-sold button{
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  position:relative;
+  z-index:5;
+}
+#panel-sold .toolbar,
+#panel-sold .toolbar-left{
+  overflow:visible !important;
+}
+
+/* sold right actions */
+#soldListBox .sold-actions{
+  display:flex !important;
+  flex-direction:column;
+  gap:6px;
+  flex:0 0 auto;
+}
+#soldListBox .sold-actions .mini-btn{
+  min-width:84px;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2856,6 +2890,171 @@
     bindInventoryToggle();
     bindSoldFilters();
     setTimeout(()=>enforceInventoryView('list'), 100);
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function setInventoryMode(mode){
+    document.body.classList.remove('inventory-mode-list','inventory-mode-card');
+    document.body.classList.add(mode === 'card' ? 'inventory-mode-card' : 'inventory-mode-list');
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBtn) listBtn.classList.toggle('active-view', mode !== 'card');
+    if(cardBtn) cardBtn.classList.toggle('active-view', mode === 'card');
+  }
+
+  function bindInventoryButtons(){
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    if(listBtn && !listBtn.dataset.finalBind){
+      listBtn.dataset.finalBind = '1';
+      listBtn.onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        setInventoryMode('list');
+      };
+      listBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        setInventoryMode('list');
+      }, true);
+    }
+    if(cardBtn && !cardBtn.dataset.finalBind){
+      cardBtn.dataset.finalBind = '1';
+      cardBtn.onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        setInventoryMode('card');
+      };
+      cardBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        setInventoryMode('card');
+      }, true);
+    }
+  }
+
+  function bindSoldFiltersFinal(){
+    ['soldCompanyFilter','soldYearFilter','soldMonthFilter'].forEach(id=>{
+      const el = $(id);
+      if(!el) return;
+      el.setAttribute('onchange','renderSoldHistory()');
+      if(el.dataset.finalBind) return;
+      el.dataset.finalBind = '1';
+      ['click','touchstart','mousedown'].forEach(evt=>{
+        el.addEventListener(evt, function(e){
+          e.stopPropagation();
+        }, true);
+      });
+      el.addEventListener('change', function(e){
+        e.stopPropagation();
+        if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+      }, true);
+    });
+  }
+
+  function ensureSoldDetailButtons(){
+    const box = $('soldListBox');
+    if(!box) return;
+    Array.from(box.children).forEach(row=>{
+      const anyBtn = row.querySelector('[data-id]');
+      const id = anyBtn ? anyBtn.getAttribute('data-id') : '';
+      if(!id) return;
+
+      let actionWrap = row.querySelector('.sold-actions');
+      if(!actionWrap){
+        actionWrap = document.createElement('div');
+        actionWrap.className = 'sold-actions';
+        row.appendChild(actionWrap);
+      }
+
+      if(!actionWrap.querySelector('[data-open="detail"]')){
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'secondary mini-btn';
+        btn.setAttribute('data-open','detail');
+        btn.setAttribute('data-id', id);
+        btn.textContent = '明細';
+        actionWrap.prepend(btn);
+      }
+    });
+  }
+
+  function patchShowPanel(){
+    if(typeof window.showPanel !== 'function' || window.__showPanelFinalPatched) return;
+    const oldShowPanel = window.showPanel;
+    window.showPanel = function(name, btn){
+      const res = oldShowPanel.apply(this, arguments);
+      if(name === 'sold'){
+        setTimeout(function(){
+          bindSoldFiltersFinal();
+          if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
+          setTimeout(ensureSoldDetailButtons, 50);
+        }, 50);
+      }
+      if(name === 'vehicle'){
+        setTimeout(function(){
+          bindInventoryButtons();
+          if(!document.body.classList.contains('inventory-mode-card')){
+            setInventoryMode('list');
+          }
+        }, 50);
+      }
+      return res;
+    };
+    window.__showPanelFinalPatched = true;
+  }
+
+  const oldRenderAll = window.renderAll;
+  if(typeof oldRenderAll === 'function' && !window.__renderAllFinalPatch2){
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      bindInventoryButtons();
+      bindSoldFiltersFinal();
+      ensureSoldDetailButtons();
+      if(!document.body.classList.contains('inventory-mode-card')){
+        setInventoryMode('list');
+      }
+      return res;
+    };
+    window.__renderAllFinalPatch2 = true;
+  }
+
+  // observe sold list mutations to re-add detail buttons
+  function observeSoldList(){
+    const box = $('soldListBox');
+    if(!box || box.dataset.observed) return;
+    box.dataset.observed = '1';
+    const mo = new MutationObserver(function(){
+      ensureSoldDetailButtons();
+    });
+    mo.observe(box, {childList:true, subtree:true});
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindInventoryButtons();
+    bindSoldFiltersFinal();
+    patchShowPanel();
+    observeSoldList();
+    setTimeout(function(){
+      setInventoryMode('list');
+      ensureSoldDetailButtons();
+    }, 100);
+  });
+  window.addEventListener('load', function(){
+    bindInventoryButtons();
+    bindSoldFiltersFinal();
+    patchShowPanel();
+    observeSoldList();
+    setTimeout(function(){
+      setInventoryMode('list');
+      ensureSoldDetailButtons();
+    }, 150);
   });
 })();
 </script>
