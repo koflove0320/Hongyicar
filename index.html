@@ -889,6 +889,11 @@
 </style>
 <style>
 /* hard switch: inventory only one view visible */
+body.inventory-mode-list #savedVehicleCardView{display:none !important;}
+body.inventory-mode-list #savedVehicleListView{display:grid !important;}
+body.inventory-mode-card #savedVehicleListView{display:none !important;}
+body.inventory-mode-card #savedVehicleCardView{display:grid !important;}
+
 /* sold filter select clickable on mobile */
 #panel-sold select,
 #panel-sold input,
@@ -915,6 +920,11 @@
 }
 </style>
 <style>
+body.force-list-view #savedVehicleCardView{display:none !important;}
+body.force-list-view #savedVehicleListView{display:grid !important;}
+body.force-card-view #savedVehicleListView{display:none !important;}
+body.force-card-view #savedVehicleCardView{display:grid !important;}
+
 #panel-sold .toolbar,
 #panel-sold .toolbar-left,
 #panel-sold .card{overflow:visible !important;}
@@ -997,24 +1007,27 @@
 
 
 <style>
-#soldListBox .sold-row{justify-content:space-between;}
-#soldListBox .sold-main{max-width:calc(100% - 110px);}
-#soldListBox .sold-action-col{
+#savedVehicleCardView{display:none;}
+.sold-row{justify-content:space-between;}
+.sold-main{max-width:calc(100% - 110px);}
+.sold-action-col{
   display:flex;
   flex-direction:column;
   gap:8px;
   width:96px;
   min-width:96px;
-  flex:0 0 96px;
   margin-left:auto;
 }
-#soldListBox .sold-action-col .mini-btn{width:100%;}
-@media (min-width:901px){
-  #soldListBox .row-line{padding:14px 16px !important;}
-  #soldListBox .small-note{font-size:13px !important;}
+.sold-action-col .mini-btn{width:100%;}
+@media (max-width:900px){
+  .sold-row{gap:10px !important;}
+  .sold-main{max-width:calc(100% - 98px);}
+  .sold-action-col{
+    width:88px;
+    min-width:88px;
+    gap:6px;
+  }
 }
-/* keep card view usable */
-#savedVehicleCardView{display:none;}
 </style>
 
 </head>
@@ -1065,7 +1078,7 @@
 <div class="stats">
 <div class="stat"><div class="k">在庫台數</div><div class="v" id="statStock">0</div></div>
 <div class="stat"><div class="k">已售台數</div><div class="v" id="statSold">0</div></div>
-<div class="stat"><div class="k">未售車輛整備總額</div><div class="v" id="statRepairTotal">0</div></div>
+<div class="stat"><div class="k">未售車輛總整備金額</div><div class="v" id="statRepairTotal">0</div></div>
 <div class="stat"><div class="k">未售車輛總投資金額</div><div class="v" id="statProfit">0</div></div>
 </div>
 </div>
@@ -1617,6 +1630,7 @@
   async function renderCostOverview(){
     const all = await dbGetAll();
     const unsold = all.filter(r => r.status !== '已售');
+
     if($('statCount')) $('statCount').textContent = fmt(all.length);
     if($('statStock')) $('statStock').textContent = fmt(unsold.length);
     if($('statSold')) $('statSold').textContent = fmt(all.filter(r => r.status === '已售').length);
@@ -1644,6 +1658,7 @@
   async function renderSoldHistory(){
     const all = await dbGetAll();
     let sold = all.filter(r => r.status === '已售');
+
     const currentCompany = $('soldCompanyFilter')?.value || '全部';
     const currentYear = $('soldYearFilter')?.value || '全部';
     const currentMonth = $('soldMonthFilter')?.value || '全部';
@@ -1655,10 +1670,10 @@
       $('soldYearFilter').value = years.includes(currentYear) ? currentYear : '全部';
     }
     if($('soldMonthFilter')){
-      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const mm=String(i+1).padStart(2,'0'); return `<option value="${mm}">${mm}月</option>`;}).join('');
+      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const m=String(i+1).padStart(2,'0'); return `<option value="${m}">${m}月</option>`;}).join('');
       $('soldMonthFilter').value = currentMonth || '全部';
     }
-    if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany;
+    if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany || '全部';
 
     const company = $('soldCompanyFilter')?.value || '全部';
     const year = $('soldYearFilter')?.value || '全部';
@@ -1686,14 +1701,14 @@
       <div class="row-line sold-row" style="display:flex;align-items:flex-start;gap:14px;">
         <div class="sold-main" style="flex:1;min-width:0;">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
-          <div class="small-note sold-line" style="margin-top:6px;white-space:normal;line-height:1.5">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
-          <div class="small-note sold-line" style="margin-top:8px;white-space:normal;line-height:1.5">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
-          <div class="small-note sold-line" style="white-space:normal;line-height:1.5">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
+          <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+          <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.45">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
+          <div class="small-note" style="white-space:normal;line-height:1.45">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
           <div style="margin-top:8px;font-size:18px;font-weight:800;color:#dc2626;">實際利：${fmt(Math.round(r.profit || 0))}</div>
         </div>
-        <div class="sold-action-col" style="margin-left:auto;">
-          <button type="button" class="secondary mini-btn sold-detail-btn" data-sold-id="${r.id}" onclick="openSoldDetail('${r.id}')">明細</button>
-          <button type="button" class="secondary mini-btn sold-photo-btn" data-sold-id="${r.id}" onclick="showSavedPhotos('${r.id}')">查看照片</button>
+        <div class="sold-action-col">
+          <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
+          <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">查看照片</button>
         </div>
       </div>
     `}).join('') : '<div class="empty">此條件下沒有已售資料</div>';
@@ -3893,16 +3908,44 @@
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
-  function clearForcedViewClasses(){
+  function clearViewClasses(){
     document.body.classList.remove('inventory-mode-list','inventory-mode-card','force-list-view','force-card-view');
   }
+  function bindVehicleViewToggle(){
+    const listBtn = $('listViewBtn');
+    const cardBtn = $('cardViewBtnBtn');
+    const list = $('savedVehicleListView');
+    const card = $('savedVehicleCardView');
+    if(listBtn && !listBtn.dataset.safeBound){
+      listBtn.dataset.safeBound = '1';
+      listBtn.onclick = function(e){
+        e.preventDefault();
+        clearViewClasses();
+        if(list) list.style.display = 'grid';
+        if(card) card.style.display = 'none';
+        listBtn.classList.add('active-view');
+        if(cardBtn) cardBtn.classList.remove('active-view');
+      };
+    }
+    if(cardBtn && !cardBtn.dataset.safeBound){
+      cardBtn.dataset.safeBound = '1';
+      cardBtn.onclick = function(e){
+        e.preventDefault();
+        clearViewClasses();
+        if(list) list.style.display = 'none';
+        if(card) card.style.display = 'grid';
+        cardBtn.classList.add('active-view');
+        if(listBtn) listBtn.classList.remove('active-view');
+      };
+    }
+  }
   document.addEventListener('DOMContentLoaded', function(){
-    clearForcedViewClasses();
-    $('listViewBtn')?.addEventListener('click', clearForcedViewClasses);
-    $('cardViewBtnBtn')?.addEventListener('click', clearForcedViewClasses);
+    clearViewClasses();
+    bindVehicleViewToggle();
   });
   window.addEventListener('load', function(){
-    clearForcedViewClasses();
+    clearViewClasses();
+    bindVehicleViewToggle();
   });
 })();
 </script>
