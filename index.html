@@ -1867,7 +1867,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="sold-meta">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
           <div class="sold-meta">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
           <div class="sold-meta">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
-          <div class="sold-profit" style="color:${profitColor};">實際利：${fmt(profitVal)}</div>
+          <div class="sold-profit" style="color:${profitColor};"><span style="font-size:16px;font-weight:900;color:${profitVal>=0?'red':'green'} !important;">實際利：${fmt(profitVal)}</span></div>
         </div>
         <div class="sold-compact-actions">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
