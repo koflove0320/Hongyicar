@@ -690,6 +690,27 @@
 @media (max-width:900px){
   .modal-x-close{top:10px;right:10px;width:42px;height:42px;font-size:26px}
 }
+</style><style>
+.record-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.record-row > div:nth-child(2){
+  flex:1;
+  min-width:0;
+}
+.vehicle-actions{
+  margin-left:auto !important;
+  display:flex;
+  gap:6px;
+  flex-wrap:nowrap;
+}
+.vehicle-actions button{
+  padding:4px 6px;
+  font-size:12px;
+  white-space:nowrap;
+}
 </style></head>
 <body>
 <div class="app">
@@ -1767,7 +1788,6 @@
 <div class="actions">
 <button class="primary" id="saveVehicleBtn" type="button">儲存入庫</button>
 <button class="secondary" id="resetVehicleBtn" type="button">清空表單</button>
-
 </div>
 </div>
 </div>
@@ -2087,6 +2107,5 @@
   }
 })();
 </script>
-
 </body>
 </html>
