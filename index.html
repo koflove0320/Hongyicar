@@ -4246,26 +4246,57 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   function $(id){ return document.getElementById(id); }
 
   async function doCancelDeposit(id){
-    if(typeof window.dbGet !== 'function' || typeof window.dbPut !== 'function'){
-      alert('退訂功能尚未就緒');
-      return;
+    try{
+      if(typeof window.dbGet !== 'function' || typeof window.dbPut !== 'function'){
+        alert('退訂功能尚未就緒');
+        return;
+      }
+      const r = await window.dbGet(id);
+      if(!r){
+        alert('找不到車輛資料');
+        return;
+      }
+      r.hasDeposit = '未收訂';
+      r.depositAmount = 0;
+      r.depositPhoto = '';
+      r.depositAccount = '';
+      r.depositTime = '';
+      r.paymentType = '';
+      r.loanCompany = '';
+      r.loanAgent = '';
+      await window.dbPut(r);
+
+      // 同步修正舊版 localStorage 備援資料，避免畫面仍讀到已收訂狀態
+      ['hongyi_inventory_records_v3','hongyi_inventory_records_v2','hongyi_inventory_records'].forEach(key=>{
+        try{
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          if(Array.isArray(arr)){
+            const idx = arr.findIndex(x => String(x.id) === String(id));
+            if(idx >= 0){
+              arr[idx].hasDeposit = '未收訂';
+              arr[idx].depositAmount = 0;
+              arr[idx].depositPhoto = '';
+              arr[idx].depositAccount = '';
+              arr[idx].depositTime = '';
+              arr[idx].paymentType = '';
+              arr[idx].loanCompany = '';
+              arr[idx].loanAgent = '';
+              localStorage.setItem(key, JSON.stringify(arr));
+            }
+          }
+        }catch(e){}
+      });
+
+      if(typeof window.renderInventory === 'function') await window.renderInventory();
+      if(typeof window.renderCostOverview === 'function') await window.renderCostOverview();
+      if(typeof window.renderAll === 'function') await window.renderAll();
+
+      // 最後保險直接重整一次，避免按鈕還停留在舊 DOM
+      setTimeout(function(){ location.reload(); }, 150);
+    }catch(err){
+      console.error(err);
+      alert('退訂失敗');
     }
-    const r = await window.dbGet(id);
-    if(!r){
-      alert('找不到車輛資料');
-      return;
-    }
-    r.hasDeposit = '未收訂';
-    r.depositAmount = 0;
-    r.depositPhoto = '';
-    r.depositAccount = '';
-    r.depositTime = '';
-    r.paymentType = '';
-    r.loanCompany = '';
-    r.loanAgent = '';
-    await window.dbPut(r);
-    if(typeof window.renderAll === 'function') await window.renderAll();
-    alert('已退訂');
   }
 
   window.openCancelDepositModal = function(id){
