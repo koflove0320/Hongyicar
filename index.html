@@ -689,13 +689,13 @@
 <div class="sub">智慧管理系統 v7<br/>側邊分頁式｜支援手機與電腦｜內部使用</div>
 </div>
 <div class="menu">
-<button class="active" onclick="showPanel('vehicle', this)">1. 車輛管理</button>
-<button onclick="showPanel('cost', this)">2. 車輛成本總覽</button>
-<button onclick="showPanel('sold', this)">1. 已售歷史總覽</button>
-<button onclick="showPanel('board', this)">2. 公佈欄</button>
-<button onclick="showPanel('sales', this)">3. 公司業績排行</button>
-<button onclick="showPanel('kpi', this)">6. 公司業績排行</button>
-<button onclick="showPanel('people', this)">7. 人員設定</button>
+<button class="active" onclick="showPanel('vehicle', this)">車輛管理</button>
+
+<button onclick="showPanel('sold', this)">已售歷史總覽</button>
+<button onclick="showPanel('board', this)">公佈欄</button>
+<button onclick="showPanel('sales', this)">公司業績排行</button>
+
+<button onclick="showPanel('people', this)">人員設定</button>
 </div>
 <div class="sidebar-note">
         儲存位置：<br/>
@@ -903,8 +903,7 @@
 <div class="viewer-close" onclick="closeImageViewer();event.stopPropagation()">×</div>
 <img alt="放大照片" id="imageViewerImg" onclick="event.stopPropagation()" src=""/>
 </div>
-<div class="bottom-nav" id="bottomNav">
-
+<div class="bottom-nav" id="bottomNav"><button class="active" data-panel="vehicle"><span class="nav-icon">🚗</span><span class="nav-label">車輛管理</span></button>
 <button data-panel="sold" onclick="showPanel('sold', this)">
 <span class="nav-icon">📚</span><span class="nav-label">已售歷史</span>
 </button>
@@ -1900,6 +1899,95 @@
   });
   window.addEventListener('load', function(){
     bindCreateModalClose();
+  });
+})();
+</script><script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function moveActionButtonsRightAndAddThumbs(){
+    const list = $('savedVehicleListView');
+    if(!list) return;
+    Array.from(list.children).forEach(row=>{
+      if(row.dataset.tablePatched === '1') return;
+      row.dataset.tablePatched = '1';
+
+      // remove 詳情 button
+      row.querySelectorAll('button[data-open="detail"]').forEach(btn=>btn.remove());
+
+      const actions = row.querySelector('.vehicle-actions');
+      const small = row.querySelector('.small-note');
+      const strong = row.querySelector('strong');
+      if(!actions || !strong) return;
+
+      // find row id from any button
+      const anyBtn = actions.querySelector('button[data-id]');
+      const vid = anyBtn ? anyBtn.getAttribute('data-id') : '';
+
+      // build left-right compact table style
+      const infoText = row.querySelector('div');
+      if(!infoText) return;
+
+      // extract title line text without buttons
+      const titleHtml = strong.outerHTML + (small ? small.outerHTML : '');
+
+      // thumbnail
+      let thumbHtml = '';
+      const card = $('savedVehicleCardView');
+      if(card && vid){
+        const matchCardBtn = card.querySelector(`button[data-id="${vid}"]`);
+        const cardItem = matchCardBtn ? matchCardBtn.closest('.car-card') : null
+        const img = cardItem ? cardItem.querySelector('.car-photo img') : null;
+        if(img){
+          thumbHtml = `<img src="${img.getAttribute('src')}" style="width:72px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`;
+        } else {
+          thumbHtml = `<div style="width:72px;height:54px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)">無照片</div>`;
+        }
+      }
+
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+          <div>${thumbHtml}</div>
+          <div style="min-width:0">
+            <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${strong.textContent}</div>
+            ${small ? small.outerHTML : ''}
+          </div>
+        </div>
+        <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">${actions.innerHTML}</div>
+      `;
+    });
+  }
+
+  function patchCardButtons(){
+    const card = $('savedVehicleCardView');
+    if(!card) return;
+    card.querySelectorAll('button[data-open="detail"]').forEach(btn=>btn.remove());
+  }
+
+  if(typeof window.renderAll === 'function' && !window.__tableMeaningPatch__){
+    const oldRenderAll = window.renderAll;
+    window.renderAll = async function(){
+      const res = await oldRenderAll.apply(this, arguments);
+      setTimeout(function(){
+        moveActionButtonsRightAndAddThumbs();
+        patchCardButtons();
+      }, 50);
+      return res;
+    };
+    window.__tableMeaningPatch__ = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      moveActionButtonsRightAndAddThumbs();
+      patchCardButtons();
+    }, 100);
+  });
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      moveActionButtonsRightAndAddThumbs();
+      patchCardButtons();
+    }, 100);
   });
 })();
 </script></body>
