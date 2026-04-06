@@ -702,14 +702,17 @@
 }
 .vehicle-actions{
   margin-left:auto !important;
-  display:flex;
-  gap:6px;
-  flex-wrap:nowrap;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(44px, 1fr));
+  gap:4px;
+  width:108px;
+  flex:0 0 108px;
 }
 .vehicle-actions button{
-  padding:4px 6px;
+  padding:4px 4px;
   font-size:12px;
   white-space:nowrap;
+  min-height:32px;
 }
 </style></head>
 <body>
@@ -1524,25 +1527,24 @@
     }
 
     $('saveDepositCloneBtn').onclick = async () => {
-      const depositAmount = Number($('depositAmount_clone').value || 0);
-      const depositAccount = $('depositAccount_clone').value;
-      const paymentType = $('paymentType_clone').value;
-      const loanCompany = '';
-      const loanAgent = $('loanAgent_clone').value.trim();
-      const depositPhotoFile = $('depositPhoto_clone').files[0];
-      if(!depositAmount) return alert('請填收訂金額');
-      if(!depositAccount) return alert('請選款項位置');
-      if(!paymentType) return alert('請選付款方式');
-      if(paymentType === '貸款' && !loanAgent) return alert('貸款請選貸款業務');
-      r.hasDeposit = '已收訂';
-      r.depositTime = depositTime;
-      r.depositAmount = depositAmount;
-      r.depositAccount = depositAccount;
-      r.paymentType = paymentType;
-      r.loanCompany = loanCompany;
-      r.loanAgent = loanAgent;
-      if(depositPhotoFile) r.depositPhoto = await fileToDataURL(depositPhotoFile);
-      await dbPut(r);
+      const depositTime = $('depositTime_clone') ? $('depositTime_clone').value : '';
+        const depositAmount = Number($('depositAmount_clone').value || 0);
+        const depositAccount = $('depositAccount_clone').value;
+        const paymentType = $('paymentType_clone').value;
+        const loanCompany = '';
+        const loanAgent = $('loanAgent_clone') ? $('loanAgent_clone').value.trim() : '';
+        if(!depositAmount) return alert('請填收訂金額');
+        if(!depositAccount) return alert('請選款項位置');
+        if(!paymentType) return alert('請選付款方式');
+        if(paymentType === '貸款' && !loanAgent) return alert('貸款請選貸款業務');
+        r.depositTime = depositTime;
+        r.hasDeposit = '已收訂';
+        r.depositAmount = depositAmount;
+        r.depositAccount = depositAccount;
+        r.paymentType = paymentType;
+        r.loanCompany = loanCompany;
+        r.loanAgent = loanAgent;
+        await dbPut(r);
       if($('flowModal')) $('flowModal').style.display = 'none';
       await renderAll();
       alert('收訂資料已儲存');
@@ -2107,5 +2109,59 @@
   }
 })();
 </script>
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  // Hard patch for deposit save if original handler still fails
+  if(typeof window.openDepositModal === 'function' && !window.__depositSavePatched__){
+    const oldOpenDepositModal = window.openDepositModal;
+    window.openDepositModal = async function(id){
+      const res = await oldOpenDepositModal.apply(this, arguments);
+      setTimeout(function(){
+        const btn = $('saveDepositCloneBtn');
+        if(btn && !btn.dataset.hardBound){
+          btn.dataset.hardBound = '1';
+          btn.onclick = async function(){
+            try{
+              const db = JSON.parse(localStorage.getItem('hongyi_inventory_records_v3') || '[]');
+              const rid = $('depositEditId') ? $('depositEditId').value : id;
+              const idx = db.findIndex(x => String(x.id) === String(rid));
+              if(idx < 0) return alert('找不到收訂資料');
+              const amount = Number(($('depositAmount_clone')||{}).value || 0);
+              const time = ($('depositTime_clone')||{}).value || '';
+              const account = ($('depositAccount_clone')||{}).value || '';
+              const payment = ($('paymentType_clone')||{}).value || '';
+              const loanAgent = ($('loanAgent_clone')||{}).value || '';
+              if(!amount) return alert('請填收訂金額');
+              if(!account) return alert('請選款項位置');
+              if(!payment) return alert('請選付款方式');
+              if(payment === '貸款' && !loanAgent) return alert('貸款請選貸款業務');
+              db[idx].depositTime = time;
+              db[idx].depositAmount = amount;
+              db[idx].depositAccount = account;
+              db[idx].paymentType = payment;
+              db[idx].loanCompany = '';
+              db[idx].loanAgent = loanAgent;
+              db[idx].hasDeposit = '已收訂';
+              localStorage.setItem('hongyi_inventory_records_v3', JSON.stringify(db));
+              if(typeof window.renderAll === 'function') window.renderAll();
+              const fm = $('flowModal'); if(fm) fm.style.display='none';
+              alert('收訂資料已儲存');
+            }catch(e){
+              console.error(e);
+              alert('收訂資料儲存失敗');
+            }
+          }
+        }
+      },50);
+      return res;
+    }
+    window.__depositSavePatched__ = true;
+  }
+})();
+</script>
+
 </body>
 </html>
