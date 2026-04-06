@@ -1030,6 +1030,32 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 }
 </style>
 
+
+<style>
+#soldListBox .sold-row{
+  display:flex;
+  width:100%;
+  justify-content:space-between;
+  gap:10px;
+}
+#soldListBox .sold-main{
+  flex:1 1 auto;
+  width:100%;
+}
+#soldListBox .sold-action-col{
+  flex:0 0 90px;
+  width:90px;
+  min-width:90px;
+  margin-left:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#soldListBox .sold-action-col .mini-btn{
+  width:100%;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1697,14 +1723,16 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
       const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
       const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      const profitVal = Math.round(r.profit || 0);
+      const profitColor = profitVal >= 0 ? '#dc2626' : '#16a34a';
       return `
-      <div class="row-line sold-row" style="display:flex;align-items:flex-start;gap:14px;">
-        <div class="sold-main" style="flex:1;min-width:0;">
+      <div class="row-line sold-row" style="display:flex;align-items:flex-start;gap:10px;width:100%;">
+        <div class="sold-main" style="flex:1 1 auto;width:100%;">
           <strong style="font-size:19px">${r.brand} ${r.model}</strong>
           <div class="small-note" style="margin-top:4px;white-space:normal;line-height:1.45">${r.entryType} | ${r.plate} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
           <div class="small-note" style="margin-top:8px;white-space:normal;line-height:1.45">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
           <div class="small-note" style="white-space:normal;line-height:1.45">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
-          <div style="margin-top:8px;font-size:18px;font-weight:800;color:#dc2626;">實際利：${fmt(Math.round(r.profit || 0))}</div>
+          <div style="margin-top:10px;font-size:20px;font-weight:900;color:${profitColor};letter-spacing:1px;">實際利：${fmt(profitVal)}</div>
         </div>
         <div class="sold-action-col">
           <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
