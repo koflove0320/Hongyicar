@@ -1498,30 +1498,36 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 
 
   async function editVehicle(id){
-    const r = await dbGet(Number(id));
-    if(!r) return alert('找不到車輛資料');
+    try{
+      const all = await dbGetAll();
+      const r = all.find(x => String(x.id) === String(id));
+      if(!r) return alert('找不到車輛資料');
 
-    if($('vehicleEditId')) $('vehicleEditId').value = r.id || '';
-    if($('entryType')) $('entryType').value = r.entryType || '屏東鴻翊汽車';
-    if(typeof setEntryType === 'function') setEntryType(r.entryType || '屏東鴻翊汽車');
-    if($('brand')) $('brand').value = r.brand || '';
-    if($('model')) $('model').value = r.model || '';
-    if($('plate')) $('plate').value = r.plate || '';
-    if($('year')) $('year').value = r.year || '';
-    if($('transferName')) $('transferName').value = r.transferName || '';
-    if($('buyerPerson')) $('buyerPerson').value = r.buyerPerson || '';
-    if($('buyAmount')) $('buyAmount').value = r.buyAmount || '';
-    if($('companyAdjust')) $('companyAdjust').value = r.companyAdjust || '';
-    if($('note')) $('note').value = r.note || '';
+      if($('vehicleEditId')) $('vehicleEditId').value = r.id || '';
+      if(typeof setEntryType === 'function') setEntryType(r.entryType || '屏東鴻翊汽車');
+      if($('entryType')) $('entryType').value = r.entryType || '屏東鴻翊汽車';
+      if($('brand')) $('brand').value = r.brand || '';
+      if($('model')) $('model').value = r.model || '';
+      if($('plate')) $('plate').value = r.plate || '';
+      if($('year')) $('year').value = r.year || '';
+      if($('transferName')) $('transferName').value = r.transferName || '';
+      if($('buyerPerson')) $('buyerPerson').value = r.buyerPerson || '';
+      if($('buyAmount')) $('buyAmount').value = r.buyAmount || '';
+      if($('companyAdjust')) $('companyAdjust').value = r.companyAdjust || '';
+      if($('note')) $('note').value = r.note || '';
 
-    const preview = $('createPhotoPreview');
-    if(preview){
-      preview.innerHTML = '';
-      if(r.carPhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" alt="車輛照片"><div class="cap">車輛照片</div></div>`;
-      if(r.licensePhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" alt="行照照片"><div class="cap">行照照片</div></div>`;
+      const preview = $('createPhotoPreview');
+      if(preview){
+        preview.innerHTML = '';
+        if(r.carPhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" alt="車輛照片"><div class="cap">車輛照片</div></div>`;
+        if(r.licensePhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" alt="行照照片"><div class="cap">行照照片</div></div>`;
+      }
+
+      if($('createVehicleModal')) $('createVehicleModal').style.display = 'flex';
+    }catch(err){
+      console.error(err);
+      alert('讀取編輯資料失敗');
     }
-
-    if($('createVehicleModal')) $('createVehicleModal').style.display = 'flex';
   }
   window.editVehicle = editVehicle;
 
@@ -1666,7 +1672,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           </div>
         </div>
         <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
-          <button type="button" class="secondary mini-btn small-btn" onclick="editVehicle('${r.id}')">編輯</button>
+          <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
           <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
@@ -1688,7 +1694,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
           <div class="car-line">整備：${fmt(r.repairTotal)}</div>
           ${r.hasDeposit==='已收訂' ? `<div class="car-line"><span class="deposit-badge">已收訂</span></div>` : ``}
           <div class="vehicle-actions">
-            <button type="button" class="secondary mini-btn small-btn" onclick="editVehicle('${r.id}')">編輯</button>
+            <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
             <button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
@@ -4025,6 +4031,38 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     clearViewClasses();
     bindVehicleViewToggle();
   });
+})();
+</script>
+
+
+<script>
+(function(){
+  function bindEditButtons(){
+    ['savedVehicleListView','savedVehicleCardView'].forEach(id=>{
+      const box = document.getElementById(id);
+      if(!box || box.dataset.editBound === '1') return;
+      box.dataset.editBound = '1';
+      box.addEventListener('click', function(e){
+        const btn = e.target.closest('.edit-btn');
+        if(!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.editVehicle === 'function'){
+          window.editVehicle(btn.getAttribute('data-edit-id'));
+        }
+      });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(bindEditButtons, 100); });
+  window.addEventListener('load', function(){ setTimeout(bindEditButtons, 150); });
+  const starter = setInterval(function(){
+    const a = document.getElementById('savedVehicleListView');
+    const b = document.getElementById('savedVehicleCardView');
+    if(a || b){
+      bindEditButtons();
+      clearInterval(starter);
+    }
+  }, 300);
 })();
 </script>
 
