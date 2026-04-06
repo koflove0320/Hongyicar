@@ -949,7 +949,20 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   flex:0 0 auto;
   margin-left:auto;
 }
-</style></head>
+</style>
+<style>
+.sold-action-col{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:88px;
+  min-width:88px;
+  margin-left:auto;
+}
+.sold-action-col .mini-btn{width:100%;}
+</style>
+
+</head>
 <body>
 <div class="app">
 <aside class="sidebar">
@@ -1287,6 +1300,10 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       req.onerror = () => reject(req.error);
     });
   }
+
+  window.dbGetAll = dbGetAll;
+  window.dbGet = dbGet;
+  window.dbPut = dbPut;
 
   function fileToDataURL(file){
     return new Promise((resolve, reject) => {
@@ -3645,8 +3662,8 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
             <div class="small-note" style="white-space:normal;line-height:1.45">實際利：${fmtSafe(r.profit)}</div>
           </div>
           <div class="sold-action-col">
-            <button type="button" class="secondary mini-btn" onclick="openSoldDetail('${r.id}')">明細</button>
-            <button type="button" class="secondary mini-btn" onclick="showSavedPhotos('${r.id}')">查看照片</button>
+            <button type="button" class="secondary mini-btn sold-detail-btn" data-sold-id="${r.id}" onclick="openSoldDetail('${r.id}')">明細</button>
+            <button type="button" class="secondary mini-btn sold-photo-btn" data-sold-id="${r.id}" onclick="showSavedPhotos('${r.id}')">查看照片</button>
           </div>
         </div>`;
     }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
@@ -3692,6 +3709,121 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       if(typeof window.renderSoldHistory === 'function') window.renderSoldHistory();
     }, 120);
   });
+})();
+</script>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function fmt(v){ return Number(v || 0).toLocaleString('zh-TW'); }
+
+  window.closeSoldDetailModal = function(){
+    const m = $('soldDetailModal');
+    if(m) m.style.display = 'none';
+  };
+
+  window.openSoldDetail = async function(id){
+    try{
+      if(typeof window.dbGet !== 'function'){
+        alert('明細資料庫尚未就緒');
+        return;
+      }
+      const r = await window.dbGet(id);
+      if(!r){
+        alert('找不到明細資料');
+        return;
+      }
+      const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      const repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+      const repairHtml = repairItems.length
+        ? repairItems.map(item => `<div>・${item.name || '整備項目'}：${fmt(item.amount)}</div>`).join('')
+        : '<div>—</div>';
+
+      const body = $('soldDetailBody');
+      if(body){
+        body.innerHTML = `
+          <div><strong>${r.brand || ''} ${r.model || ''}</strong></div>
+          <div>車牌：${r.plate || '—'}</div>
+          <div>買入人：${r.buyerPerson || '—'}</div>
+          <div>買進價格：${fmt(r.buyAmount)}</div>
+          <div>公司底價：${fmt(r.companyFloorPrice)}</div>
+          <div>售出金額（開發票）：${fmt(r.sellAmount)}</div>
+          <div>新車主姓名：${r.newOwner || '—'}</div>
+          <div>身分證：${r.newOwnerIdNo || '—'}</div>
+          <div>有無換牌：${r.plateChanged || '否'}</div>
+          <div>換牌車號：${r.newPlate || '—'}</div>
+          <div style="margin-top:8px"><strong>整備明細</strong></div>
+          ${repairHtml}
+          <div style="margin-top:8px"><strong>稅金明細</strong></div>
+          <div>發票稅：${fmt(r.invoiceTax)}</div>
+          <div>營業稅：${fmt(r.businessTax)}</div>
+          <div>稅金合計：${fmt(taxTotal)}</div>
+          <div style="margin-top:8px"><strong>最後利潤：${fmt(r.profit)}</strong></div>
+        `;
+      }
+      const m = $('soldDetailModal');
+      if(m) m.style.display = 'flex';
+    }catch(err){
+      console.error(err);
+      alert('明細資料載入失敗');
+    }
+  };
+
+  function bindSoldButtons(){
+    const box = $('soldListBox');
+    if(!box || box.dataset.boundSafe === '1') return;
+    box.dataset.boundSafe = '1';
+    box.addEventListener('click', function(e){
+      const detailBtn = e.target.closest('.sold-detail-btn');
+      if(detailBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        window.openSoldDetail(detailBtn.getAttribute('data-sold-id'));
+        return;
+      }
+      const photoBtn = e.target.closest('.sold-photo-btn');
+      if(photoBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        window.showSavedPhotos(photoBtn.getAttribute('data-sold-id'));
+        return;
+      }
+    });
+  }
+
+  function cleanupButtons(){
+    const box = $('soldListBox');
+    if(!box) return;
+    box.querySelectorAll('.row-line').forEach(row=>{
+      const detailBtns = row.querySelectorAll('.sold-detail-btn');
+      const photoBtns = row.querySelectorAll('.sold-photo-btn');
+      detailBtns.forEach((btn, i)=>{ if(i>0) btn.remove(); });
+      photoBtns.forEach((btn, i)=>{ if(i>0) btn.remove(); });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindSoldButtons();
+    cleanupButtons();
+  });
+  window.addEventListener('load', function(){
+    bindSoldButtons();
+    cleanupButtons();
+  });
+
+  const starter = setInterval(function(){
+    const box = $('soldListBox');
+    if(box){
+      bindSoldButtons();
+      cleanupButtons();
+      const mo = new MutationObserver(function(){
+        cleanupButtons();
+      });
+      mo.observe(box, {childList:true, subtree:true});
+      clearInterval(starter);
+    }
+  }, 300);
 })();
 </script>
 
