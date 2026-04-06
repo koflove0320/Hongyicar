@@ -962,6 +962,49 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 .sold-action-col .mini-btn{width:100%;}
 </style>
 
+
+<style>
+/* 修正已售歷史篩選器浮到最上層 */
+#panel-sold .toolbar{
+  display:block !important;
+  overflow:visible !important;
+}
+#panel-sold .toolbar-left{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:10px !important;
+  align-items:center !important;
+  position:static !important;
+  z-index:auto !important;
+  overflow:visible !important;
+}
+#panel-sold .toolbar-left h3{
+  width:100% !important;
+  margin-bottom:6px !important;
+}
+#panel-sold .toolbar-left select{
+  flex:1 1 180px !important;
+  min-width:160px !important;
+  position:static !important;
+  z-index:auto !important;
+  top:auto !important;
+  left:auto !important;
+  transform:none !important;
+}
+@media (max-width:900px){
+  #panel-sold .toolbar-left{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  #panel-sold .toolbar-left select{
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
