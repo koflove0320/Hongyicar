@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="zh-Hant">
@@ -1111,6 +1110,20 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 }
 </style>
 
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
+  apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
+  authDomain: "hongyi-car-app.firebaseapp.com",
+  projectId: "hongyi-car-app",
+  storageBucket: "hongyi-car-app.appspot.com",
+  messagingSenderId: "506346503503",
+  appId: "1:506346503503:web:cfaa3f9ac323945591193a"
+};
+</script>
+
 </head>
 <body>
 <div class="app">
@@ -1130,7 +1143,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
         儲存位置：<br/>
         1. 程式是你下載的 HTML 檔<br/>
         2. 資料存在這台裝置瀏覽器的 localStorage<br/>
-        3. 同裝置關掉再開還在，換裝置不會同步<br/>4. LINE 登入要真正可用，下一步要接雲端資料庫與 LINE Login
+        3. 同裝置關掉再開還在，換裝置不會同步<br/>4. 已接上 Firebase 雲端同步；LINE Login 仍需下一步正式串接
       </div>
 </aside>
 <main class="main">
@@ -1139,7 +1152,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 <h2 id="pageTitle">車輛管理</h2>
 <div class="desc" id="pageDesc">完整新增車輛、入庫公司選擇、整備總額自動彙總、利潤自動計算，以及後續售出功能。</div>
 </div>
-<div class="storage">目前儲存：本機瀏覽器 localStorage</div>
+<div class="storage">目前儲存：Firebase 雲端同步</div>
 </div>
 <section class="panel active" id="panel-vehicle">
 <div class="card">
@@ -1419,14 +1432,104 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   const DB_NAME = 'hongyi_v949_local_db';
   const STORE = 'vehicles';
   let db;
+  let dbMode = 'local';
+  let cloudDb = null;
+  let cloudCache = [];
+  let cloudUnsubscribe = null;
+  let cloudReadyOnce = false;
 
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+  function getFirebaseConfig(){
+    const cfg = window.HONGYI_FIREBASE_CONFIG || {};
+    return cfg;
+  }
+
+  function hasUsableFirebaseConfig(cfg){
+    return !!(cfg && cfg.apiKey && cfg.projectId && !String(cfg.apiKey).includes('請填入'));
+  }
+
+  function updateStorageBadge(){
+    const el = document.querySelector('.storage');
+    if(!el) return;
+    el.textContent = dbMode === 'cloud'
+      ? '目前儲存：Firebase Firestore 雲端同步'
+      : '目前儲存：本機 IndexedDB（尚未填 Firebase 設定）';
+  }
+
+  function setTopbarDescCloud(){
+    if($('pageDesc')){
+      $('pageDesc').textContent = dbMode === 'cloud'
+        ? '資料與照片目前使用 Firebase Firestore 雲端同步'
+        : '資料與照片目前存放在這台裝置的瀏覽器本地資料庫（IndexedDB）';
+    }
+  }
+
+  async function triggerRealtimeRefresh(){
+    try{
+      if(typeof renderAll === 'function'){
+        await renderAll();
+      }else{
+        if(typeof renderInventory === 'function') await renderInventory();
+        if(typeof renderCostOverview === 'function') await renderCostOverview();
+        if(typeof renderSoldHistory === 'function') await renderSoldHistory();
+        if(typeof renderPerformance === 'function') await renderPerformance();
+      }
+    }catch(err){
+      console.error('即時同步重繪失敗', err);
+    }
+  }
+
   function fmt(n){ return (Number(n)||0).toLocaleString('zh-TW'); }
+
 
   function openDB(){
     return new Promise((resolve, reject) => {
+      const cfg = getFirebaseConfig();
+      if(hasUsableFirebaseConfig(cfg) && window.firebase){
+        try{
+          if(!firebase.apps.length){
+            firebase.initializeApp(cfg);
+          }
+          cloudDb = firebase.firestore();
+          dbMode = 'cloud';
+          updateStorageBadge();
+          setTopbarDescCloud();
+
+          if(cloudUnsubscribe){
+            try{ cloudUnsubscribe(); }catch(e){}
+            cloudUnsubscribe = null;
+          }
+
+          cloudUnsubscribe = cloudDb.collection(STORE).onSnapshot(async (snap) => {
+            cloudCache = snap.docs.map(doc => {
+              const data = doc.data() || {};
+              if(!data.id) data.id = doc.id;
+              return data;
+            }).sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+            if(cloudReadyOnce){
+              await triggerRealtimeRefresh();
+            }
+            cloudReadyOnce = true;
+          }, (err) => {
+            console.error('Firestore 監聽失敗，改回本機模式', err);
+            dbMode = 'local';
+            updateStorageBadge();
+            setTopbarDescCloud();
+          });
+
+          resolve();
+          return;
+        }catch(err){
+          console.error('Firebase 初始化失敗，改回本機模式', err);
+        }
+      }
+
+      dbMode = 'local';
+      updateStorageBadge();
+      setTopbarDescCloud();
+
       const req = indexedDB.open(DB_NAME, 1);
       req.onupgradeneeded = (e) => {
         const d = e.target.result;
@@ -1440,6 +1543,9 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   }
 
   function dbGetAll(){
+    if(dbMode === 'cloud'){
+      return Promise.resolve([...(cloudCache || [])]);
+    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readonly').objectStore(STORE).getAll();
       req.onsuccess = () => resolve(req.result || []);
@@ -1448,6 +1554,10 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   }
 
   function dbGet(id){
+    if(dbMode === 'cloud'){
+      const found = (cloudCache || []).find(x => String(x.id) === String(id));
+      return Promise.resolve(found || null);
+    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
       req.onsuccess = () => resolve(req.result || null);
@@ -1456,6 +1566,25 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   }
 
   function dbPut(record){
+    if(dbMode === 'cloud'){
+      const payload = Object.assign({}, record || {});
+      if(!payload.id) payload.id = String(Date.now());
+
+      const idx = (cloudCache || []).findIndex(x => String(x.id) === String(payload.id));
+      if(idx >= 0){
+        cloudCache[idx] = payload;
+      }else{
+        cloudCache = [payload].concat(cloudCache || []);
+      }
+      cloudCache = (cloudCache || []).slice().sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      Promise.resolve().then(() => triggerRealtimeRefresh()).catch(() => {});
+
+      cloudDb.collection(STORE).doc(String(payload.id)).set(payload).catch((err) => {
+        console.error('Firestore 儲存失敗', err);
+        alert('雲端儲存失敗，請檢查網路後再試一次');
+      });
+      return Promise.resolve(payload);
+    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(record);
       req.onsuccess = () => resolve(record);
@@ -1467,11 +1596,38 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
   window.dbGet = dbGet;
   window.dbPut = dbPut;
 
+
   function fileToDataURL(file){
     return new Promise((resolve, reject) => {
       if(!file){ resolve(''); return; }
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const raw = reader.result;
+        if(!String(file.type || '').startsWith('image/')){
+          resolve(raw);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          try{
+            const maxSide = 960;
+            let { width, height } = img;
+            const ratio = Math.min(1, maxSide / Math.max(width, height));
+            width = Math.max(1, Math.round(width * ratio));
+            height = Math.max(1, Math.round(height * ratio));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.55));
+          }catch(e){
+            resolve(raw);
+          }
+        };
+        img.onerror = () => resolve(raw);
+        img.src = raw;
+      };
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
@@ -1504,7 +1660,7 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
       people:['人員設定','先保留版位。']
     }[name] || ['車輛管理',''];
     if($('pageTitle')) $('pageTitle').textContent = meta[0];
-    if($('pageDesc')) $('pageDesc').textContent = '資料與照片都存放在這台裝置的瀏覽器本地資料庫（IndexedDB）';
+    if($('pageDesc')) $('pageDesc').textContent = '資料儲存採 Firebase 雲端同步；若未填 Firebase 設定，則自動退回本機 IndexedDB。';
   }
   window.showPanel = showPanel;
 
@@ -1724,6 +1880,8 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
     await renderAll();
     alert(editId ? '車輛已更新' : '車輛已新增');
   }
+  window.saveVehicle = saveVehicle;
+  window.resetForm = resetForm;
 
   async function renderInventory(){
     const all = await dbGetAll();
@@ -4367,25 +4525,139 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 </script>
 
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
-  authDomain: "hongyi-car-app.firebaseapp.com",
-  projectId: "hongyi-car-app",
-  storageBucket: "hongyi-car-app.appspot.com",
-  messagingSenderId: "506346503503",
-  appId: "1:506346503503:web:cfaa3f9ac323945591193a"
-};
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-window.db = db;
+<script>
+(function(){
+  function isPlaceholderConfig(cfg){
+    return !cfg || !cfg.apiKey || String(cfg.apiKey).includes('請填入');
+  }
 
-console.log("🔥 Firebase 已連線成功");
+  async function migrateLocalDataToCloudOnce(){
+    try{
+      if(!window.firebase || !window.HONGYI_FIREBASE_CONFIG || isPlaceholderConfig(window.HONGYI_FIREBASE_CONFIG)) return;
+      const key = 'hongyi_cloud_migrated_v1';
+      if(localStorage.getItem(key) === 'done') return;
+
+      const dbReq = indexedDB.open('hongyi_v949_local_db', 1);
+      dbReq.onsuccess = async function(){
+        try{
+          const idb = dbReq.result;
+          const tx = idb.transaction('vehicles', 'readonly');
+          const req = tx.objectStore('vehicles').getAll();
+          req.onsuccess = async function(){
+            const rows = req.result || [];
+            if(!rows.length){
+              localStorage.setItem(key, 'done');
+              return;
+            }
+            const db = firebase.apps.length ? firebase.firestore() : null;
+            if(!db) return;
+            const batch = db.batch();
+            rows.forEach(row => {
+              const id = String(row.id || Date.now());
+              row.id = id;
+              batch.set(db.collection('vehicles').doc(id), row, { merge: true });
+            });
+            await batch.commit();
+            localStorage.setItem(key, 'done');
+            console.log('本機車輛資料已搬到 Firebase');
+          };
+        }catch(err){
+          console.error('搬移本機資料失敗', err);
+        }
+      };
+    }catch(err){
+      console.error('初始化搬移失敗', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(migrateLocalDataToCloudOnce, 1200);
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function rebindButton(buttonId, handler){
+    const oldBtn = $(buttonId);
+    if(!oldBtn) return null;
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+    newBtn.addEventListener('click', handler);
+    return newBtn;
+  }
+
+  function safeOpenCreateModal(){
+    const btn = $('openCreateVehicleBtn');
+    const modal = $('createVehicleModal');
+    if(!btn || !modal) return;
+    if(btn.dataset.opening === '1') return;
+    btn.dataset.opening = '1';
+    btn.disabled = true;
+    try{
+      if(typeof window.resetForm === 'function'){
+        window.resetForm();
+      }else{
+        if($('vehicleEditId')) $('vehicleEditId').value = '';
+      }
+      modal.style.display = 'flex';
+    }finally{
+      setTimeout(()=>{
+        btn.disabled = false;
+        btn.dataset.opening = '0';
+      }, 300);
+    }
+  }
+
+  async function safeSaveVehicle(){
+    const btn = $('saveVehicleBtn');
+    if(!btn) return;
+    if(window.__vehicleSavingLock__) return;
+    window.__vehicleSavingLock__ = true;
+    const oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '儲存中...';
+    try{
+      if(typeof window.saveVehicle === 'function'){
+        await window.saveVehicle();
+      }else{
+        alert('儲存功能不存在（saveVehicle 未掛到全域）。');
+      }
+    }catch(err){
+      console.error(err);
+      alert('儲存失敗，請再試一次');
+    }finally{
+      setTimeout(()=>{
+        window.__vehicleSavingLock__ = false;
+        const currentBtn = $('saveVehicleBtn');
+        if(currentBtn){
+          currentBtn.disabled = false;
+          currentBtn.textContent = oldText || '儲存入庫';
+        }
+      }, 150);
+    }
+  }
+
+  function bindSingleVehicleButtons(){
+    rebindButton('openCreateVehicleBtn', safeOpenCreateModal);
+    rebindButton('saveVehicleBtn', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      safeSaveVehicle();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', bindSingleVehicleButtons);
+  window.addEventListener('load', function(){
+    setTimeout(bindSingleVehicleButtons, 50);
+  });
+})();
 </script>
 
 </body>
