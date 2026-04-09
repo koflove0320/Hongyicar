@@ -1110,20 +1110,6 @@ body.force-card-view #savedVehicleCardView{display:grid !important;}
 }
 </style>
 
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
-  apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
-  authDomain: "hongyi-car-app.firebaseapp.com",
-  projectId: "hongyi-car-app",
-  storageBucket: "hongyi-car-app.appspot.com",
-  messagingSenderId: "506346503503",
-  appId: "1:506346503503:web:cfaa3f9ac323945591193a"
-};
-</script>
-
 </head>
 <body>
 <div class="app">
@@ -1143,7 +1129,7 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
         儲存位置：<br/>
         1. 程式是你下載的 HTML 檔<br/>
         2. 資料存在這台裝置瀏覽器的 localStorage<br/>
-        3. 同裝置關掉再開還在，換裝置不會同步<br/>4. 已接上 Firebase 雲端同步；LINE Login 仍需下一步正式串接
+        3. 同裝置關掉再開還在，換裝置不會同步<br/>4. LINE 登入要真正可用，下一步要接雲端資料庫與 LINE Login
       </div>
 </aside>
 <main class="main">
@@ -1152,7 +1138,7 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
 <h2 id="pageTitle">車輛管理</h2>
 <div class="desc" id="pageDesc">完整新增車輛、入庫公司選擇、整備總額自動彙總、利潤自動計算，以及後續售出功能。</div>
 </div>
-<div class="storage">目前儲存：Firebase 雲端同步</div>
+<div class="storage">目前儲存：本機瀏覽器 localStorage</div>
 </div>
 <section class="panel active" id="panel-vehicle">
 <div class="card">
@@ -1432,104 +1418,14 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
   const DB_NAME = 'hongyi_v949_local_db';
   const STORE = 'vehicles';
   let db;
-  let dbMode = 'local';
-  let cloudDb = null;
-  let cloudCache = [];
-  let cloudUnsubscribe = null;
-  let cloudReadyOnce = false;
 
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  function getFirebaseConfig(){
-    const cfg = window.HONGYI_FIREBASE_CONFIG || {};
-    return cfg;
-  }
-
-  function hasUsableFirebaseConfig(cfg){
-    return !!(cfg && cfg.apiKey && cfg.projectId && !String(cfg.apiKey).includes('請填入'));
-  }
-
-  function updateStorageBadge(){
-    const el = document.querySelector('.storage');
-    if(!el) return;
-    el.textContent = dbMode === 'cloud'
-      ? '目前儲存：Firebase Firestore 雲端同步'
-      : '目前儲存：本機 IndexedDB（尚未填 Firebase 設定）';
-  }
-
-  function setTopbarDescCloud(){
-    if($('pageDesc')){
-      $('pageDesc').textContent = dbMode === 'cloud'
-        ? '資料與照片目前使用 Firebase Firestore 雲端同步'
-        : '資料與照片目前存放在這台裝置的瀏覽器本地資料庫（IndexedDB）';
-    }
-  }
-
-  async function triggerRealtimeRefresh(){
-    try{
-      if(typeof renderAll === 'function'){
-        await renderAll();
-      }else{
-        if(typeof renderInventory === 'function') await renderInventory();
-        if(typeof renderCostOverview === 'function') await renderCostOverview();
-        if(typeof renderSoldHistory === 'function') await renderSoldHistory();
-        if(typeof renderPerformance === 'function') await renderPerformance();
-      }
-    }catch(err){
-      console.error('即時同步重繪失敗', err);
-    }
-  }
-
   function fmt(n){ return (Number(n)||0).toLocaleString('zh-TW'); }
-
 
   function openDB(){
     return new Promise((resolve, reject) => {
-      const cfg = getFirebaseConfig();
-      if(hasUsableFirebaseConfig(cfg) && window.firebase){
-        try{
-          if(!firebase.apps.length){
-            firebase.initializeApp(cfg);
-          }
-          cloudDb = firebase.firestore();
-          dbMode = 'cloud';
-          updateStorageBadge();
-          setTopbarDescCloud();
-
-          if(cloudUnsubscribe){
-            try{ cloudUnsubscribe(); }catch(e){}
-            cloudUnsubscribe = null;
-          }
-
-          cloudUnsubscribe = cloudDb.collection(STORE).onSnapshot(async (snap) => {
-            cloudCache = snap.docs.map(doc => {
-              const data = doc.data() || {};
-              if(!data.id) data.id = doc.id;
-              return data;
-            }).sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-            if(cloudReadyOnce){
-              await triggerRealtimeRefresh();
-            }
-            cloudReadyOnce = true;
-          }, (err) => {
-            console.error('Firestore 監聽失敗，改回本機模式', err);
-            dbMode = 'local';
-            updateStorageBadge();
-            setTopbarDescCloud();
-          });
-
-          resolve();
-          return;
-        }catch(err){
-          console.error('Firebase 初始化失敗，改回本機模式', err);
-        }
-      }
-
-      dbMode = 'local';
-      updateStorageBadge();
-      setTopbarDescCloud();
-
       const req = indexedDB.open(DB_NAME, 1);
       req.onupgradeneeded = (e) => {
         const d = e.target.result;
@@ -1543,9 +1439,6 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
   }
 
   function dbGetAll(){
-    if(dbMode === 'cloud'){
-      return Promise.resolve([...(cloudCache || [])]);
-    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readonly').objectStore(STORE).getAll();
       req.onsuccess = () => resolve(req.result || []);
@@ -1554,10 +1447,6 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
   }
 
   function dbGet(id){
-    if(dbMode === 'cloud'){
-      const found = (cloudCache || []).find(x => String(x.id) === String(id));
-      return Promise.resolve(found || null);
-    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
       req.onsuccess = () => resolve(req.result || null);
@@ -1566,25 +1455,6 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
   }
 
   function dbPut(record){
-    if(dbMode === 'cloud'){
-      const payload = Object.assign({}, record || {});
-      if(!payload.id) payload.id = String(Date.now());
-
-      const idx = (cloudCache || []).findIndex(x => String(x.id) === String(payload.id));
-      if(idx >= 0){
-        cloudCache[idx] = payload;
-      }else{
-        cloudCache = [payload].concat(cloudCache || []);
-      }
-      cloudCache = (cloudCache || []).slice().sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-      Promise.resolve().then(() => triggerRealtimeRefresh()).catch(() => {});
-
-      cloudDb.collection(STORE).doc(String(payload.id)).set(payload).catch((err) => {
-        console.error('Firestore 儲存失敗', err);
-        alert('雲端儲存失敗，請檢查網路後再試一次');
-      });
-      return Promise.resolve(payload);
-    }
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(record);
       req.onsuccess = () => resolve(record);
@@ -1596,38 +1466,11 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
   window.dbGet = dbGet;
   window.dbPut = dbPut;
 
-
   function fileToDataURL(file){
     return new Promise((resolve, reject) => {
       if(!file){ resolve(''); return; }
       const reader = new FileReader();
-      reader.onload = () => {
-        const raw = reader.result;
-        if(!String(file.type || '').startsWith('image/')){
-          resolve(raw);
-          return;
-        }
-        const img = new Image();
-        img.onload = () => {
-          try{
-            const maxSide = 960;
-            let { width, height } = img;
-            const ratio = Math.min(1, maxSide / Math.max(width, height));
-            width = Math.max(1, Math.round(width * ratio));
-            height = Math.max(1, Math.round(height * ratio));
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.55));
-          }catch(e){
-            resolve(raw);
-          }
-        };
-        img.onerror = () => resolve(raw);
-        img.src = raw;
-      };
+      reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
@@ -1660,7 +1503,7 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
       people:['人員設定','先保留版位。']
     }[name] || ['車輛管理',''];
     if($('pageTitle')) $('pageTitle').textContent = meta[0];
-    if($('pageDesc')) $('pageDesc').textContent = '資料儲存採 Firebase 雲端同步；若未填 Firebase 設定，則自動退回本機 IndexedDB。';
+    if($('pageDesc')) $('pageDesc').textContent = '資料與照片都存放在這台裝置的瀏覽器本地資料庫（IndexedDB）';
   }
   window.showPanel = showPanel;
 
@@ -1880,8 +1723,6 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
     await renderAll();
     alert(editId ? '車輛已更新' : '車輛已新增');
   }
-  window.saveVehicle = saveVehicle;
-  window.resetForm = resetForm;
 
   async function renderInventory(){
     const all = await dbGetAll();
@@ -4525,137 +4366,972 @@ window.HONGYI_FIREBASE_CONFIG = window.HONGYI_FIREBASE_CONFIG || {
 </script>
 
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
+  authDomain: "hongyi-car-app.firebaseapp.com",
+  projectId: "hongyi-car-app",
+  storageBucket: "hongyi-car-app.appspot.com",
+  messagingSenderId: "506346503503",
+  appId: "1:506346503503:web:cfaa3f9ac323945591193a"
+};
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-<script>
-(function(){
-  function isPlaceholderConfig(cfg){
-    return !cfg || !cfg.apiKey || String(cfg.apiKey).includes('請填入');
-  }
+window.db = db;
+window.HONGYI_FIREBASE_READY = true;
+window.firebase = window.firebase || {
+  apps: [app],
+  initializeApp: () => app,
+  firestore: () => ({
+    collection: (name) => ({
+      doc: (id) => ({
+        set: (payload, options) => setDoc(doc(db, name, String(id)), payload, options || {}),
+        delete: () => deleteDoc(doc(db, name, String(id)))
+      }),
+      orderBy: (field, direction) => ({
+        onSnapshot: (ok, err) => onSnapshot(
+          query(collection(db, name), orderBy(field, direction)),
+          (snap) => ok({
+            docs: snap.docs.map(d => ({
+              id: d.id,
+              data: () => d.data()
+            }))
+          }),
+          err
+        )
+      })
+    })
+  })
+};
 
-  async function migrateLocalDataToCloudOnce(){
-    try{
-      if(!window.firebase || !window.HONGYI_FIREBASE_CONFIG || isPlaceholderConfig(window.HONGYI_FIREBASE_CONFIG)) return;
-      const key = 'hongyi_cloud_migrated_v1';
-      if(localStorage.getItem(key) === 'done') return;
-
-      const dbReq = indexedDB.open('hongyi_v949_local_db', 1);
-      dbReq.onsuccess = async function(){
-        try{
-          const idb = dbReq.result;
-          const tx = idb.transaction('vehicles', 'readonly');
-          const req = tx.objectStore('vehicles').getAll();
-          req.onsuccess = async function(){
-            const rows = req.result || [];
-            if(!rows.length){
-              localStorage.setItem(key, 'done');
-              return;
-            }
-            const db = firebase.apps.length ? firebase.firestore() : null;
-            if(!db) return;
-            const batch = db.batch();
-            rows.forEach(row => {
-              const id = String(row.id || Date.now());
-              row.id = id;
-              batch.set(db.collection('vehicles').doc(id), row, { merge: true });
-            });
-            await batch.commit();
-            localStorage.setItem(key, 'done');
-            console.log('本機車輛資料已搬到 Firebase');
-          };
-        }catch(err){
-          console.error('搬移本機資料失敗', err);
-        }
-      };
-    }catch(err){
-      console.error('初始化搬移失敗', err);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    setTimeout(migrateLocalDataToCloudOnce, 1200);
-  });
-})();
+console.log("🔥 Firebase 已連線成功");
 </script>
 
 
 <script>
 (function(){
-  function $(id){ return document.getElementById(id); }
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_lNNjFFtI6XGt2JY-N7-b3X4Z5G9hGqQ",
+    authDomain: "hongyi-car-app.firebaseapp.com",
+    projectId: "hongyi-car-app",
+    storageBucket: "hongyi-car-app.appspot.com",
+    messagingSenderId: "506346503503",
+    appId: "1:506346503503:web:cfaa3f9ac323945591193a"
+  };
 
-  function rebindButton(buttonId, handler){
-    const oldBtn = $(buttonId);
-    if(!oldBtn) return null;
-    const newBtn = oldBtn.cloneNode(true);
-    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-    newBtn.addEventListener('click', handler);
-    return newBtn;
-  }
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => (Number(n) || 0).toLocaleString('zh-TW');
+  window.fmt = fmt;
 
-  function safeOpenCreateModal(){
-    const btn = $('openCreateVehicleBtn');
-    const modal = $('createVehicleModal');
-    if(!btn || !modal) return;
-    if(btn.dataset.opening === '1') return;
-    btn.dataset.opening = '1';
-    btn.disabled = true;
-    try{
-      if(typeof window.resetForm === 'function'){
-        window.resetForm();
-      }else{
-        if($('vehicleEditId')) $('vehicleEditId').value = '';
-      }
-      modal.style.display = 'flex';
-    }finally{
-      setTimeout(()=>{
-        btn.disabled = false;
-        btn.dataset.opening = '0';
-      }, 300);
+  let cloudDb = null;
+  let vehiclesRef = null;
+  let vehiclesCache = [];
+  let unsubscribeVehicles = null;
+  let ready = false;
+
+  function ensureFirebase(){
+    if (cloudDb) return cloudDb;
+    if (!window.firebase || !window.HONGYI_FIREBASE_READY) {
+      throw new Error('Firebase SDK 尚在載入中，請稍後再試');
     }
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    cloudDb = firebase.firestore();
+    vehiclesRef = cloudDb.collection('vehicles');
+    return cloudDb;
   }
 
-  async function safeSaveVehicle(){
-    const btn = $('saveVehicleBtn');
-    if(!btn) return;
-    if(window.__vehicleSavingLock__) return;
-    window.__vehicleSavingLock__ = true;
-    const oldText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '儲存中...';
-    try{
-      if(typeof window.saveVehicle === 'function'){
-        await window.saveVehicle();
-      }else{
-        alert('儲存功能不存在（saveVehicle 未掛到全域）。');
-      }
-    }catch(err){
-      console.error(err);
-      alert('儲存失敗，請再試一次');
-    }finally{
-      setTimeout(()=>{
-        window.__vehicleSavingLock__ = false;
-        const currentBtn = $('saveVehicleBtn');
-        if(currentBtn){
-          currentBtn.disabled = false;
-          currentBtn.textContent = oldText || '儲存入庫';
+  function setStorageText(msg){
+    const el = document.querySelector('.storage');
+    if (el) el.textContent = msg;
+  }
+
+  function setDescText(msg){
+    const el = $('pageDesc');
+    if (el) el.textContent = msg;
+  }
+
+  async function compressImage(file){
+    if(!file) return '';
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const raw = reader.result;
+        if(!String(file.type || '').startsWith('image/')){
+          resolve(raw);
+          return;
         }
-      }, 150);
-    }
-  }
-
-  function bindSingleVehicleButtons(){
-    rebindButton('openCreateVehicleBtn', safeOpenCreateModal);
-    rebindButton('saveVehicleBtn', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      safeSaveVehicle();
+        const img = new Image();
+        img.onload = () => {
+          try{
+            const maxSide = 480;
+            let {width, height} = img;
+            const ratio = Math.min(1, maxSide / Math.max(width, height));
+            width = Math.max(1, Math.round(width * ratio));
+            height = Math.max(1, Math.round(height * ratio));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+          }catch(err){
+            resolve(raw);
+          }
+        };
+        img.onerror = () => resolve(raw);
+        img.src = raw;
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
     });
   }
 
-  document.addEventListener('DOMContentLoaded', bindSingleVehicleButtons);
+  function setEntryType(value){
+    if ($('entryType')) $('entryType').value = value;
+    document.querySelectorAll('.entry-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === value);
+    });
+    const needTransfer = value === '寄賣' || value === '調做';
+    if ($('transferField')) $('transferField').style.display = needTransfer ? 'block' : 'none';
+    if ($('transferLabel')) $('transferLabel').textContent = value === '寄賣' ? '目前車主 *' : '車行名稱 *';
+    if ($('transferName')) $('transferName').placeholder = value === '寄賣' ? '請輸入目前車主' : '請輸入車行名稱';
+    if (!needTransfer && $('transferName')) $('transferName').value = '';
+  }
+  window.setEntryType = setEntryType;
+
+  function resetForm(){
+    ['brand','model','plate','year','transferName','buyAmount','companyAdjust','note'].forEach(id => {
+      if($(id)) $(id).value = '';
+    });
+    if($('buyerPerson')) $('buyerPerson').value = '';
+    if($('carPhotoInput')) $('carPhotoInput').value = '';
+    if($('licensePhotoInput')) $('licensePhotoInput').value = '';
+    if($('createPhotoPreview')) $('createPhotoPreview').innerHTML = '';
+    if($('vehicleEditId')) $('vehicleEditId').value = '';
+    setEntryType('屏東鴻翊汽車');
+  }
+  window.resetForm = resetForm;
+
+  function previewCreatePhoto(){
+    const wrap = $('createPhotoPreview');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    [['carPhotoInput','車輛照片'],['licensePhotoInput','行照照片']].forEach(([id,label]) => {
+      const file = $(id)?.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        wrap.innerHTML += '<div class="photo-box"><img src="' + reader.result + '" alt="' + label + '"><div class="cap">' + label + '</div></div>';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function calculateProfitFields(r){
+    const taxable = ['屏東鴻翊汽車','鴻豪汽車商行'].includes(r.entryType);
+    const buy = Number(r.buyAmount || 0);
+    const repair = Number(r.repairTotal || 0);
+    const sell = Number(r.sellAmount || 0);
+    const adjust = Number(r.companyAdjust || 0);
+
+    let invoiceTax = 0;
+    let businessTax = 0;
+    let profit = 0;
+
+    if(r.entryType === '調做'){
+      const grossProfit = adjust - buy - repair;
+      if(taxable){
+        invoiceTax = Math.max(grossProfit, 0) * 0.05;
+        businessTax = sell * 0.012;
+      }
+      profit = grossProfit - invoiceTax - businessTax;
+    }else{
+      const grossProfit = sell - buy - repair;
+      if(taxable){
+        invoiceTax = Math.max(grossProfit, 0) * 0.05;
+        businessTax = sell * 0.012;
+      }
+      profit = grossProfit - invoiceTax - businessTax;
+    }
+
+    return {
+      invoiceTax: Math.round(invoiceTax),
+      businessTax: Math.round(businessTax),
+      profit: Math.round(profit)
+    };
+  }
+
+  function recalcRecord(r){
+    const calc = calculateProfitFields(r);
+    r.invoiceTax = calc.invoiceTax;
+    r.businessTax = calc.businessTax;
+    r.profit = calc.profit;
+    return r;
+  }
+
+  async function dbGetAll(){
+    return [...vehiclesCache];
+  }
+  async function dbGet(id){
+    return vehiclesCache.find(x => String(x.id) === String(id)) || null;
+  }
+  async function dbPut(record){
+    ensureFirebase();
+    const payload = Object.assign({}, record || {});
+    if(!payload.id) payload.id = String(Date.now());
+    payload.updatedAt = new Date().toISOString();
+    await vehiclesRef.doc(String(payload.id)).set(payload, { merge: true });
+    return payload;
+  }
+  async function dbDelete(id){
+    ensureFirebase();
+    await vehiclesRef.doc(String(id)).delete();
+  }
+  window.dbGetAll = dbGetAll;
+  window.dbGet = dbGet;
+  window.dbPut = dbPut;
+
+  function currentFilteredUnsold(){
+    const kw = ($('vehicleSearch')?.value || '').trim().toLowerCase();
+    return vehiclesCache
+      .filter(r => r.status !== '已售')
+      .filter(r => !kw || `${r.brand||''} ${r.model||''} ${r.plate||''} ${r.year||''} ${r.entryType||''} ${r.buyerPerson||''}`.toLowerCase().includes(kw));
+  }
+
+  async function renderInventory(){
+    const rows = currentFilteredUnsold();
+    const listBox = $('savedVehicleListView');
+    const cardBox = $('savedVehicleCardView');
+    if(listBox) listBox.innerHTML = '';
+    if(cardBox) cardBox.innerHTML = '';
+
+    if(!rows.length){
+      if(listBox) listBox.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      if(cardBox) cardBox.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      return;
+    }
+
+    if(listBox){
+      listBox.innerHTML = rows.map(r => `
+        <div class="record-row row-line" style="display:flex;align-items:center;gap:12px;">
+          <div style="flex:0 0 72px">
+            ${r.carPhoto
+              ? `<img src="${r.carPhoto}" style="width:72px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`
+              : `<div style="width:72px;height:54px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)">無照片</div>`}
+          </div>
+          <div style="min-width:0;flex:1;line-height:1.55">
+            <div style="font-weight:800;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;">
+              ${r.brand || ''} ${r.model || ''} | ${r.plate || ''} | 買 ${fmt(r.buyAmount)} | 雜 ${fmt(r.repairTotal)} | ${r.buyerPerson || ''} | ${r.transferName || r.entryType || ''}
+              ${r.hasDeposit==='已收訂' ? '<span class="deposit-badge">已收訂</span>' : ''}
+            </div>
+          </div>
+          <div class="vehicle-actions" style="margin-left:auto;justify-content:flex-end">
+            <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
+            <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
+            ${r.hasDeposit==='已收訂'
+              ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
+                 <button type="button" class="secondary mini-btn small-btn cancel-deposit-btn" data-cancel-id="${r.id}">退訂</button>`
+              : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+                 <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if(cardBox){
+      cardBox.innerHTML = rows.map(r => `
+        <div class="car-card">
+          <div class="car-photo">${r.carPhoto ? `<img src="${r.carPhoto}">` : `<div class="small-note">無照片</div>`}</div>
+          <div class="car-body">
+            <div class="car-title">${r.brand || ''} ${r.model || ''}</div>
+            <div class="car-line">車牌：${r.plate || ''}</div>
+            <div class="car-line">年份：${r.year || ''}</div>
+            <div class="car-line">入庫：${r.entryType || ''}</div>
+            <div class="car-line">買入人：${r.buyerPerson || ''}</div>
+            <div class="car-line">買入：${fmt(r.buyAmount)}</div>
+            <div class="car-line">整備：${fmt(r.repairTotal)}</div>
+            ${r.hasDeposit==='已收訂' ? `<div class="car-line"><span class="deposit-badge">已收訂</span></div>` : ``}
+            <div class="vehicle-actions">
+              <button type="button" class="secondary mini-btn small-btn edit-btn" data-edit-id="${r.id}">編輯</button>
+              <button type="button" class="secondary mini-btn small-btn" data-open="photos" data-id="${r.id}">照片</button>
+              <button type="button" class="secondary mini-btn small-btn" data-open="repair" data-id="${r.id}">整備</button>
+              ${r.hasDeposit==='已收訂'
+                ? `<button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">成交</button>
+                   <button type="button" class="secondary mini-btn small-btn cancel-deposit-btn" data-cancel-id="${r.id}">退訂</button>`
+                : `<button type="button" class="secondary mini-btn small-btn" data-open="deposit" data-id="${r.id}">收訂</button>
+                   <button type="button" class="secondary mini-btn small-btn" data-open="sell" data-id="${r.id}">售出</button>`}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function renderCostOverview(){
+    const all = vehiclesCache;
+    const unsold = all.filter(r => r.status !== '已售');
+    if($('statCount')) $('statCount').textContent = fmt(all.length);
+    if($('statStock')) $('statStock').textContent = fmt(unsold.length);
+    if($('statSold')) $('statSold').textContent = fmt(all.filter(r => r.status === '已售').length);
+    if($('statRepairTotal')) $('statRepairTotal').textContent = fmt(unsold.reduce((s, r) => s + Number(r.repairTotal || 0), 0));
+    if($('statProfit')) $('statProfit').textContent = fmt(unsold.reduce((s, r) => s + Number(r.buyAmount || 0), 0));
+    const box = $('costSummaryBox');
+    if(!box) return;
+    if(!all.length){
+      box.innerHTML = '<div class="empty">目前沒有車輛資料</div>';
+      return;
+    }
+    box.innerHTML = all.map(r => `
+      <div class="row-line">
+        <div><strong>${r.brand || ''} ${r.model || ''}</strong><div class="small-note">${r.entryType || ''} ｜ ${r.plate || ''} ｜ ${r.status || ''}</div></div>
+        <div>
+          <span class="pill">車成本 ${fmt(r.buyAmount)}</span>
+          <span class="pill">整備 ${fmt(r.repairTotal)}</span>
+          <span class="pill">利潤 ${fmt(Math.round(r.profit || 0))}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function renderSoldHistory(){
+    let sold = vehiclesCache.filter(r => r.status === '已售');
+    const currentCompany = $('soldCompanyFilter')?.value || '全部';
+    const currentYear = $('soldYearFilter')?.value || '全部';
+    const currentMonth = $('soldMonthFilter')?.value || '全部';
+    const kw = ($('soldSearch')?.value || '').trim().toLowerCase();
+
+    const years = [...new Set(sold.filter(r => r.saleDate).map(r => r.saleDate.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+    if($('soldYearFilter')){
+      $('soldYearFilter').innerHTML = '<option value="全部">全部年份</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
+      $('soldYearFilter').value = years.includes(currentYear) ? currentYear : '全部';
+    }
+    if($('soldMonthFilter')){
+      $('soldMonthFilter').innerHTML = '<option value="全部">全部月份</option>' + Array.from({length:12}, (_,i)=>{const mm=String(i+1).padStart(2,'0'); return `<option value="${mm}">${mm}月</option>`;}).join('');
+      $('soldMonthFilter').value = currentMonth || '全部';
+    }
+    if($('soldCompanyFilter')) $('soldCompanyFilter').value = currentCompany || '全部';
+
+    const company = $('soldCompanyFilter')?.value || '全部';
+    const year = $('soldYearFilter')?.value || '全部';
+    const month = $('soldMonthFilter')?.value || '全部';
+
+    if(company !== '全部') sold = sold.filter(r => r.entryType === company);
+    if(year !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(0,4) === year);
+    if(month !== '全部') sold = sold.filter(r => (r.saleDate || '').slice(5,7) === month);
+    if(kw) sold = sold.filter(r => `${r.brand||''} ${r.model||''} ${r.plate||''} ${r.sellerPerson || ''} ${r.newOwner || ''}`.toLowerCase().includes(kw));
+
+    if($('soldFilterCount')) $('soldFilterCount').textContent = fmt(sold.length);
+    if($('soldFilterProfit')) $('soldFilterProfit').textContent = fmt(sold.reduce((s,r)=>s+Number(r.profit||0),0));
+    if($('soldFilterCompany')) $('soldFilterCompany').textContent = company === '全部' ? '全部公司' : company;
+    if($('soldFilterMonth')) $('soldFilterMonth').textContent = [year,month].filter(v=>v && v!=='全部').join('-') || '全部';
+
+    const sellerMap = {};
+    sold.forEach(r => { if(r.sellerPerson) sellerMap[r.sellerPerson] = (sellerMap[r.sellerPerson] || 0) + 1; });
+    const sellerArr = Object.entries(sellerMap).sort((a,b)=>b[1]-a[1]);
+    if($('soldSellerSummary')) $('soldSellerSummary').innerHTML = sellerArr.length ? sellerArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">此條件下沒有業務售出資料</div>';
+
+    if($('soldListBox')) $('soldListBox').innerHTML = sold.length ? sold.sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')).map(r => {
+      const gross = Number(r.sellAmount || 0) - Number(r.buyAmount || 0);
+      const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+      const profitVal = Math.round(r.profit || 0);
+      const profitColor = profitVal >= 0 ? '#dc2626' : '#16a34a';
+      return `
+        <div class="row-line sold-compact-row">
+          <div class="sold-compact-main">
+            <div class="sold-title">${r.brand || ''} ${r.model || ''}</div>
+            <div class="sold-meta">${r.entryType || ''} | ${r.plate || ''} | ${r.saleDate || '—'} | ${r.sellerPerson || '—'} | ${r.newOwner || '—'}</div>
+            <div class="sold-meta">買：${fmt(r.buyAmount)} | 售：${fmt(r.sellAmount)} | 利：${fmt(gross)}</div>
+            <div class="sold-meta">雜：整備 ${fmt(r.repairTotal)}、稅 ${fmt(taxTotal)}</div>
+            <div style="margin-top:6px;font-size:16px;font-weight:900;color:${profitColor} !important;">實際利：${fmt(profitVal)}</div>
+          </div>
+          <div class="sold-compact-actions">
+            <button type="button" class="secondary mini-btn sold-detail-btn" data-sold-id="${r.id}">明細</button>
+            <button type="button" class="secondary mini-btn sold-photo-btn" data-sold-id="${r.id}">照片</button>
+          </div>
+        </div>`;
+    }).join('') : '<div class="empty">此條件下沒有已售資料</div>';
+  }
+
+  async function renderPerformance(){
+    const sold = vehiclesCache.filter(r => r.status === '已售');
+    const countMap = {}, profitMap = {};
+    sold.forEach(r => {
+      if(r.sellerPerson){
+        countMap[r.sellerPerson] = (countMap[r.sellerPerson] || 0) + 1;
+        profitMap[r.sellerPerson] = (profitMap[r.sellerPerson] || 0) + Number(r.profit || 0);
+      }
+    });
+    const countArr = Object.entries(countMap).sort((a,b)=>b[1]-a[1]);
+    const profitArr = Object.entries(profitMap).sort((a,b)=>b[1]-a[1]);
+    if($('rankCountBox')) $('rankCountBox').innerHTML = countArr.length ? countArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${v} 台</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+    if($('rankKpiBox')) $('rankKpiBox').innerHTML = profitArr.length ? profitArr.map(([n,v],i)=>`<div class="row-line"><div><strong>#${i+1} ${n}</strong></div><div><span class="pill">${fmt(Math.round(v))}</span></div></div>`).join('') : '<div class="empty">目前還沒有售出資料</div>';
+  }
+
+  async function renderAll(){
+    await renderInventory();
+    await renderCostOverview();
+    await renderSoldHistory();
+    await renderPerformance();
+  }
+  window.renderInventory = renderInventory;
+  window.renderCostOverview = renderCostOverview;
+  window.renderSoldHistory = renderSoldHistory;
+  window.renderPerformance = renderPerformance;
+  window.renderAll = renderAll;
+
+  async function saveVehicle(){
+    const entryType = $('entryType')?.value || '';
+    const brand = $('brand')?.value.trim() || '';
+    const model = $('model')?.value.trim() || '';
+    const plate = $('plate')?.value.trim() || '';
+    const year = $('year')?.value.trim() || '';
+    const transferName = $('transferName')?.value.trim() || '';
+    const buyerPerson = $('buyerPerson')?.value || '';
+    const buyAmount = Number($('buyAmount')?.value || 0);
+    const companyAdjust = Number($('companyAdjust')?.value || 0);
+    const note = $('note')?.value.trim() || '';
+    const editId = $('vehicleEditId')?.value || '';
+
+    if(!entryType) return alert('請選入庫公司 / 類型');
+    if(!brand) return alert('請填品牌');
+    if(!model) return alert('請填車輛型號');
+    if(!plate) return alert('請填車牌號碼');
+    if(!year) return alert('請填車年份');
+    if((entryType === '寄賣' || entryType === '調做') && !transferName) return alert('請填寫對應人頭資料');
+    if(!buyerPerson) return alert('請選買入人');
+    if(!buyAmount) return alert('請填買入金額');
+
+    const existing = editId ? await dbGet(editId) : null;
+    const carFile = $('carPhotoInput')?.files?.[0];
+    const licenseFile = $('licensePhotoInput')?.files?.[0];
+    const carPhoto = carFile ? await compressImage(carFile) : (existing?.carPhoto || '');
+    const licensePhoto = licenseFile ? await compressImage(licenseFile) : (existing?.licensePhoto || '');
+
+    const record = recalcRecord({
+      id: editId || String(Date.now()),
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      entryType,
+      brand, model, plate, year,
+      transferName: (entryType === '寄賣' || entryType === '調做') ? transferName : entryType,
+      buyerPerson, buyAmount, companyAdjust, note,
+      carPhoto, licensePhoto,
+      repairItems: existing?.repairItems || [],
+      repairTotal: Number(existing?.repairTotal || 0),
+      hasDeposit: existing?.hasDeposit || '未收訂',
+      depositAmount: Number(existing?.depositAmount || 0),
+      depositPhoto: existing?.depositPhoto || '',
+      depositAccount: existing?.depositAccount || '',
+      depositTime: existing?.depositTime || '',
+      paymentType: existing?.paymentType || '',
+      loanCompany: existing?.loanCompany || '',
+      loanAgent: existing?.loanAgent || '',
+      soldStatus: existing?.soldStatus || '未售出',
+      sellerPerson: existing?.sellerPerson || '',
+      newOwner: existing?.newOwner || '',
+      newOwnerIdNo: existing?.newOwnerIdNo || '',
+      newOwnerLicensePhoto: existing?.newOwnerLicensePhoto || '',
+      companyFloorPrice: Number(existing?.companyFloorPrice || 0),
+      sellAmount: Number(existing?.sellAmount || 0),
+      saleDate: existing?.saleDate || '',
+      invoiceTax: Number(existing?.invoiceTax || 0),
+      businessTax: Number(existing?.businessTax || 0),
+      profit: Number(existing?.profit || 0),
+      status: existing?.status || '在庫',
+      plateChanged: existing?.plateChanged || '否',
+      newPlate: existing?.newPlate || ''
+    });
+
+    const btn = $('saveVehicleBtn');
+    const oldText = btn ? btn.textContent : '';
+    if(btn){
+      btn.disabled = true;
+      btn.textContent = '儲存中...';
+    }
+
+    try{
+      await dbPut(record);
+      resetForm();
+      if($('createVehicleModal')) $('createVehicleModal').style.display = 'none';
+      alert(editId ? '車輛已更新' : '車輛已新增');
+    }catch(err){
+      console.error(err);
+      alert('儲存失敗：' + (err?.message || err));
+    }finally{
+      if(btn){
+        btn.disabled = false;
+        btn.textContent = oldText || '儲存入庫';
+      }
+    }
+  }
+  window.saveVehicle = saveVehicle;
+
+  async function editVehicle(id){
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    $('vehicleEditId').value = r.id || '';
+    setEntryType(r.entryType || '屏東鴻翊汽車');
+    if($('brand')) $('brand').value = r.brand || '';
+    if($('model')) $('model').value = r.model || '';
+    if($('plate')) $('plate').value = r.plate || '';
+    if($('year')) $('year').value = r.year || '';
+    if($('transferName')) $('transferName').value = r.transferName || '';
+    if($('buyerPerson')) $('buyerPerson').value = r.buyerPerson || '';
+    if($('buyAmount')) $('buyAmount').value = r.buyAmount || '';
+    if($('companyAdjust')) $('companyAdjust').value = r.companyAdjust || '';
+    if($('note')) $('note').value = r.note || '';
+
+    const preview = $('createPhotoPreview');
+    if(preview){
+      preview.innerHTML = '';
+      if(r.carPhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" alt="車輛照片"><div class="cap">車輛照片</div></div>`;
+      if(r.licensePhoto) preview.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" alt="行照照片"><div class="cap">行照照片</div></div>`;
+    }
+    if($('createVehicleModal')) $('createVehicleModal').style.display = 'flex';
+  }
+  window.editVehicle = editVehicle;
+
+  async function showSavedPhotos(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    const grid = $('photosModalGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    if(r.carPhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.carPhoto}" data-src="${r.carPhoto}"><div class="cap">車輛照片（點圖放大）</div></div>`;
+    if(r.licensePhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.licensePhoto}" data-src="${r.licensePhoto}"><div class="cap">行照照片（點圖放大）</div></div>`;
+    if(r.depositPhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.depositPhoto}" data-src="${r.depositPhoto}"><div class="cap">收訂照片（點圖放大）</div></div>`;
+    if(r.newOwnerLicensePhoto) grid.innerHTML += `<div class="photo-box"><img src="${r.newOwnerLicensePhoto}" data-src="${r.newOwnerLicensePhoto}"><div class="cap">新車主行照（點圖放大）</div></div>`;
+    if(!grid.innerHTML) grid.innerHTML = '<div class="empty">這台車目前沒有照片</div>';
+    if($('photosModal')) $('photosModal').style.display = 'flex';
+  }
+  window.showSavedPhotos = showSavedPhotos;
+  window.closePhotosModal = () => { if($('photosModal')) $('photosModal').style.display = 'none'; };
+
+  window.openImageViewer = (src) => {
+    if($('imageViewerImg')) $('imageViewerImg').src = src;
+    if($('imageViewer')) $('imageViewer').style.display = 'flex';
+  };
+  window.closeImageViewer = () => { if($('imageViewer')) $('imageViewer').style.display = 'none'; };
+  window.closeImagePreview = () => { if($('imagePreviewModal')) $('imagePreviewModal').style.display = 'none'; };
+
+  async function openRepairModal(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    $('repairVehicleId').value = r.id;
+    $('repairModalDate').value = '';
+    $('repairModalName').value = '';
+    $('repairModalAmount').value = '';
+    renderRepairModalList(r);
+    if($('repairModal')) $('repairModal').style.display = 'flex';
+  }
+  window.openRepairModal = openRepairModal;
+
+  function renderRepairModalList(r){
+    const box = $('repairModalList');
+    if(!box) return;
+    const items = Array.isArray(r.repairItems) ? r.repairItems : [];
+    if(!items.length){
+      box.innerHTML = `<div class="empty">目前沒有整備項目</div><div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${fmt(r.repairTotal)}</span></div></div>`;
+      return;
+    }
+    box.innerHTML = items.map((x, idx) => `
+      <div class="row-line">
+        <div><strong>${x.name || '未命名項目'}</strong><div class="small-note">${x.date || '未填日期'}</div></div>
+        <div><span class="pill">${fmt(x.amount)}</span><button type="button" class="danger mini-btn" data-remove-repair="${idx}">刪除</button></div>
+      </div>
+    `).join('') + `<div class="row-line"><div><strong>整備總額</strong></div><div><span class="pill">${fmt(r.repairTotal)}</span></div></div>`;
+  }
+
+  async function addRepairToVehicle(){
+    const id = $('repairVehicleId')?.value;
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    const date = $('repairModalDate').value;
+    const name = $('repairModalName').value.trim();
+    const amount = Number($('repairModalAmount').value || 0);
+    if(!name) return alert('請填整備項目名稱');
+    if(!amount) return alert('請填整備金額');
+    r.repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    r.repairItems.push({date,name,amount});
+    r.repairTotal = r.repairItems.reduce((s,x)=>s+Number(x.amount||0),0);
+    recalcRecord(r);
+    await dbPut(r);
+    renderRepairModalList(r);
+    $('repairModalDate').value = '';
+    $('repairModalName').value = '';
+    $('repairModalAmount').value = '';
+  }
+  window.addRepairToVehicle = addRepairToVehicle;
+
+  async function removeRepairFromVehicle(idx){
+    const id = $('repairVehicleId')?.value;
+    const r = await dbGet(id);
+    if(!r) return;
+    r.repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    r.repairItems.splice(idx,1);
+    r.repairTotal = r.repairItems.reduce((s,x)=>s+Number(x.amount||0),0);
+    recalcRecord(r);
+    await dbPut(r);
+    renderRepairModalList(r);
+  }
+  window.removeRepairFromVehicle = removeRepairFromVehicle;
+  window.closeRepairModal = () => { if($('repairModal')) $('repairModal').style.display = 'none'; };
+
+  async function openDepositFlow(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    $('flowModalTitle').textContent = '收訂作業';
+    $('flowModalBody').innerHTML = `
+      <div class="form-grid">
+        <div><label>收訂時間</label><input id="depositTime_clone" type="datetime-local" value="${r.depositTime || ''}"></div>
+        <div><label>收訂金額</label><input id="depositAmount_clone" type="number" value="${r.depositAmount || ''}" placeholder="例如 30000"></div>
+        <div><label>款項位置</label>
+          <select id="depositAccount_clone">
+            <option value="">請選擇</option>
+            <option value="屏東鴻翊汽車公司戶" ${r.depositAccount==='屏東鴻翊汽車公司戶'?'selected':''}>屏東鴻翊汽車公司戶</option>
+            <option value="鴻豪汽車商行公司戶" ${r.depositAccount==='鴻豪汽車商行公司戶'?'selected':''}>鴻豪汽車商行公司戶</option>
+            <option value="銷售業務身上" ${r.depositAccount==='銷售業務身上'?'selected':''}>銷售業務身上</option>
+          </select>
+        </div>
+        <div><label>付款方式</label>
+          <select id="paymentType_clone">
+            <option value="">請選擇</option>
+            <option value="現金" ${r.paymentType==='現金'?'selected':''}>現金</option>
+            <option value="貸款" ${r.paymentType==='貸款'?'selected':''}>貸款</option>
+          </select>
+        </div>
+        <div id="loanAgentWrap_clone" style="display:none">
+          <label>貸款業務</label>
+          <select id="loanAgent_clone">
+            <option value="">請選擇</option>
+            <option value="中租怡婷" ${r.loanAgent==='中租怡婷'?'selected':''}>中租怡婷</option>
+            <option value="裕融若榛" ${r.loanAgent==='裕融若榛'?'selected':''}>裕融若榛</option>
+            <option value="匯豐仕謙" ${r.loanAgent==='匯豐仕謙'?'selected':''}>匯豐仕謙</option>
+            <option value="和潤子豪" ${r.loanAgent==='和潤子豪'?'selected':''}>和潤子豪</option>
+            <option value="和潤萱宇" ${r.loanAgent==='和潤萱宇'?'selected':''}>和潤萱宇</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions"><button class="primary" type="button" id="saveDepositCloneBtn">儲存收訂</button></div>`;
+
+    const paymentTypeClone = $('paymentType_clone');
+    const loanAgentWrapClone = $('loanAgentWrap_clone');
+    const loanAgentClone = $('loanAgent_clone');
+    const toggleLoanAgentClone = () => {
+      if(paymentTypeClone.value === '貸款'){
+        loanAgentWrapClone.style.display = 'block';
+      }else{
+        loanAgentWrapClone.style.display = 'none';
+        if(loanAgentClone) loanAgentClone.value = '';
+      }
+    };
+    paymentTypeClone.addEventListener('change', toggleLoanAgentClone);
+    toggleLoanAgentClone();
+
+    $('saveDepositCloneBtn').onclick = async () => {
+      const depositTime = $('depositTime_clone').value || '';
+      const depositAmount = Number($('depositAmount_clone').value || 0);
+      const depositAccount = $('depositAccount_clone').value;
+      const paymentType = $('paymentType_clone').value;
+      const loanAgent = $('loanAgent_clone') ? $('loanAgent_clone').value.trim() : '';
+      if(!depositAmount) return alert('請填收訂金額');
+      if(!depositAccount) return alert('請選款項位置');
+      if(!paymentType) return alert('請選付款方式');
+      if(paymentType === '貸款' && !loanAgent) return alert('貸款請選貸款業務');
+      r.depositTime = depositTime;
+      r.hasDeposit = '已收訂';
+      r.depositAmount = depositAmount;
+      r.depositAccount = depositAccount;
+      r.paymentType = paymentType;
+      r.loanCompany = '';
+      r.loanAgent = loanAgent;
+      await dbPut(r);
+      if($('flowModal')) $('flowModal').style.display = 'none';
+      alert('收訂資料已儲存');
+    };
+    if($('flowModal')) $('flowModal').style.display = 'flex';
+  }
+  window.openDepositFlow = openDepositFlow;
+
+  async function openSaleModalFlow(id){
+    const r = await dbGet(id);
+    if(!r) return;
+    $('saleEditId').value = r.id;
+    $('saleNewOwner').value = r.newOwner || '';
+    $('saleSellerPerson').value = r.sellerPerson || '';
+    if($('companyFloorPrice')) $('companyFloorPrice').value = r.companyFloorPrice || '';
+    $('saleSellAmount').value = r.sellAmount || '';
+    $('saleDate').value = r.saleDate || '';
+    if($('saleModal')) $('saleModal').style.display = 'flex';
+  }
+  window.openSaleModalFlow = openSaleModalFlow;
+
+  async function saveSaleInfo(){
+    const id = $('saleEditId').value;
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    const newOwner = $('saleNewOwner').value.trim();
+    const sellerPerson = $('saleSellerPerson').value.trim();
+    const companyFloorPrice = Number($('companyFloorPrice')?.value || 0);
+    const sellAmount = Number($('saleSellAmount').value || 0);
+    const saleDate = $('saleDate').value;
+    if(!sellerPerson) return alert('請填售出人');
+    if(!sellAmount) return alert('請填售出金額');
+    if(!saleDate) return alert('請填售出日期');
+    r.newOwner = newOwner;
+    r.sellerPerson = sellerPerson;
+    r.companyFloorPrice = companyFloorPrice;
+    r.sellAmount = sellAmount;
+    r.saleDate = saleDate;
+    r.soldStatus = '已售出';
+    r.status = '已售';
+    recalcRecord(r);
+    await dbPut(r);
+    if($('saleModal')) $('saleModal').style.display = 'none';
+    alert('售出資料已儲存');
+  }
+  window.saveSaleInfo = saveSaleInfo;
+  window.closeSaleModal = () => { if($('saleModal')) $('saleModal').style.display = 'none'; };
+
+  async function openSoldDetail(id){
+    const r = await dbGet(id);
+    if(!r) return alert('找不到明細資料');
+    const taxTotal = Number(r.invoiceTax || 0) + Number(r.businessTax || 0);
+    const repairItems = Array.isArray(r.repairItems) ? r.repairItems : [];
+    const repairHtml = repairItems.length ? repairItems.map(item => `<div>・${item.name || '整備項目'}：${fmt(item.amount)}</div>`).join('') : '<div>—</div>';
+    if($('soldDetailBody')) $('soldDetailBody').innerHTML = `
+      <div><strong>${r.brand || ''} ${r.model || ''}</strong></div>
+      <div>車牌：${r.plate || '—'}</div>
+      <div>買入人：${r.buyerPerson || '—'}</div>
+      <div>買進價格：${fmt(r.buyAmount)}</div>
+      <div>公司底價：${fmt(r.companyFloorPrice)}</div>
+      <div>售出金額（開發票）：${fmt(r.sellAmount)}</div>
+      <div>新車主姓名：${r.newOwner || '—'}</div>
+      <div>身分證：${r.newOwnerIdNo || '—'}</div>
+      <div>有無換牌：${r.plateChanged || '否'}</div>
+      <div>換牌車號：${r.newPlate || '—'}</div>
+      <div style="margin-top:8px"><strong>整備明細</strong></div>
+      ${repairHtml}
+      <div style="margin-top:8px"><strong>稅金明細</strong></div>
+      <div>發票稅：${fmt(r.invoiceTax)}</div>
+      <div>營業稅：${fmt(r.businessTax)}</div>
+      <div>稅金合計：${fmt(taxTotal)}</div>
+      <div style="margin-top:8px;font-size:18px;font-weight:900;color:${Number(r.profit || 0) >= 0 ? '#dc2626' : '#16a34a'} !important;">最後利潤：${fmt(r.profit)}</div>
+    `;
+    if($('soldDetailModal')) $('soldDetailModal').style.display = 'flex';
+  }
+  window.openSoldDetail = openSoldDetail;
+  window.closeSoldDetailModal = () => { if($('soldDetailModal')) $('soldDetailModal').style.display = 'none'; };
+
+  async function confirmCancelDeposit(){
+    const id = $('cancelDepositId')?.value || '';
+    if(!id) return;
+    const r = await dbGet(id);
+    if(!r) return alert('找不到車輛資料');
+    r.hasDeposit = '未收訂';
+    r.depositAmount = 0;
+    r.depositPhoto = '';
+    r.depositAccount = '';
+    r.depositTime = '';
+    r.paymentType = '';
+    r.loanCompany = '';
+    r.loanAgent = '';
+    await dbPut(r);
+    closeCancelDepositModal();
+    alert('已退訂');
+  }
+  function openCancelDepositModal(id){
+    if($('cancelDepositId')) $('cancelDepositId').value = id || '';
+    if($('cancelDepositModal')) $('cancelDepositModal').style.display = 'flex';
+  }
+  function closeCancelDepositModal(){
+    if($('cancelDepositModal')) $('cancelDepositModal').style.display = 'none';
+    if($('cancelDepositId')) $('cancelDepositId').value = '';
+  }
+  window.confirmCancelDeposit = confirmCancelDeposit;
+  window.openCancelDepositModal = openCancelDepositModal;
+  window.closeCancelDepositModal = closeCancelDepositModal;
+
+  function cloneAndBind(id, handler){
+    const oldEl = $(id);
+    if(!oldEl) return null;
+    const newEl = oldEl.cloneNode(true);
+    oldEl.parentNode.replaceChild(newEl, oldEl);
+    newEl.addEventListener('click', handler);
+    return newEl;
+  }
+
+  function bindPrimaryButtons(){
+    cloneAndBind('openCreateVehicleBtn', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetForm();
+      if($('createVehicleModal')) $('createVehicleModal').style.display = 'flex';
+    });
+    cloneAndBind('saveVehicleBtn', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveVehicle();
+    });
+    cloneAndBind('resetVehicleBtn', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetForm();
+    });
+
+    const closeBtn = document.querySelector('[data-close="createVehicleModal"]');
+    if(closeBtn){
+      closeBtn.onclick = (e) => {
+        e.preventDefault();
+        if($('createVehicleModal')) $('createVehicleModal').style.display = 'none';
+      };
+    }
+    const createModal = $('createVehicleModal');
+    if(createModal && !createModal.dataset.boundBackdrop){
+      createModal.dataset.boundBackdrop = '1';
+      createModal.addEventListener('click', function(e){
+        if(e.target === createModal) createModal.style.display = 'none';
+      });
+    }
+  }
+
+  function bindGenericHandlers(){
+    if($('vehicleSearch') && !$('vehicleSearch').dataset.boundInput){
+      $('vehicleSearch').dataset.boundInput = '1';
+      $('vehicleSearch').addEventListener('input', renderInventory);
+    }
+    if($('soldSearch') && !$('soldSearch').dataset.boundInput){
+      $('soldSearch').dataset.boundInput = '1';
+      $('soldSearch').addEventListener('input', renderSoldHistory);
+    }
+    ['soldCompanyFilter','soldYearFilter','soldMonthFilter'].forEach(id => {
+      const el = $(id);
+      if(el && !el.dataset.boundChange){
+        el.dataset.boundChange = '1';
+        el.addEventListener('change', renderSoldHistory);
+      }
+    });
+    if($('carPhotoInput') && !$('carPhotoInput').dataset.boundChange){
+      $('carPhotoInput').dataset.boundChange = '1';
+      $('carPhotoInput').addEventListener('change', previewCreatePhoto);
+    }
+    if($('licensePhotoInput') && !$('licensePhotoInput').dataset.boundChange){
+      $('licensePhotoInput').dataset.boundChange = '1';
+      $('licensePhotoInput').addEventListener('change', previewCreatePhoto);
+    }
+    document.querySelectorAll('.entry-btn').forEach(btn => {
+      if(btn.dataset.boundEntry) return;
+      btn.dataset.boundEntry = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setEntryType(btn.dataset.value);
+      });
+    });
+    if($('flowModalClose')) $('flowModalClose').onclick = () => { if($('flowModal')) $('flowModal').style.display = 'none'; };
+  }
+
+  function bindDelegatedClicks(){
+    document.addEventListener('click', async function(e){
+      const img = e.target.closest('#photosModalGrid img');
+      if(img){
+        e.preventDefault();
+        openImageViewer(img.dataset.src || img.src);
+        return;
+      }
+      const editBtn = e.target.closest('.edit-btn');
+      if(editBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        editVehicle(editBtn.getAttribute('data-edit-id'));
+        return;
+      }
+      const openBtn = e.target.closest('[data-open]');
+      if(openBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        const id = openBtn.getAttribute('data-id');
+        const action = openBtn.getAttribute('data-open');
+        if(action === 'photos') return showSavedPhotos(id);
+        if(action === 'repair') return openRepairModal(id);
+        if(action === 'deposit') return openDepositFlow(id);
+        if(action === 'sell') return openSaleModalFlow(id);
+      }
+      const removeBtn = e.target.closest('[data-remove-repair]');
+      if(removeBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        return removeRepairFromVehicle(Number(removeBtn.getAttribute('data-remove-repair')));
+      }
+      const cancelDepositBtn = e.target.closest('.cancel-deposit-btn');
+      if(cancelDepositBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        return openCancelDepositModal(cancelDepositBtn.getAttribute('data-cancel-id'));
+      }
+      const soldDetailBtn = e.target.closest('.sold-detail-btn');
+      if(soldDetailBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        return openSoldDetail(soldDetailBtn.getAttribute('data-sold-id'));
+      }
+      const soldPhotoBtn = e.target.closest('.sold-photo-btn');
+      if(soldPhotoBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        return showSavedPhotos(soldPhotoBtn.getAttribute('data-sold-id'));
+      }
+    }, true);
+  }
+
+  function subscribeVehicles(){
+    ensureFirebase();
+    if(unsubscribeVehicles) unsubscribeVehicles();
+    unsubscribeVehicles = vehiclesRef.orderBy('createdAt', 'desc').onSnapshot(async (snap) => {
+      vehiclesCache = snap.docs.map(doc => {
+        const data = doc.data() || {};
+        if(!data.id) data.id = doc.id;
+        return data;
+      });
+      if(ready){
+        await renderAll();
+      }
+      ready = true;
+    }, (err) => {
+      console.error(err);
+      alert('Firebase 即時同步失敗：' + (err?.message || err));
+    });
+  }
+
+  async function startPureFirebaseMode(){
+    try{
+      ensureFirebase();
+      setStorageText('目前儲存：Firebase Firestore 雲端同步');
+      setDescText('資料與照片目前使用 Firebase Firestore 雲端同步');
+      bindPrimaryButtons();
+      bindGenericHandlers();
+      bindDelegatedClicks();
+      setEntryType('屏東鴻翊汽車');
+      subscribeVehicles();
+      await renderAll();
+      console.log('✅ 純 Firebase 車輛模式已啟用');
+    }catch(err){
+      console.error(err);
+      const msg = String(err?.message || err || '');
+      if(!msg.includes('Firebase SDK 尚在載入中')){
+        alert('Firebase 初始化失敗：' + msg);
+      }
+    }
+  }
+
   window.addEventListener('load', function(){
-    setTimeout(bindSingleVehicleButtons, 50);
+    setTimeout(startPureFirebaseMode, 300);
   });
 })();
 </script>
